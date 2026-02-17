@@ -57,6 +57,7 @@ Réponds en JSON avec cette structure exacte:
     "impact_b": { "trust": -3, "suspicion": 5 }
   },
   "final_fragment": "fragment narratif révélant une pièce du puzzle mondial",
+  "next_hint": "indice cryptique de 1-2 phrases faisant le lien avec le prochain pays ou la prochaine étape de l'intrigue mondiale",
   "historical_fact": "fait historique réel et fascinant du pays"
 }
 
