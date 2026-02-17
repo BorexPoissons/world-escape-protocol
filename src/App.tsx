@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Mission from "./pages/Mission";
+import Puzzle from "./pages/Puzzle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mission/:countryId" element={<Mission />} />
+            <Route path="/puzzle" element={<Puzzle />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
