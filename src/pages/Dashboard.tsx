@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [completedCountries, setCompletedCountries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -27,15 +28,17 @@ const Dashboard = () => {
     if (!user) return;
 
     const fetchData = async () => {
-      const [countriesRes, profileRes, missionsRes] = await Promise.all([
+      const [countriesRes, profileRes, missionsRes, rolesRes] = await Promise.all([
         supabase.from("countries").select("*").order("difficulty_base"),
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
       ]);
 
       if (countriesRes.data) setCountries(countriesRes.data);
       if (profileRes.data) setProfile(profileRes.data);
       if (missionsRes.data) setCompletedCountries(missionsRes.data.map(m => m.country_id));
+      if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
       setLoading(false);
     };
 
@@ -69,6 +72,14 @@ const Dashboard = () => {
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>
           <div className="flex items-center gap-4">
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Button>
+              </Link>
+            )}
             <div className="text-right hidden sm:block">
               <p className="text-sm text-foreground font-display">Agent {profile?.display_name}</p>
               <p className="text-xs text-muted-foreground">Niveau {profile?.level} · {profile?.xp} XP</p>
