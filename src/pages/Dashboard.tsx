@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle } from "lucide-react";
+import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -86,16 +87,18 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
         >
-          <div className="bg-card border border-border rounded-lg p-5 border-glow">
-            <div className="flex items-center gap-3 mb-2">
-              <Globe className="h-5 w-5 text-primary" />
-              <span className="text-sm text-muted-foreground font-display tracking-wider">PROGRESSION</span>
+          <Link to="/puzzle" className="block">
+            <div className="bg-card border border-border rounded-lg p-5 border-glow hover:border-primary/50 transition-all cursor-pointer">
+              <div className="flex items-center gap-3 mb-2">
+                <Puzzle className="h-5 w-5 text-primary" />
+                <span className="text-sm text-muted-foreground font-display tracking-wider">PUZZLE MONDIAL</span>
+              </div>
+              <p className="text-3xl font-display font-bold text-foreground">{progress}%</p>
+              <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+              </div>
             </div>
-            <p className="text-3xl font-display font-bold text-foreground">{progress}%</p>
-            <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
+          </Link>
 
           <div className="bg-card border border-border rounded-lg p-5 border-glow">
             <div className="flex items-center gap-3 mb-2">
