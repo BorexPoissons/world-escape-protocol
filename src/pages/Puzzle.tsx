@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Shield, ArrowLeft, Lock, CheckCircle, Puzzle as PuzzleIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import WorldPathMap from "@/components/WorldPathMap";
 
 const TOTAL_PIECES_PER_COUNTRY = 5;
 
@@ -124,6 +125,16 @@ const Puzzle = () => {
             </p>
           </div>
         </motion.div>
+
+        {/* Animated World Path */}
+        <WorldPathMap
+          countries={puzzleData.map((d) => ({
+            id: d.country.id,
+            name: d.country.name,
+            code: d.country.code,
+            unlocked: d.unlockedPieces > 0,
+          }))}
+        />
 
         {/* World Map Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
