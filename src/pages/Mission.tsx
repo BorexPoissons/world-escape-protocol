@@ -202,7 +202,7 @@ const Mission = () => {
     }
 
     toast({ title: "Mission accomplie!", description: `Score: ${score}/${mission.enigmes.length} — Pièce du puzzle débloquée!` });
-    navigate("/dashboard");
+    navigate(`/mission/${countryId}/complete?score=${score}&total=${mission.enigmes.length}`);
   };
 
   if (phase === "loading") {
