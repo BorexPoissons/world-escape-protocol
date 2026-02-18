@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map, Puzzle } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import type { Tables } from "@/integrations/supabase/types";
@@ -19,9 +19,8 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    // Auth check disabled for demo — re-enable in production
+    // if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -68,7 +67,12 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="h-6 w-6 text-primary" />
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-1">
+              <Home className="h-4 w-4" />
+              <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
+            </Link>
+            <span className="text-border">|</span>
+            <Shield className="h-6 w-6 text-primary ml-1" />
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>
           <div className="flex items-center gap-4">
