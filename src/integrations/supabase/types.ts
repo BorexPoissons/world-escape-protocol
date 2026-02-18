@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          key: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          key: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          key?: string
+          name?: string
+        }
+        Relationships: []
+      }
       countries: {
         Row: {
           code: string
@@ -105,7 +132,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          last_mission_at: string | null
           level: number
+          longest_streak: number
+          streak: number
           updated_at: string
           user_id: string
           xp: number
@@ -114,7 +144,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_mission_at?: string | null
           level?: number
+          longest_streak?: number
+          streak?: number
           updated_at?: string
           user_id: string
           xp?: number
@@ -123,7 +156,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_mission_at?: string | null
           level?: number
+          longest_streak?: number
+          streak?: number
           updated_at?: string
           user_id?: string
           xp?: number
@@ -165,6 +201,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "countries"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          badge_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_key_fkey"
+            columns: ["badge_key"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["key"]
           },
         ]
       }
