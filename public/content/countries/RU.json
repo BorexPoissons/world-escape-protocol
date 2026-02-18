@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION DOUBLE VOILE",
+  "intro": "Agent, bienvenue en Russie.\n\nSaint-Pétersbourg, -18°C. La Neva est gelée. Les toits de l'Ermitage sont couverts de neige. Il est 23h44. Vous êtes seul dans une bibliothèque privée du quartier Vasilievsky Ostrov, face à un coffre que vous venez d'ouvrir avec une clé qui ne devait pas exister.\n\nÀ l'intérieur : 200 pages de documents classifiés. Des télégrammes en code Vernam — le seul système de chiffrement réellement incassable. Et une photographie. Elle vous représente lors d'une réunion à Genève il y a trois ans. Une réunion que vous n'avez jamais eu lieu.\n\nLe **Fragment du Bouleau** — le plus profondément enfoui du Protocole Omega — est dissimulé dans les archives de la Division K, ancienne unité de désinformation du KGB, dissoute officiellement en 1991. Officieusement, elle opère encore sous le nom de **Дирекция Тень** (Direction Ombre).\n\nEn Russie, la vérité a toujours plusieurs couches. Chaque couche cache une autre couche. Le chiffrement n'est pas seulement technique — c'est une façon de penser.\n\nVous avez 3 heures avant le premier métro. Et peut-être déjà quelqu'un qui vous suit.",
+  "enigmes": [
+    {
+      "question": "Le KGB — Comité pour la Sécurité d'État — fut l'agence de renseignement soviétique de 1954 à 1991. Son successeur principal en Russie s'appelle :",
+      "type": "culture",
+      "choices": [
+        "Le GRU (renseignement militaire)",
+        "Le FSB (Service fédéral de sécurité)",
+        "Le SVR (renseignement étranger)",
+        "Le FSO (Service de protection fédérale)"
+      ],
+      "answer": "Le FSB (Service fédéral de sécurité)",
+      "explanation": "Le KGB fut dissous le 6 novembre 1991 et divisé en plusieurs agences. Le FSB (FSБ) hérita de la contre-espionnage intérieur — c'est Vladimir Poutine qui le dirigea de 1998 à 1999 avant de devenir Premier ministre puis Président. Le SVR gère le renseignement extérieur, le GRU dépend de l'armée. Ces trois services opèrent souvent en parallèle et parfois en compétition."
+    },
+    {
+      "question": "L'affaire Cambridge Five — les cinq espions britanniques travaillant pour l'URSS — est l'une des plus grandes opérations de double trahison du XXe siècle. Qui en était le membre le plus haut placé, recruté comme chef de contre-espionnage britannique ?",
+      "type": "logique",
+      "choices": [
+        "Donald Maclean",
+        "Guy Burgess",
+        "Anthony Blunt",
+        "Kim Philby"
+      ],
+      "answer": "Kim Philby",
+      "explanation": "Kim Philby, chef de la section contre-espionnage soviétique du MI6, fut recruté par le KGB dans les années 1930 à Cambridge. Il dirigea le contre-espionnage britannique CONTRE l'URSS tout en travaillant POUR l'URSS. Il s'enfuit à Moscou en 1963 où il vécut jusqu'en 1988. Pendant 25 ans, chaque opération britannique contre le renseignement soviétique fut sabotée de l'intérieur."
+    },
+    {
+      "question": "Le chiffrement de Vernam (One-Time Pad) est théoriquement incassable. Pourquoi son usage systématique par l'URSS a-t-il néanmoins permis aux Américains de décrypter des messages soviétiques dans l'opération VENONA ?",
+      "type": "observation",
+      "choices": [
+        "L'URSS utilisait des clés trop courtes",
+        "Les Soviétiques ont réutilisé certaines pages de clés — violant la règle fondamentale du système",
+        "Les Américains ont volé les carnets de clés à Berlin",
+        "Le code a été cassé mathématiquement par Alan Turing"
+      ],
+      "answer": "Les Soviétiques ont réutilisé certaines pages de clés — violant la règle fondamentale du système",
+      "explanation": "L'opération VENONA (1943-1980) permit aux services américains et britanniques de décrypter environ 3 000 messages soviétiques. La raison : sous la pression de la Seconde Guerre mondiale, le KGB avait imprimé en double certaines pages de one-time pad et les avait distribuées à deux stations différentes. Cette erreur humaine dans un système mathématiquement parfait révéla des noms d'agents dans les gouvernements américain et britannique — dont Julius et Ethel Rosenberg."
+    },
+    {
+      "question": "L'Ermitage de Saint-Pétersbourg est l'un des plus grands musées du monde. Combien d'œuvres contient-il approximativement, et combien de visiteurs faudrait-il pour les voir toutes en passant 1 minute devant chaque œuvre ?",
+      "type": "logique",
+      "choices": [
+        "Environ 3 millions d'œuvres — 11 ans de visite non-stop",
+        "Environ 800 000 œuvres — 3 ans de visite non-stop",
+        "Environ 120 000 œuvres — 83 jours de visite",
+        "Environ 5 millions d'œuvres — 19 ans de visite"
+      ],
+      "answer": "Environ 3 millions d'œuvres — 11 ans de visite non-stop",
+      "explanation": "L'Ermitage possède environ 3 millions d'objets dans ses collections — dont seulement 5% sont exposés à un moment donné. À raison d'une minute par œuvre, 24h/24, il faudrait 11 ans pour tout voir. Le musée s'étend sur 6 bâtiments sur les bords de la Neva. Pendant le siège de Leningrad (1941-1944), les œuvres furent évacuées — les cadres restèrent accrochés pour maintenir le moral des employés qui vivaient dans le musée."
+    }
+  ],
+  "false_hint": "Les documents de la Direction Ombre sont stockés dans le sous-sol est de l'Ermitage, dans une salle codée Komnat-77, accessible par un couloir derrière la galerie des chevaliers médiévaux.",
+  "moral_choice": {
+    "description": "Vous avez le Fragment et les 200 pages de documents. Parmi eux, vous découvrez que l'Opérateur Zéro a été un agent double depuis le début — travaillant pour le Cercle de Davos tout en vous guidant. Ses motivations semblent complexes. Son prochain message vous attend.",
+    "option_a": "Signalez immédiatement la trahison de l'Opérateur Zéro à votre organisation et attendez les ordres.",
+    "option_b": "Gardez l'information pour vous, attendez son prochain message, cherchez à comprendre avant d'agir.",
+    "impact_a": { "trust": 3, "suspicion": -8 },
+    "impact_b": { "trust": -8, "suspicion": 15, "secrets_unlocked": 2 }
+  },
+  "final_fragment": "Fragment du Bouleau — Division K, archive 1991-OMEGA.\n\nDans les dernières pages des documents, une note manuscrite non chiffrée — en français : *« Si vous lisez ceci, vous avez passé le test. Le Protocole Omega n'est pas un complot. C'est une réponse. La Phase III commence là où l'empire du milieu cache ses algorithmes. Direction : Est lointain. »*\n\nSignature : Opérateur Zéro.",
+  "historical_fact": "La Russie a produit 5 des plus grandes révolutions de l'histoire mondiale : la Révolution de 1905, la Révolution de Février 1917, la Révolution d'Octobre 1917, la dislocation de l'URSS en 1991, et la révolution numérique des mathématiciens soviétiques reconvertis dans la cryptographie et la cybersécurité après 1991. Les hackers russes actuels sont souvent d'anciens chercheurs de l'Académie des Sciences soviétique.",
+  "next_hint": "L'empire du milieu ne parle pas — il calcule. Dans le pays le plus peuplé du monde, un algorithme gouverne plus de gens qu'aucun souverain dans l'histoire. Le Stratège Impérial attend au cœur de la Cité Interdite.",
+  "lore": {
+    "titre": "LA DIRECTION OMBRE ET LE DOUBLE VOILE",
+    "texte": "La Direction Ombre (Дирекция Тень) n'a officiellement jamais existé. Trois chercheurs qui ont tenté de documenter son existence ont disparu entre 2007 et 2019. Ce que nous savons : elle opère par couches de désinformation — chaque 'vérité' découverte en cache une autre. Le Double Voile désigne le fait qu'un agent croit trahir le Cercle pour votre organisation, alors qu'il trahit votre organisation pour le Cercle.",
+    "personnages": [
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "La note vous attend. Il savait que vous trouveriez les documents. Il vous a conduit ici."
+      },
+      {
+        "nom": "L'Archiviste",
+        "role": "L'homme qui vous a remis la clé du coffre. Il est mort d'une crise cardiaque 2 heures après."
+      }
+    ]
+  }
+}

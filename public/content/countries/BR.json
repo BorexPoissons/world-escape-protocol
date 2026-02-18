@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION CARNAVAL NOIR",
+  "intro": "Agent, bienvenue au Brésil.\n\nRio de Janeiro, 2h du matin. Le carnaval bat son plein. 2 millions de personnes dans les rues. La chaleur est humide, les percussions des batucadas résonnent à plusieurs kilomètres. Impossible de penser clairement. C'est exactement pour ça que le Cercle de Davos a choisi cette nuit.\n\nVotre contact — nom de code Sereia — devait vous remettre le **Fragment Émeraude** lors du défilé de la Escola de Samba do Salgueiro. Elle ne s'est pas présentée. À la place, vous avez trouvé dans sa loge un message codé dans les couleurs de son costume : violet-or-blanc-rouge-noir.\n\nVotre couverture : photographe accrédité pour l'Agence France-Presse. Votre réalité : vous avez 40 minutes avant que le défilé s'arrête et que la loge soit fouillée par les hommes du Cercle.\n\nLe code est dans les couleurs. Les couleurs sont dans la musique. La musique est dans le chaos.\n\nBienvenue dans le chaos organisé le plus complexe du monde.",
+  "enigmes": [
+    {
+      "question": "Le Carnaval de Rio est le plus grand du monde. Combien de membres compte approximativement une grande école de samba comme l'Escola do Salgueiro lors du défilé officiel ?",
+      "type": "observation",
+      "choices": [
+        "Environ 500 participants",
+        "Environ 3 000 à 5 000 participants",
+        "Environ 200 participants",
+        "Environ 15 000 participants"
+      ],
+      "answer": "Environ 3 000 à 5 000 participants",
+      "explanation": "Les grandes écoles de samba du groupe spécial alignent 3 000 à 5 000 participants — danseurs, percussionnistes, porteurs de chars, passistas. La préparation dure toute l'année. Le thème du défilé est un secret jalousement gardé jusqu'au début de la saison. La Marquês de Sapucaí, sambodrome construit par Oscar Niemeyer en 1984, accueille 90 000 spectateurs."
+    },
+    {
+      "question": "Le Brésil est la plus grande démocratie d'Amérique du Sud. Pourtant, il a connu une dictature militaire. De quelle période date-t-elle ?",
+      "type": "culture",
+      "choices": [
+        "1937-1945 (État Novo de Vargas)",
+        "1964-1985 (Dictature militaire)",
+        "1954-1964 (Gouvernements d'exception)",
+        "1889-1930 (République oligarchique)"
+      ],
+      "answer": "1964-1985 (Dictature militaire)",
+      "explanation": "Le coup d'État militaire brésilien du 31 mars 1964, soutenu par les États-Unis (opération 'Brother Sam'), instaura une dictature de 21 ans. Les généraux se succédèrent jusqu'en 1985. Pendant cette période, l'AI-5 (1968) suspendit toutes les libertés civiles. Le carnaval fut paradoxalement toléré — une soupape sociale jugée nécessaire."
+    },
+    {
+      "question": "L'Amazonie brésilienne représente quelle proportion de la forêt tropicale mondiale ?",
+      "type": "logique",
+      "choices": [
+        "Environ 20%",
+        "Environ 40%",
+        "Environ 60%",
+        "Environ 10%"
+      ],
+      "answer": "Environ 60%",
+      "explanation": "Le Brésil abrite environ 60% de la forêt amazonienne totale, soit 4,1 millions de km² sur les 6,7 millions au total. L'Amazonie produit 20% de l'oxygène terrestre et contient 10% de toutes les espèces vivantes. En 2022, le déforestation a atteint un taux record de 11 568 km² en un an — équivalent à 10 000 terrains de football par jour."
+    },
+    {
+      "question": "La capoeira, art martial brésilien, a une caractéristique unique dans l'histoire des arts martiaux. Laquelle ?",
+      "type": "culture",
+      "choices": [
+        "Elle est exclusivement pratiquée par des femmes",
+        "Elle a été développée par des esclaves africains déguisée en danse pour ne pas être interdite",
+        "Elle intègre des armes secrètes cachées dans les vêtements",
+        "Elle fut inventée par les Jésuites pour convertir les indigènes"
+      ],
+      "answer": "Elle a été développée par des esclaves africains déguisée en danse pour ne pas être interdite",
+      "explanation": "La capoeira fut développée par des esclaves africains au Brésil à partir du XVIe siècle. Pour pratiquer cet art martial sans être punis, ils le camouflèrent en danse — les coups devenaient des mouvements chorégraphiés, la musique du berimbau donnait le signal du danger. Elle resta interdite jusqu'en 1937. C'est la résistance codifiée dans le mouvement."
+    }
+  ],
+  "false_hint": "Le Fragment Émeraude est dissimulé sous le char numéro 7 du défilé Salgueiro, dans un compartiment accessible par une trappe de maintenance côté gauche.",
+  "moral_choice": {
+    "description": "Vous avez déchiffré le code couleur de Sereia et trouvé le Fragment. Mais vous avez aussi découvert qu'elle travaille pour trois organisations simultanément — dont l'une est clairement criminelle. Elle est vivante, cachée dans le sambodrome. Vous pouvez l'aider à fuir ou la livrer.",
+    "option_a": "Livrez sa position à votre organisation — une taupe est une taupe, peu importe les circonstances.",
+    "option_b": "Aidez-la à fuir, récupérez le Fragment, et dites que vous ne l'avez pas trouvée.",
+    "impact_a": { "trust": 8, "suspicion": -5 },
+    "impact_b": { "trust": -6, "suspicion": 7 }
+  },
+  "final_fragment": "Fragment Émeraude — obtenu dans le chaos du carnaval.\n\nSereia avait gravé au dos du fragment : *« Le prochain gardien est un fantôme dans la machine. Il surveille tout le monde. Et surtout — il vous surveille déjà depuis cette mission. Bienvenue dans le pays de la transparence illusoire. »*\n\nDirection : Amérique du Nord.",
+  "historical_fact": "Le Brésil est le seul pays d'Amérique latine dont la langue officielle n'est pas l'espagnol. Colonisé par le Portugal en 1500, il devint Empire en 1822 sous Pedro I — le seul empire indépendant des Amériques. Sa transition vers la République en 1889 fut pacifique et presque accidentelle — le maréchal Deodoro da Fonseca pensait juste organiser un coup militaire temporaire.",
+  "next_hint": "Tout est observé. Chaque clic, chaque mouvement, chaque hésitation est enregistrée. Dans le pays de la liberté surveillée, les données sont la nouvelle arme. Cherchez le hacker qui surveille les surveillants.",
+  "lore": {
+    "titre": "LE RÉSEAU SEREIA",
+    "texte": "Sereia — la sirène — est le nom de code d'un réseau de contre-espionnage fondé dans les années 1970 par des opposants à la dictature brésilienne. Infiltré depuis, démembré, recréé. En 2024, un groupe se réclamant de Sereia a transmis au Cercle de Davos des informations sur 12 agents actifs dans la région. L'un d'eux était peut-être vous.",
+    "personnages": [
+      {
+        "nom": "Sereia",
+        "role": "Votre contact. Triple agent ou victime ? Les deux ne s'excluent pas."
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Message reçu après la mission : 'Bien joué. Ou bien menti. Je ne sais pas encore.'"
+      }
+    ]
+  }
+}
