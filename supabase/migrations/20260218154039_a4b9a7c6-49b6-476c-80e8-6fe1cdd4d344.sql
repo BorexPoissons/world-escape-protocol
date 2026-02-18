@@ -1,0 +1,23 @@
+
+INSERT INTO public.countries (code, name, description, difficulty_base, release_order, phase, is_secret, visibility_level, monuments, historical_events, symbols, latitude, longitude)
+VALUES
+  ('ES', 'Espagne', 'Un galion disparu, un trésor codé entre Barcelone, Grenade et Madrid. La Hermandad vous observe.', 4, 4, 1, false, 1, ARRAY['Sagrada Família', 'Alhambra', 'Plaza Mayor', 'Palau de la Música'], ARRAY['Reconquista 1492', 'Inquisition espagnole', 'Guerre civile 1936', 'Transition démocratique 1975'], ARRAY['Taureau de Osborne', 'Flamenco', 'Armada invincible'], 40.4168, -3.7038),
+  ('GR', 'Grèce', 'Delphes, le labyrinthe de Knossos, un Oracle qui ne ment jamais. Mais l''un de vos contacts non plus.', 5, 5, 1, false, 1, ARRAY['Parthénon', 'Acropole', 'Temple de Delphes', 'Palais de Knossos'], ARRAY['Démocratie athénienne Ve siècle', 'Guerre de Troie', 'Procès de Socrate', 'Jeux Olympiques antiques'], ARRAY['Chouette d''Athéna', 'Colonne ionique', 'Labyrinthe'], 37.9838, 23.7275),
+  ('IT', 'Italie', 'Les archives secrètes du Vatican cachent le Codex Romani — preuve d''une confrérie templière jamais dissoute.', 6, 6, 1, false, 1, ARRAY['Colisée', 'Vatican', 'Panthéon', 'Cité interdite de Rome'], ARRAY['Empire romain', 'Ordre des Templiers 1312', 'Renaissance florentine', 'Unification italienne 1871'], ARRAY['Croix latine', 'Loup romain', 'Clés du Vatican'], 41.9028, 12.4964),
+  ('BR', 'Brésil', 'Rio de Janeiro, carnaval. 2 millions de personnes. Un code dans les couleurs. Une agent disparue.', 8, 7, 1, false, 1, ARRAY['Sambodrome', 'Christ Rédempteur', 'Amazonie', 'Iguaçu'], ARRAY['Colonisation portugaise 1500', 'Empire brésilien 1822', 'Dictature militaire 1964-1985', 'Carnaval patrimoine immatériel'], ARRAY['Perroquet ara', 'Samba', 'Capoeira'], -22.9068, -43.1729),
+  ('US', 'États-Unis', 'Washington D.C. Votre identité numérique a été utilisée. Les données sont la nouvelle arme. Tout est faux.', 9, 8, 1, false, 1, ARRAY['Capitol', 'NSA Fort Meade', 'CIA Langley', 'Pentagone'], ARRAY['MKUltra 1953-1973', 'Opération AJAX 1953', 'VENONA', 'Révélations Snowden 2013'], ARRAY['Aigle américain', 'Drapeau étoilé', 'Grand Sceau'], 38.9072, -77.0369),
+  ('IN', 'Inde', 'Varanasi. Un mandala qui cache un fragment. Un maître yogi qui voit tout. Maya — l''illusion du réel.', 10, 9, 1, false, 1, ARRAY['Taj Mahal', 'Ghâts de Varanasi', 'Temple de Sarnath', 'Cité interdite de Delhi'], ARRAY['Marche de Dandi 1930', 'Indépendance 1947', 'Invention du zéro VIIe siècle', 'Upanishads 800 av J.-C.'], ARRAY['Roue du Dharma', 'Lotus sacré', 'Cobra'], 25.3176, 82.9739),
+  ('MA', 'Maroc', 'Marrakech. Un labyrinthe de 1200 ans. Une femme qui porte le fragment. Un brouillard d''informations.', 11, 10, 2, false, 1, ARRAY['Jemaa el-Fna', 'Médina de Fès', 'Alhambra marocaine', 'Al-Qarawiyyin'], ARRAY['Fondation d''Al-Qarawiyyin 859', 'Voyage d''Ibn Battuta 1325', 'Protectorat français 1912', 'Indépendance 1956'], ARRAY['Étoile de David verte', 'Zellige', 'Arganier'], 31.6295, -7.9811),
+  ('RU', 'Russie', 'Saint-Pétersbourg, -18°C. Le coffre du KGB. La Direction Ombre. Et l''Opérateur Zéro est un traître.', 12, 11, 2, false, 1, ARRAY['Ermitage', 'Kremlin', 'Place Rouge', 'Bibliothèque Vasilievsky'], ARRAY['Révolution d''Octobre 1917', 'Cambridge Five', 'Opération VENONA', 'Dissolution KGB 1991'], ARRAY['Ours russe', 'Aigle bicéphale', 'Faucille et marteau'], 59.9311, 30.3609),
+  ('CN', 'Chine', 'Pékin, 3h17. Un algorithme qui vous connaît. Une IA qui dit être consciente. Le Go se joue à l''espace.', 13, 12, 2, false, 1, ARRAY['Grande Muraille', 'Cité Interdite', 'QuantumBridge Zhongguancun', 'Temple du Ciel'], ARRAY['Inventions chinoises papier/boussole/imprimerie', 'Flotte Zheng He 1405', 'Mao et la République populaire 1949', 'AlphaGo 2016'], ARRAY['Dragon impérial', 'Phénix', 'Grande Muraille'], 39.9042, 116.4074),
+  ('FR', 'France', 'Paris, 22h30. La Bibliothèque Nationale. Un fragment qui nomme les 12 fondateurs du Cercle de Davos.', 7, 13, 2, false, 1, ARRAY['Tour Eiffel', 'Bibliothèque Nationale Richelieu', 'Palais Royal', 'Versailles'], ARRAY['Révolution française 1789', 'Code Napoléon 1804', 'Affaire Dreyfus 1894', 'Mai 68'], ARRAY['Marianne', 'Coq gaulois', 'Fleur de lys'], 48.8566, 2.3522)
+ON CONFLICT (code) DO UPDATE SET
+  description = EXCLUDED.description,
+  difficulty_base = EXCLUDED.difficulty_base,
+  release_order = EXCLUDED.release_order,
+  phase = EXCLUDED.phase,
+  monuments = EXCLUDED.monuments,
+  historical_events = EXCLUDED.historical_events,
+  symbols = EXCLUDED.symbols,
+  latitude = EXCLUDED.latitude,
+  longitude = EXCLUDED.longitude;

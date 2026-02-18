@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Country codes with static content (loaded from public JSON files via CDN)
 // These are served as static assets from the project's public folder
-const STATIC_CONTENT_CODES = ["CH", "JP", "EG"];
+const STATIC_CONTENT_CODES = ["CH", "JP", "EG", "ES", "GR", "IT", "BR", "US", "IN", "MA", "RU", "CN", "FR"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
