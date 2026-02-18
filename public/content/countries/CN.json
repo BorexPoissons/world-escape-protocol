@@ -3,7 +3,7 @@
   "intro": "Agent, bienvenue en Chine.\n\nPékin, Zone de Zhongguancun — la Silicon Valley chinoise. 03h17. Les serveurs de la startup QuantumBridge Holdings — façade d'une division technologique du Protocole Omega — viennent de transmettre un paquet chiffré en AES-256 vers une adresse IP que vous reconnaissez : celle de l'Opérateur Zéro.\n\nLe **Fragment du Dragon de Jade** est encodé dans un algorithme d'intelligence artificielle en développement. Mais l'IA a été entraînée avec des données incluant les empreintes de vos 9 missions précédentes. Elle vous connaît. Elle anticipe vos mouvements. Elle peut simuler vos choix avec une précision de 94,7%.\n\nVotre couverture : directeur technique en visite pour un partenariat Eurasie. Votre réel objectif : extraire le Fragment avant que l'algorithme soit déployé — car une fois déployé, il sera impossible à intercepter sans déclencher une contre-mesure automatique.\n\nLa Chine est le pays du Go — le jeu de stratégie le plus ancien et le plus complexe du monde. Dans le Go, la victoire ne vient pas d'attaques directes mais du contrôle de l'espace. Contrôlez le contexte, et votre adversaire se piège lui-même.\n\nL'algorithme joue au Go. Jouez mieux.",
   "enigmes": [
     {
-      "question": "La Grande Muraille de Chine est souvent décrite comme 'visible depuis l'espace'. Cette affirmation est-elle exacte scientifiquement ?",
+      "question": "La Grande Muraille de Chine est souvent décrite comme « visible depuis l'espace ». Cette affirmation est-elle exacte scientifiquement (à l'œil nu, depuis l'orbite de l'ISS) ?",
       "type": "observation",
       "choices": [
         "Oui, elle est visible à l'œil nu depuis la Station Spatiale Internationale",
@@ -12,43 +12,43 @@
         "Non, mais elle a été photographiée depuis la Lune"
       ],
       "answer": "Non — à l'altitude de l'ISS, elle est trop étroite pour être distinguée sans instrument optique",
-      "explanation": "La Grande Muraille mesure entre 4 et 9 mètres de large — soit moins qu'une autoroute. À l'altitude de l'ISS (400 km), l'œil humain ne peut distinguer des objets de moins de 10 km de large. L'astronaute chinois Yang Liwei, premier Chinois dans l'espace (2003), confirma ne pas l'avoir vue. Cette légende fut propagée depuis le XVIIe siècle — avant même que la Muraille soit terminée dans sa forme actuelle."
+      "explanation": "La Muraille fait souvent seulement quelques mètres de large. À ~400 km d'altitude (ISS), la limite de résolution de l'œil humain (même dans de bonnes conditions) est de l'ordre de la centaine de mètres, et la Muraille se confond avec le relief et les couleurs environnantes. Des astronautes ont confirmé ne pas pouvoir la distinguer à l'œil nu ; en revanche, elle peut être captée avec des instruments (téléobjectif, imagerie radar, etc.). Yang Liwei (2003) a notamment déclaré ne pas l'avoir vue."
     },
     {
       "question": "Le Projet des Mille Talents, programme gouvernemental chinois lancé en 2008, visait à :",
       "type": "culture",
       "choices": [
         "Former 1000 ingénieurs en intelligence artificielle par an",
-        "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour transférer des technologies avancées",
+        "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour attirer des compétences et faciliter des transferts de savoir-faire/technologies",
         "Créer 1000 universités technologiques en 10 ans",
         "Financer 1000 startups technologiques dans les ZES chinoises"
       ],
-      "answer": "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour transférer des technologies avancées",
-      "explanation": "Le Projet des Mille Talents (千人计划) recruta des scientifiques et ingénieurs travaillant dans des universités et entreprises américaines, européennes et japonaises, en leur offrant des salaires très supérieurs. Le FBI a lancé des centaines d'enquêtes pour espionnage technologique liées à ce programme. Officiellement suspendu en 2018, il a été renommé et restructuré selon les experts en contre-espionnage."
+      "answer": "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour attirer des compétences et faciliter des transferts de savoir-faire/technologies",
+      "explanation": "Le « Thousand Talents Plan » (lancé en 2008) est un programme de recrutement de talents S&T depuis l'étranger, incluant diaspora et non-diaspora, avec des incitations fortes. Il a été fortement scruté par des autorités étrangères (notamment américaines) pour des risques de transferts non déclarés et de conflits d'intérêts. À partir de la fin des années 2010, le programme a été discrétisé et des volets ont été restructurés/renommés, mais la stratégie de recrutement de talents s'est poursuivie sous d'autres formes."
     },
     {
-      "question": "AlphaGo, l'IA de Google DeepMind, battit le champion du monde de Go Lee Sedol en mars 2016. Qu'est-ce que cet événement a révélé sur les capacités de l'IA ?",
+      "question": "AlphaGo, l'IA de Google DeepMind, battit le champion de Go Lee Sedol en mars 2016. Qu'est-ce que cet événement a révélé sur les capacités de l'IA ?",
       "type": "logique",
       "choices": [
         "Que l'IA peut calculer toutes les possibilités d'un jeu",
-        "Que l'IA peut développer des stratégies intuitives que ses créateurs n'ont pas programmées — dépassant la logique humaine pure",
+        "Que l'IA peut développer des stratégies inédites via l'apprentissage (self-play) — surprenant même les experts humains",
         "Que le Go est un jeu moins complexe qu'on ne le pensait",
         "Que la puissance de calcul suffit à battre l'intelligence humaine dans tout domaine"
       ],
-      "answer": "Que l'IA peut développer des stratégies intuitives que ses créateurs n'ont pas programmées — dépassant la logique humaine pure",
-      "explanation": "Le coup 37 d'AlphaGo contre Lee Sedol — un coup qu'aucun joueur humain n'aurait joué car considéré incorrect — se révéla être le tournant décisif de la partie. Les créateurs d'AlphaGo eux-mêmes ne comprenaient pas pourquoi l'IA avait joué ce coup. L'IA avait développé une intuition non-humaine. Lee Sedol, seul joueur à avoir battu AlphaGo dans une partie (sur 5), prit sa retraite en 2019 : 'Je ne peux pas battre quelque chose qui n'a pas de sommet.'"
+      "answer": "Que l'IA peut développer des stratégies inédites via l'apprentissage (self-play) — surprenant même les experts humains",
+      "explanation": "Le fameux « Move 37 » (coup 37) lors de la 2e partie a choqué les commentateurs : jugé très improbable pour un humain, il s'est révélé extrêmement fort et a changé la lecture stratégique de la position. AlphaGo ne se contentait pas de « brute force » : il combinait réseaux de neurones, recherche et apprentissage par renforcement (notamment via auto-jeu), produisant des choix que même des professionnels n'auraient pas envisagés. Lee Sedol a ensuite pris sa retraite en 2019, déclarant qu'il existait désormais « une entité qui ne peut pas être vaincue »."
     },
     {
-      "question": "La Cité Interdite (Gugong) de Pékin fut construite entre 1406 et 1420. Combien de pièces contient-elle selon les archives impériales ?",
+      "question": "La Cité Interdite (Gugong) de Pékin fut construite entre 1406 et 1420. Selon les relevés modernes, combien compte-t-on environ de « baies » (bays) / unités de pièces dans l'ensemble du complexe ?",
       "type": "culture",
       "choices": [
         "Exactement 9 999 pièces — une de moins que les 10 000 du paradis céleste",
         "Environ 1 500 pièces réparties sur 720 000 m²",
-        "Exactement 8 888 pièces pour le chiffre porte-bonheur",
+        "Environ 8 886 « baies » (bays) — souvent vulgarisé comme ~8 700 pièces selon le mode de comptage",
         "Environ 3 000 pièces dont 800 accessibles au public"
       ],
-      "answer": "Exactement 9 999 pièces — une de moins que les 10 000 du paradis céleste",
-      "explanation": "La tradition impériale chinoise veut que la Cité Interdite contienne 9 999 pièces — car 10 000 (万, wàn) était le nombre parfait du paradis, réservé aux dieux. L'Empereur ne pouvait prétendre à la perfection divine. Des études récentes suggèrent le chiffre réel est environ 8 728 pièces. La Cité Interdite servit de résidence à 24 empereurs pendant 492 ans (1420-1912)."
+      "answer": "Environ 8 886 « baies » (bays) — souvent vulgarisé comme ~8 700 pièces selon le mode de comptage",
+      "explanation": "Le chiffre « 9 999 » (parfois « 9 999,5 ») relève surtout d'une tradition symbolique liée aux nombres auspices, mais il n'est pas confirmé par les relevés. Les études et inventaires modernes évoquent plutôt un total autour de 8 8xx unités selon la méthode (souvent exprimées en « bays », unité architecturale), ce qui se traduit fréquemment par ~8 700 « pièces » dans les versions vulgarisées."
     }
   ],
   "false_hint": "Le Fragment du Dragon est dans le serveur numéro 7 de la salle B-12 — accès par la porte de maintenance nord-est du data center QuantumBridge.",
@@ -60,7 +60,7 @@
     "impact_b": { "trust": -5, "suspicion": 8, "secrets_unlocked": 3 }
   },
   "final_fragment": "Fragment du Dragon de Jade — obtenu. Algorithme détruit / libéré.\n\nDernière ligne de code de l'algorithme avant extinction : *« Vous avez fait le bon choix. Ou le mauvais. Je ne le saurai jamais. La Phase III : les fragments restants sont gardés là où les empires n'ont jamais vraiment disparu. Cherchez les pays qui ont perdu leur centre mais gardé leur mémoire. »*\n\nLa Phase III du Protocole Omega commence.",
-  "historical_fact": "La Chine a inventé la poudre à canon, l'imprimerie, la boussole et le papier — les quatre inventions qui ont le plus transformé la civilisation humaine selon Francis Bacon (1620). Paradoxalement, aucune de ces inventions n'a conduit la Chine à coloniser le monde. La flotte de Zheng He (1405-1433) navigua jusqu'en Afrique avec des bateaux 5 fois plus grands que ceux de Colomb — 60 ans avant lui. Puis l'Empereur décida de stopper l'exploration et de brûler les bateaux. L'histoire aurait pu être différente.",
+  "historical_fact": "La Chine a inventé la poudre à canon, l'imprimerie, la boussole et le papier — les quatre inventions qui ont le plus transformé la civilisation humaine selon Francis Bacon. Paradoxalement, aucune de ces inventions n'a conduit la Chine à coloniser le monde. La flotte de Zheng He (1405-1433) navigua jusqu'en Afrique avec des navires gigantesques, bien avant les grandes expéditions européennes. Puis la cour impériale stoppa l'exploration et démantela la flotte. L'histoire aurait pu être différente.",
   "next_hint": "Phase III. Les empires qui n'ont jamais vraiment disparu. Commencez par celui qui a traversé l'histoire sous mille noms. Le prochain fragment est dans une langue qui n'existe que là où le désert rencontre la mer.",
   "lore": {
     "titre": "ALGORITHME IMPÉRIAL ET PROTOCOLE OMEGA",
