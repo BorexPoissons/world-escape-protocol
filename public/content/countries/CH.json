@@ -1,3 +1,4 @@
+```json
 {
   "mission_title": "OPÉRATION ALPES BLANCHES",
   "intro": "Agent, bienvenue en Suisse.\n\nDernier message reçu de l'Opérateur Zéro, il y a 72 heures : *« Le coffre de Genève contient la clé du Protocole Omega. Personne ne doit y accéder avant vous. »*\n\nVous êtes à Berne, capitale fédérale. Il fait -3°C. Les rues pavées brillent sous la neige fine. Votre couverture : délégué culturel auprès de la Confédération helvétique.\n\nLa Suisse n'est pas le pays paisible qu'elle prétend être. Neutre depuis 1815, elle abrite les coffres les plus secrets du monde, les traités les plus discrets de l'histoire mondiale, et une organisation que nous appelons en interne le **Cercle de Davos** — ni banque, ni gouvernement, ni armée. Quelque chose d'autre.\n\nVotre mission : récupérer le **Fragment de la Croix Alpine** dissimulé dans les archives de la Bibliothèque nationale suisse. Pour y accéder, vous devez prouver que vous maîtrisez l'histoire et les symboles de ce pays — les gardiens du coffre sont formés pour détecter les imposteurs.\n\nChaque bonne réponse déverrouille une section des archives. Chaque erreur éveille les soupçons.\n\nLe Cercle vous observe. Faites attention à chaque mot.",
@@ -6,13 +7,13 @@
       "question": "L'organisation humanitaire fondée à Genève en 1863 par Henry Dunant, qui a inspiré les Conventions de Genève, est :",
       "type": "culture",
       "choices": [
-        "La Croix-Rouge internationale (CICR)",
+        "Le Comité international de la Croix-Rouge (CICR)",
         "Médecins Sans Frontières",
         "Amnesty International",
         "L'Organisation Mondiale de la Santé"
       ],
-      "answer": "La Croix-Rouge internationale (CICR)",
-      "explanation": "Le CICR, fondé à Genève après la bataille de Solférino (1859), est le gardien des Conventions de Genève qui régissent le droit de la guerre. Henry Dunant en fut le fondateur — prix Nobel de la Paix en 1901."
+      "answer": "Le Comité international de la Croix-Rouge (CICR)",
+      "explanation": "Le CICR est fondé à Genève en 1863, à l'initiative d'Henry Dunant après la bataille de Solférino (1859). Il joue un rôle central dans l'histoire et l'application du droit international humanitaire, notamment autour des Conventions de Genève."
     },
     {
       "question": "La Suisse est une confédération de 26 cantons. Combien de langues nationales officielles reconnaît-elle ?",
@@ -24,31 +25,31 @@
         "5 langues (+ anglais officiel)"
       ],
       "answer": "4 langues (français, allemand, italien, romanche)",
-      "explanation": "La Suisse est l'un des rares pays à avoir 4 langues nationales officielles. Le romanche, héritage du latin des légions romaines, est parlé par moins de 1% de la population dans le canton des Grisons."
+      "explanation": "La Suisse reconnaît 4 langues nationales : allemand, français, italien et romanche. Le romanche est minoritaire et principalement parlé dans le canton des Grisons."
     },
     {
       "question": "La Garde Suisse Pontificale, seule armée de l'État du Vatican, recrute exclusivement des hommes de quelle nationalité, depuis 1506 ?",
       "type": "logique",
       "choices": [
-        "Suisses catholiques de moins de 30 ans",
+        "Citoyens suisses catholiques (avec critères stricts)",
         "Citoyens de tous les pays alpins",
         "Soldats de n'importe quelle nationalité catholique",
         "Uniquement des citoyens des cantons romands"
       ],
-      "answer": "Suisses catholiques de moins de 30 ans",
-      "explanation": "Depuis le pape Jules II en 1506, la Garde Suisse protège le Vatican. Ils doivent être suisses, catholiques, célibataires, de moins de 30 ans et mesurer au moins 174 cm. Leur uniforme renaissance fut dessiné par Michel-Ange — ou c'est du moins la légende."
+      "answer": "Citoyens suisses catholiques (avec critères stricts)",
+      "explanation": "Depuis 1506, la Garde Suisse recrute des citoyens suisses pratiquants catholiques. Des critères stricts s'ajoutent (âge, formation, taille, casier, etc.). La légende attribue parfois l'uniforme à Michel-Ange, mais c'est surtout un mythe."
     },
     {
-      "question": "En 2022, la Suisse a refusé par référendum populaire de rejoindre une organisation internationale. Laquelle ?",
+      "question": "En 1992, la Suisse a refusé par référendum populaire de rejoindre une structure européenne. Laquelle ?",
       "type": "observation",
       "choices": [
+        "L'Espace économique européen (EEE)",
         "L'Organisation des Nations Unies (ONU)",
         "L'OTAN (Alliance atlantique)",
-        "L'Union Européenne (UE)",
-        "L'Organisation Mondiale du Commerce"
+        "L'Organisation Mondiale du Commerce (OMC)"
       ],
-      "answer": "L'Union Européenne (UE)",
-      "explanation": "La Suisse a voté NON à l'adhésion à l'UE (et à l'EEE dès 1992). Elle maintient des accords bilatéraux spécifiques. Sa neutralité légendaire lui permet de rester en dehors de toute alliance militaire ou politique majeure — une position unique en Europe."
+      "answer": "L'Espace économique européen (EEE)",
+      "explanation": "Le 6 décembre 1992, la Suisse a rejeté l'adhésion à l'EEE. Depuis, elle privilégie une voie fondée sur des accords bilatéraux avec l'Union européenne, tout en conservant ses spécificités institutionnelles."
     }
   ],
   "false_hint": "Les archives les plus importantes sont gardées dans le sous-sol du Palais fédéral, accessible uniquement le mardi entre 14h et 15h30.",
@@ -66,11 +67,11 @@
     }
   },
   "final_fragment": "Fragment de la Croix Alpine — Niveau 1 obtenu.\n\nEn sécurisant ce fragment, vous avez décrypté les premières lignes du Protocole Omega : *« La neutralité n'est pas l'absence de choix — c'est le plus grand choix de tous. Le prochain fragment est gardé là où le soleil se lève sur l'Empire qui n'existe plus. »*\n\nVotre prochain objectif vous emmène en Orient.",
-  "historical_fact": "La Suisse n'a pas participé à une guerre internationale depuis plus de 500 ans. Pourtant, elle abrite à Genève le siège de 22 organisations internationales, dont le CICR, l'ONU Europe et l'Organisation Mondiale du Commerce. En 2020, 196 pays étrangers maintenaient des missions permanentes à Genève — plus qu'à New York.",
-  "next_hint": "Le soleil se lève à l'Est. Un empire disparu. Des cerisiers en fleur cachent des samouraïs de l'ombre. Cherchez le temple qui tient debout depuis 1400 ans sans un seul clou.",
+  "historical_fact": "La neutralité suisse est reconnue au Congrès de Vienne (1815). La Suisse n'a plus mené de guerre à l'étranger depuis des siècles, mais demeure un acteur diplomatique majeur : Genève accueille des institutions internationales et sert régulièrement de terrain de négociation discret entre puissances rivales.",
+  "next_hint": "Le soleil se lève à l'Est. Un empire disparu. Des cerisiers en fleur cachent des samouraïs de l'ombre. Cherchez le temple qui tient debout depuis environ 1400 ans, là où le bois défie le temps.",
   "lore": {
     "titre": "LA SUISSE ET LE CERCLE DE DAVOS",
-    "texte": "Chaque année à Davos, 3000 des personnes les plus puissantes du monde se réunissent officiellement pour 'améliorer l'état du monde'. Mais dans les sous-sols de l'Hôtel Belvedere, une réunion parallèle se tient depuis 1974. Ses participants ne portent aucun badge. Leurs décisions ne sont jamais publiées. Le Protocole Omega serait né lors de l'une de ces réunions.",
+    "texte": "Chaque année à Davos, des milliers de personnes influentes se réunissent officiellement pour 'améliorer l'état du monde'. Mais dans les sous-sols d'un hôtel ancien, une réunion parallèle se tiendrait depuis 1974. Ses participants ne portent aucun badge. Leurs décisions ne sont jamais publiées. Le Protocole Omega serait né lors de l'une de ces réunions.",
     "personnages": [
       {
         "nom": "L'Opérateur Zéro",
@@ -83,3 +84,4 @@
     ]
   }
 }
+```
