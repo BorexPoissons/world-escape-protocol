@@ -1,7 +1,6 @@
-```json
 {
   "mission_title": "OPÉRATION ALPES BLANCHES",
-  "intro": "Agent, bienvenue en Suisse.\n\nDernier message reçu de l'Opérateur Zéro, il y a 72 heures : *« Le coffre de Genève contient la clé du Protocole Omega. Personne ne doit y accéder avant vous. »*\n\nVous êtes à Berne, capitale fédérale. Il fait -3°C. Les rues pavées brillent sous la neige fine. Votre couverture : délégué culturel auprès de la Confédération helvétique.\n\nLa Suisse n'est pas le pays paisible qu'elle prétend être. Neutre depuis 1815, elle abrite les coffres les plus secrets du monde, les traités les plus discrets de l'histoire mondiale, et une organisation que nous appelons en interne le **Cercle de Davos** — ni banque, ni gouvernement, ni armée. Quelque chose d'autre.\n\nVotre mission : récupérer le **Fragment de la Croix Alpine** dissimulé dans les archives de la Bibliothèque nationale suisse. Pour y accéder, vous devez prouver que vous maîtrisez l'histoire et les symboles de ce pays — les gardiens du coffre sont formés pour détecter les imposteurs.\n\nChaque bonne réponse déverrouille une section des archives. Chaque erreur éveille les soupçons.\n\nLe Cercle vous observe. Faites attention à chaque mot.",
+  "intro": "Agent, bienvenue en Suisse.\n\nDernier message reçu de l'Opérateur Zéro, il y a 72 heures : *« Le coffre de Genève contient la clé du Protocole Omega. Personne ne doit y accéder avant vous. »*\n\nVous êtes à Berne, capitale fédérale. Il fait -3°C. Les rues pavées brillent sous la neige fine. Votre couverture : délégué culturel auprès de la Confédération helvétique.\n\nLa Suisse n'est pas le pays paisible qu'elle prétend être. Neutre depuis 1815, elle abrite des coffres parmi les plus secrets du monde, des traités parmi les plus discrets de l'histoire moderne, et une organisation que nous appelons en interne le **Cercle de Davos** — ni banque, ni gouvernement, ni armée. Quelque chose d'autre.\n\nVotre mission : récupérer le **Fragment de la Croix Alpine** dissimulé dans les archives de la Bibliothèque nationale suisse. Pour y accéder, vous devez prouver que vous maîtrisez l'histoire et les symboles de ce pays — les gardiens du coffre sont formés pour détecter les imposteurs.\n\nChaque bonne réponse déverrouille une section des archives. Chaque erreur éveille les soupçons.\n\nLe Cercle vous observe. Faites attention à chaque mot.",
   "enigmes": [
     {
       "question": "L'organisation humanitaire fondée à Genève en 1863 par Henry Dunant, qui a inspiré les Conventions de Genève, est :",
@@ -13,10 +12,10 @@
         "L'Organisation Mondiale de la Santé"
       ],
       "answer": "Le Comité international de la Croix-Rouge (CICR)",
-      "explanation": "Le CICR est fondé à Genève en 1863, à l'initiative d'Henry Dunant après la bataille de Solférino (1859). Il joue un rôle central dans l'histoire et l'application du droit international humanitaire, notamment autour des Conventions de Genève."
+      "explanation": "Le CICR est fondé à Genève en 1863 à l'initiative d'Henry Dunant, après la bataille de Solférino (1859). Il joue un rôle central dans l'élaboration et l'application du droit international humanitaire, notamment à travers les Conventions de Genève."
     },
     {
-      "question": "La Suisse est une confédération de 26 cantons. Combien de langues nationales officielles reconnaît-elle ?",
+      "question": "La Suisse est une confédération de 26 cantons. Combien de langues nationales reconnaît-elle ?",
       "type": "culture",
       "choices": [
         "2 langues (français, allemand)",
@@ -25,10 +24,10 @@
         "5 langues (+ anglais officiel)"
       ],
       "answer": "4 langues (français, allemand, italien, romanche)",
-      "explanation": "La Suisse reconnaît 4 langues nationales : allemand, français, italien et romanche. Le romanche est minoritaire et principalement parlé dans le canton des Grisons."
+      "explanation": "La Suisse reconnaît quatre langues nationales : allemand, français, italien et romanche. Le romanche est principalement parlé dans le canton des Grisons et possède un statut officiel limité au niveau fédéral."
     },
     {
-      "question": "La Garde Suisse Pontificale, seule armée de l'État du Vatican, recrute exclusivement des hommes de quelle nationalité, depuis 1506 ?",
+      "question": "La Garde Suisse Pontificale, seule armée de l'État du Vatican, recrute exclusivement des hommes de quelle nationalité depuis 1506 ?",
       "type": "logique",
       "choices": [
         "Citoyens suisses catholiques (avec critères stricts)",
@@ -37,7 +36,7 @@
         "Uniquement des citoyens des cantons romands"
       ],
       "answer": "Citoyens suisses catholiques (avec critères stricts)",
-      "explanation": "Depuis 1506, la Garde Suisse recrute des citoyens suisses pratiquants catholiques. Des critères stricts s'ajoutent (âge, formation, taille, casier, etc.). La légende attribue parfois l'uniforme à Michel-Ange, mais c'est surtout un mythe."
+      "explanation": "Fondée en 1506 sous le pape Jules II, la Garde Suisse pontificale recrute exclusivement des citoyens suisses catholiques pratiquants. Des critères stricts s'appliquent : formation militaire préalable en Suisse, âge, taille minimale, casier vierge, etc."
     },
     {
       "question": "En 1992, la Suisse a refusé par référendum populaire de rejoindre une structure européenne. Laquelle ?",
@@ -49,7 +48,7 @@
         "L'Organisation Mondiale du Commerce (OMC)"
       ],
       "answer": "L'Espace économique européen (EEE)",
-      "explanation": "Le 6 décembre 1992, la Suisse a rejeté l'adhésion à l'EEE. Depuis, elle privilégie une voie fondée sur des accords bilatéraux avec l'Union européenne, tout en conservant ses spécificités institutionnelles."
+      "explanation": "Le 6 décembre 1992, la Suisse a rejeté l'adhésion à l'EEE par référendum (50,3% de non). Depuis, elle privilégie une voie fondée sur des accords bilatéraux avec l'Union européenne tout en conservant son autonomie institutionnelle."
     }
   ],
   "false_hint": "Les archives les plus importantes sont gardées dans le sous-sol du Palais fédéral, accessible uniquement le mardi entre 14h et 15h30.",
@@ -67,11 +66,11 @@
     }
   },
   "final_fragment": "Fragment de la Croix Alpine — Niveau 1 obtenu.\n\nEn sécurisant ce fragment, vous avez décrypté les premières lignes du Protocole Omega : *« La neutralité n'est pas l'absence de choix — c'est le plus grand choix de tous. Le prochain fragment est gardé là où le soleil se lève sur l'Empire qui n'existe plus. »*\n\nVotre prochain objectif vous emmène en Orient.",
-  "historical_fact": "La neutralité suisse est reconnue au Congrès de Vienne (1815). La Suisse n'a plus mené de guerre à l'étranger depuis des siècles, mais demeure un acteur diplomatique majeur : Genève accueille des institutions internationales et sert régulièrement de terrain de négociation discret entre puissances rivales.",
+  "historical_fact": "La neutralité suisse est officiellement reconnue lors du Congrès de Vienne en 1815. Depuis le XVIe siècle, la Confédération n'a plus mené de guerre offensive en tant qu'État souverain, bien que des mercenaires suisses aient longtemps servi à l'étranger. Aujourd'hui, la Suisse demeure un acteur diplomatique majeur : Genève accueille de nombreuses organisations internationales et sert régulièrement de terrain de négociation discret entre puissances rivales.",
   "next_hint": "Le soleil se lève à l'Est. Un empire disparu. Des cerisiers en fleur cachent des samouraïs de l'ombre. Cherchez le temple qui tient debout depuis environ 1400 ans, là où le bois défie le temps.",
   "lore": {
     "titre": "LA SUISSE ET LE CERCLE DE DAVOS",
-    "texte": "Chaque année à Davos, des milliers de personnes influentes se réunissent officiellement pour 'améliorer l'état du monde'. Mais dans les sous-sols d'un hôtel ancien, une réunion parallèle se tiendrait depuis 1974. Ses participants ne portent aucun badge. Leurs décisions ne sont jamais publiées. Le Protocole Omega serait né lors de l'une de ces réunions.",
+    "texte": "Chaque année à Davos, des milliers de dirigeants se réunissent officiellement pour 'améliorer l'état du monde'. Mais dans les sous-sols d'un hôtel ancien, une réunion parallèle se tiendrait depuis les années 1970. Ses participants ne portent aucun badge. Leurs décisions ne sont jamais publiées. Le Protocole Omega serait né lors de l'une de ces réunions.",
     "personnages": [
       {
         "nom": "L'Opérateur Zéro",
@@ -84,4 +83,3 @@
     ]
   }
 }
-```
