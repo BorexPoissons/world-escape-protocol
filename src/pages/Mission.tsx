@@ -42,7 +42,7 @@ interface MissionData {
 type Phase = "loading" | "intro" | "enigme" | "moral" | "finale" | "failed";
 
 const DEMO_USER_ID = "demo-user-local";
-const PUZZLE_TIMER_SECONDS = 60;
+const PUZZLE_TIMER_SECONDS = 120;
 const MAX_ATTEMPTS_PER_PUZZLE = 2;
 
 const LIVES_HEART_COLORS = ["text-destructive", "text-destructive", "text-destructive"];
@@ -83,6 +83,10 @@ const Mission = () => {
   const [timeLeft, setTimeLeft] = useState(PUZZLE_TIMER_SECONDS);
   const [missionStartTime] = useState(() => Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Bonus time & life trade
+  const [bonusSeconds, setBonusSeconds] = useState(0);
+  const [lifeTradeUsed, setLifeTradeUsed] = useState(false);
 
   // Tracking
   const [usedHint, setUsedHint] = useState(false);
@@ -206,6 +210,8 @@ const Mission = () => {
       setScore(s => s + 1);
       setAnswerRevealed(true);
       if (timerRef.current) clearInterval(timerRef.current);
+      // Accumulate bonus seconds from remaining timer
+      setBonusSeconds(prev => prev + timeLeft);
     } else {
       const newAttempts = attemptsOnCurrent + 1;
       const newLives = lives - 1;
@@ -387,6 +393,8 @@ const Mission = () => {
     setAttemptsOnCurrent(0);
     setIgnoredFakeClue(true);
     setUsedHint(false);
+    setBonusSeconds(0);
+    setLifeTradeUsed(false);
     const lives = storyState.suspicion_level > 70 ? 2 : 3;
     setLives(lives);
     setMaxLives(lives);
@@ -451,6 +459,23 @@ const Mission = () => {
             )}
           </div>
         </div>
+
+        {/* Bonus bar — visible during enigme phase */}
+        {(phase === "enigme" || phase === "moral" || phase === "finale") && bonusSeconds > 0 && (
+          <div className="border-t px-4 py-1.5" style={{ borderColor: "hsl(var(--gold-glow) / 0.25)" }}>
+            <div className="max-w-4xl mx-auto flex items-center gap-3">
+              <span className="text-xs font-display tracking-wider flex-shrink-0" style={{ color: "hsl(var(--gold-glow))" }}>⚡ BONUS</span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ width: `${Math.min(100, (bonusSeconds / 120) * 100)}%`, backgroundColor: "hsl(var(--gold-glow))" }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
+              <span className="text-xs font-display flex-shrink-0 tabular-nums" style={{ color: "hsl(var(--gold-glow))" }}>{bonusSeconds}s</span>
+            </div>
+          </div>
+        )}
 
         {/* Suspicion warning banner */}
         {storyState.suspicion_level > 30 && phase === "enigme" && (
@@ -649,6 +674,29 @@ const Mission = () => {
                         <p className="text-xs text-muted-foreground mt-2 font-display">(cliquez pour analyser)</p>
                       </div>
                     </div>
+                  )}
+
+                  {/* Life trade button — 3 conditions */}
+                  {mission && lives === 1 && currentEnigme >= Math.floor(mission.enigmes.length / 2) && bonusSeconds >= 60 && !lifeTradeUsed && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                      <button
+                        onClick={() => {
+                          setLives(prev => prev + 1);
+                          setBonusSeconds(prev => prev - 60);
+                          setLifeTradeUsed(true);
+                          toast({ title: "💛 Vie récupérée !", description: "Votre rapidité vous a sauvé — 60s de bonus déduits." });
+                        }}
+                        className="w-full py-2.5 px-4 rounded-lg border font-display tracking-wider text-sm flex items-center justify-center gap-2 transition-all"
+                        style={{
+                          borderColor: "hsl(var(--gold-glow) / 0.5)",
+                          color: "hsl(var(--gold-glow))",
+                          backgroundColor: "hsl(var(--gold-glow) / 0.08)",
+                        }}
+                      >
+                        <Heart className="h-4 w-4" />
+                        ÉCHANGER 60s BONUS → +1 VIE
+                      </button>
+                    </motion.div>
                   )}
 
                   <Button onClick={nextStep} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90">
