@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, Home, ChevronRight } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -45,6 +45,14 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4">
+      {/* Home button */}
+      <div className="fixed top-4 left-4 z-50">
+        <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+          <Home className="h-4 w-4" />
+          <span className="text-xs font-display tracking-wider">ACCUEIL</span>
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -123,6 +131,21 @@ const Auth = () => {
             >
               {isLogin ? "Pas encore recruté ? S'enregistrer" : "Déjà agent ? S'identifier"}
             </button>
+          </div>
+
+          {/* Demo access */}
+          <div className="mt-6 pt-5 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground mb-3 font-display tracking-wider">MODE DÉCOUVERTE</p>
+            <Link to="/dashboard">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-muted-foreground hover:text-primary font-display tracking-wider text-sm border border-dashed border-border hover:border-primary/50"
+              >
+                EXPLORER SANS COMPTE
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </motion.div>
