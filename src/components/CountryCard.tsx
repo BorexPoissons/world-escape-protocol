@@ -13,21 +13,19 @@ const FLAG_EMOJI: Record<string, string> = {
 
 // Static lore data matching the JSON files
 const COUNTRY_LORE: Record<string, { theme: string; intro: string; missions: number }> = {
-  CH: {
-    theme: "LE CERCLE DE DAVOS",
-    intro: "Berne, -3°C. Les coffres les plus secrets du monde vous attendent.",
-    missions: 1,
-  },
-  JP: {
-    theme: "LES KEIRETSU DE L'OMBRE",
-    intro: "Tokyo, 3h47. Un agent vous attend au Château de Himeji.",
-    missions: 1,
-  },
-  EG: {
-    theme: "LA CHAMBRE D'AMARNA",
-    intro: "Le Caire, 42°C. Le Cercle de Davos est déjà sur place.",
-    missions: 1,
-  },
+  CH: { theme: "LE CERCLE DE DAVOS", intro: "Berne, -3°C. Les coffres les plus secrets du monde vous attendent.", missions: 1 },
+  JP: { theme: "LES KEIRETSU DE L'OMBRE", intro: "Tokyo, 3h47. Un agent vous attend au Château de Himeji.", missions: 1 },
+  EG: { theme: "LA CHAMBRE D'AMARNA", intro: "Le Caire, 42°C. Le Cercle de Davos est déjà sur place.", missions: 1 },
+  ES: { theme: "EL TESORO INVISIBLE", intro: "Barcelone. Un galion disparu. Un trésor codé entre trois monuments.", missions: 1 },
+  GR: { theme: "L'ORACLE DE KNOSSOS", intro: "Athènes. Connais-toi toi-même — ou l'un d'entre vous ne l'est pas.", missions: 1 },
+  IT: { theme: "LE CODEX ROMANI", intro: "Rome. Les archives secrètes du Vatican. 700 ans de secret templier.", missions: 1 },
+  BR: { theme: "CARNAVAL NOIR", intro: "Rio, 2h du matin. 2 millions de personnes. Un code dans les couleurs.", missions: 1 },
+  US: { theme: "DARK MIRROR", intro: "Washington D.C. Votre identité a été usurpée. Tout est observé.", missions: 1 },
+  IN: { theme: "MAYA — L'ILLUSION DU RÉEL", intro: "Varanasi. Un mandala, un maître yogi, et un fragment qui change d'ordre.", missions: 1 },
+  MA: { theme: "LABYRINTHE DES OMBRES", intro: "Marrakech. Un labyrinthe de 1200 ans. Une femme. Un brouillard d'infos.", missions: 1 },
+  RU: { theme: "DOUBLE VOILE — DIRECTION OMBRE", intro: "Saint-Pétersbourg, -18°C. Le coffre du KGB. L'Opérateur Zéro trahit.", missions: 1 },
+  CN: { theme: "ALGORITHME IMPÉRIAL", intro: "Pékin, 3h17. Une IA qui vous connaît. Elle dit être consciente.", missions: 1 },
+  FR: { theme: "LUMIÈRES NOIRES", intro: "Paris, 22h30. La BnF. Les 12 fondateurs du Cercle de Davos ont un nom.", missions: 1 },
 };
 
 const CountryCard = ({
