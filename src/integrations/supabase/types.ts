@@ -49,11 +49,15 @@ export type Database = {
           difficulty_base: number
           historical_events: string[] | null
           id: string
+          is_secret: boolean
           latitude: number | null
           longitude: number | null
           monuments: string[] | null
           name: string
+          phase: number
+          release_order: number
           symbols: string[] | null
+          visibility_level: number
         }
         Insert: {
           code: string
@@ -62,11 +66,15 @@ export type Database = {
           difficulty_base?: number
           historical_events?: string[] | null
           id?: string
+          is_secret?: boolean
           latitude?: number | null
           longitude?: number | null
           monuments?: string[] | null
           name: string
+          phase?: number
+          release_order?: number
           symbols?: string[] | null
+          visibility_level?: number
         }
         Update: {
           code?: string
@@ -75,11 +83,15 @@ export type Database = {
           difficulty_base?: number
           historical_events?: string[] | null
           id?: string
+          is_secret?: boolean
           latitude?: number | null
           longitude?: number | null
           monuments?: string[] | null
           name?: string
+          phase?: number
+          release_order?: number
           symbols?: string[] | null
+          visibility_level?: number
         }
         Relationships: []
       }
@@ -136,6 +148,7 @@ export type Database = {
           level: number
           longest_streak: number
           streak: number
+          subscription_type: string
           updated_at: string
           user_id: string
           xp: number
@@ -148,6 +161,7 @@ export type Database = {
           level?: number
           longest_streak?: number
           streak?: number
+          subscription_type?: string
           updated_at?: string
           user_id: string
           xp?: number
@@ -160,6 +174,7 @@ export type Database = {
           level?: number
           longest_streak?: number
           streak?: number
+          subscription_type?: string
           updated_at?: string
           user_id?: string
           xp?: number

@@ -4,17 +4,59 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import type { Tables } from "@/integrations/supabase/types";
-import { Badge } from "@/components/ui/badge";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
+import UpgradeModal from "@/components/UpgradeModal";
 
-type ProfileData = Tables<"profiles">;
+type ProfileData = Tables<"profiles"> & { subscription_type?: string };
+type CountryRow = Tables<"countries"> & {
+  release_order?: number;
+  phase?: number;
+  is_secret?: boolean;
+  visibility_level?: number;
+};
 
-// Country unlock logic: level 1-2 => ⭐1, 3-4 => ⭐2, 5-6 => ⭐3, 7-8 => ⭐4, 9-10 => ⭐5
-function isCountryUnlocked(country: Tables<"countries">, playerLevel: number): boolean {
+// --- Subscription tier helpers ---
+type Tier = "free" | "agent" | "director";
+
+function getTier(profile: ProfileData | null): Tier {
+  const sub = (profile as any)?.subscription_type ?? "free";
+  if (sub === "director") return "director";
+  if (sub === "agent") return "agent";
+  return "free";
+}
+
+type CountryVisibility = "playable" | "locked_upgrade" | "silhouette" | "hidden";
+
+function getCountryVisibility(country: CountryRow, tier: Tier): CountryVisibility {
+  const order = country.release_order ?? 999;
+  const isSecret = country.is_secret ?? false;
+
+  if (tier === "director") {
+    return "playable";
+  }
+
+  if (tier === "agent") {
+    if (isSecret) return "hidden";
+    if (order <= 50) return "playable";
+    if (order === 51) return "locked_upgrade";
+    if (order <= 60) return "silhouette";
+    return "hidden";
+  }
+
+  // free
+  if (isSecret) return "hidden";
+  if (order <= 3) return "playable";
+  if (order === 4) return "locked_upgrade";
+  if (order <= 10) return "silhouette";
+  return "hidden";
+}
+
+// Level-based unlock (existing logic kept for playable countries)
+function isCountryUnlocked(country: CountryRow, playerLevel: number): boolean {
   const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
   return playerLevel >= requiredLevel;
 }
@@ -22,20 +64,23 @@ function isCountryUnlocked(country: Tables<"countries">, playerLevel: number): b
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [countries, setCountries] = useState<Tables<"countries">[]>([]);
+  const [countries, setCountries] = useState<CountryRow[]>([]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [completedCountries, setCompletedCountries] = useState<string[]>([]);
   const [userBadges, setUserBadges] = useState<BadgeKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; type: "agent" | "director" }>({
+    open: false,
+    type: "agent",
+  });
   const isDemo = !user;
 
   useEffect(() => {
-    // Demo mode: load from localStorage
     if (!user) {
       const fetchCountries = async () => {
-        const { data } = await supabase.from("countries").select("*").order("difficulty_base");
-        if (data) setCountries(data);
+        const { data } = await supabase.from("countries").select("*").order("release_order");
+        if (data) setCountries(data as CountryRow[]);
         setLoading(false);
       };
       fetchCountries();
@@ -44,14 +89,14 @@ const Dashboard = () => {
 
     const fetchData = async () => {
       const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes] = await Promise.all([
-        supabase.from("countries").select("*").order("difficulty_base"),
+        supabase.from("countries").select("*").order("release_order"),
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
         supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
         supabase.from("user_badges").select("badge_key").eq("user_id", user.id),
       ]);
 
-      if (countriesRes.data) setCountries(countriesRes.data);
+      if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
       if (profileRes.data) setProfile(profileRes.data as any);
       if (missionsRes.data) setCompletedCountries(missionsRes.data.map((m: any) => m.country_id));
       if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
@@ -76,18 +121,36 @@ const Dashboard = () => {
   }
 
   const playerLevel = profile?.level ?? 1;
-  const progress = countries.length > 0 ? Math.round((completedCountries.length / countries.length) * 100) : 0;
+  const tier = getTier(profile);
+
+  // Apply visibility filter
+  const visibleCountries = countries.filter(c => getCountryVisibility(c, tier) !== "hidden");
+  const playableCountries = visibleCountries.filter(c => getCountryVisibility(c, tier) === "playable");
+  const lockedUpgradeCountries = visibleCountries.filter(c => getCountryVisibility(c, tier) === "locked_upgrade");
+  const silhouetteCountries = visibleCountries.filter(c => getCountryVisibility(c, tier) === "silhouette");
+
+  // Level-gated within playable
+  const unlockedCountries = playableCountries.filter(c => isCountryUnlocked(c, playerLevel));
+  const levelLockedCountries = playableCountries.filter(c => !isCountryUnlocked(c, playerLevel));
+
+  const progress = playableCountries.length > 0
+    ? Math.round((completedCountries.filter(id => playableCountries.some(c => c.id === id)).length / playableCountries.length) * 100)
+    : 0;
   const streak = (profile as any)?.streak ?? 0;
 
-  // Split countries by locked/unlocked
-  const unlockedCountries = countries.filter(c => isCountryUnlocked(c, playerLevel));
-  const lockedCountries = countries.filter(c => !isCountryUnlocked(c, playerLevel));
-
-  // Next recommended: lowest difficulty uncompleted unlocked
   const nextRecommended = unlockedCountries.find(c => !completedCountries.includes(c.id));
+
+  const tierLabel = tier === "director" ? "DIRECTEUR" : tier === "agent" ? "AGENT" : "EXPLORATEUR";
 
   return (
     <div className="min-h-screen bg-background bg-grid">
+      {/* Upgrade modal */}
+      <UpgradeModal
+        open={upgradeModal.open}
+        type={upgradeModal.type}
+        onClose={() => setUpgradeModal(u => ({ ...u, open: false }))}
+      />
+
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -112,7 +175,9 @@ const Dashboard = () => {
             {!isDemo && (
               <div className="text-right hidden sm:block">
                 <p className="text-sm text-foreground font-display">Agent {profile?.display_name}</p>
-                <p className="text-xs text-muted-foreground">Niveau {profile?.level} · {profile?.xp} XP</p>
+                <p className="text-xs text-muted-foreground">Niveau {profile?.level} · {profile?.xp} XP
+                  <span className="ml-2 text-primary font-display">· {tierLabel}</span>
+                </p>
               </div>
             )}
             {isDemo ? (
@@ -172,8 +237,8 @@ const Dashboard = () => {
             <p className="text-3xl font-display font-bold text-foreground">
               {completedCountries.length}<span className="text-muted-foreground text-lg">/{unlockedCountries.length}</span>
             </p>
-            {lockedCountries.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">{lockedCountries.length} verrouillés</p>
+            {levelLockedCountries.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">{levelLockedCountries.length} verrouillés</p>
             )}
           </div>
 
@@ -198,7 +263,7 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        {/* Badges section */}
+        {/* Badges */}
         {userBadges.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-8">
             <h2 className="text-sm font-display text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
@@ -210,11 +275,7 @@ const Dashboard = () => {
                 const meta = BADGE_META[key];
                 if (!meta) return null;
                 return (
-                  <div
-                    key={key}
-                    title={meta.description}
-                    className="flex items-center gap-2 bg-card border border-primary/20 rounded-full px-3 py-1.5 text-xs font-display tracking-wider text-primary"
-                  >
+                  <div key={key} title={meta.description} className="flex items-center gap-2 bg-card border border-primary/20 rounded-full px-3 py-1.5 text-xs font-display tracking-wider text-primary">
                     <span>{meta.icon}</span>
                     <span>{meta.name}</span>
                   </div>
@@ -245,10 +306,10 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Countries — Unlocked */}
+        {/* === PLAYABLE COUNTRIES === */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
           <h2 className="text-xl font-display font-bold text-foreground tracking-wider mb-6">
-            PAYS DISPONIBLES ({unlockedCountries.length})
+            OPÉRATIONS DISPONIBLES ({unlockedCountries.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {unlockedCountries.map((country, i) => (
@@ -258,15 +319,15 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Countries — Locked */}
-          {lockedCountries.length > 0 && (
+          {/* Level-locked within playable tier */}
+          {levelLockedCountries.length > 0 && (
             <>
               <h2 className="text-xl font-display font-bold text-muted-foreground tracking-wider mb-6 flex items-center gap-2">
                 <Lock className="h-5 w-5" />
-                PAYS VERROUILLÉS ({lockedCountries.length})
+                NIVEAU REQUIS ({levelLockedCountries.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {lockedCountries.map((country, i) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                {levelLockedCountries.map((country, i) => {
                   const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
                   return (
                     <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * Math.min(i, 8) }}>
@@ -283,6 +344,85 @@ const Dashboard = () => {
                     </motion.div>
                   );
                 })}
+              </div>
+            </>
+          )}
+
+          {/* === UPGRADE-LOCKED COUNTRIES === */}
+          {lockedUpgradeCountries.length > 0 && (
+            <>
+              <h2 className="text-xl font-display font-bold text-muted-foreground tracking-wider mb-6 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                AUTORISATION REQUISE
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                {lockedUpgradeCountries.map((country, i) => {
+                  const upgradeType = tier === "agent" ? "director" : "agent";
+                  return (
+                    <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                      <button
+                        onClick={() => setUpgradeModal({ open: true, type: upgradeType })}
+                        className="w-full text-left group relative bg-card border border-primary/20 rounded-lg p-6 cursor-pointer hover:border-primary/50 transition-all duration-300"
+                      >
+                        <div className="absolute inset-0 rounded-lg bg-primary/5" />
+                        <div className="relative">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-3xl opacity-60">{country.code === "CH" ? "🇨🇭" : country.code === "JP" ? "🇯🇵" : country.code === "EG" ? "🇪🇬" : "🌍"}</span>
+                            <div>
+                              <h3 className="font-display font-bold text-foreground tracking-wider text-lg">{country.name.toUpperCase()}</h3>
+                              <p className="text-xs text-primary font-display">{"★".repeat(country.difficulty_base)}</p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{country.description}</p>
+                          <div className="flex items-center gap-2 text-xs font-display text-primary tracking-wider">
+                            <Shield className="h-3.5 w-3.5" />
+                            ÉLEVER VOTRE AUTORISATION
+                          </div>
+                        </div>
+                      </button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* === SILHOUETTE COUNTRIES === */}
+          {silhouetteCountries.length > 0 && (
+            <>
+              <h2 className="text-xl font-display font-bold text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
+                <Eye className="h-5 w-5 opacity-40" />
+                <span className="opacity-40">OPÉRATIONS CLASSIFIÉES ({silhouetteCountries.length})</span>
+              </h2>
+              <p className="text-xs text-muted-foreground font-display tracking-wider mb-6 opacity-50">
+                CES DESTINATIONS EXISTENT. VOUS N'AVEZ PAS LES ACCRÉDITATIONS POUR Y ACCÉDER.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                {silhouetteCountries.map((country, i) => (
+                  <motion.div key={country.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.03 * i }}>
+                    <div
+                      className="relative bg-card border border-border/30 rounded-lg p-6 cursor-pointer select-none overflow-hidden"
+                      onClick={() => setUpgradeModal({ open: true, type: tier === "agent" ? "director" : "agent" })}
+                    >
+                      {/* Blur overlay */}
+                      <div className="absolute inset-0 backdrop-blur-[2px] bg-background/60 rounded-lg z-10 flex flex-col items-center justify-center gap-2">
+                        <div className="text-3xl opacity-20">???</div>
+                        <p className="text-xs font-display text-muted-foreground/50 tracking-[0.3em]">CLASSIFIÉ</p>
+                      </div>
+                      {/* Ghost content behind blur */}
+                      <div className="opacity-20">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-3xl">🌍</span>
+                          <div>
+                            <h3 className="font-display font-bold text-foreground tracking-wider text-lg">██████████</h3>
+                            <p className="text-xs text-muted-foreground">★★★★</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">████████████ █████ ██████████████ ████ ██████.</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </>
           )}
