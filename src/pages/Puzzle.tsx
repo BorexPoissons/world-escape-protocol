@@ -11,6 +11,7 @@ import {
   Sparkles,
   Globe,
   ChevronRight,
+  Home,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import WorldPathMap from "@/components/WorldPathMap";
@@ -60,7 +61,8 @@ const Puzzle = () => {
   const prevPiecesRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth");
+    // Auth check disabled for demo — re-enable in production
+    // if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   // Rotate inspiring messages
@@ -179,6 +181,11 @@ const Puzzle = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+              <Globe className="h-4 w-4" />
+              <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
+            </Link>
+            <span className="text-border">|</span>
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>

@@ -4,7 +4,8 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
+import { Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -30,7 +31,8 @@ const Admin = () => {
   const [editingCountryId, setEditingCountryId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth");
+    // Auth check disabled for demo — re-enable in production
+    // if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -160,6 +162,11 @@ const Admin = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-2">
+              <Home className="h-4 w-4" />
+              <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
+            </Link>
+            <span className="text-border mr-2">|</span>
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">ADMIN · W.E.P.</h1>
           </div>

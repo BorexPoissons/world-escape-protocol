@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Puzzle, MapPin, ArrowRight, Shield, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Puzzle, MapPin, ArrowRight, Shield, Sparkles, Eye, EyeOff, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 const MissionComplete = () => {
@@ -24,7 +25,8 @@ const MissionComplete = () => {
   const [missionFragment, setMissionFragment] = useState("");
 
   useEffect(() => {
-    if (!user) { navigate("/auth"); return; }
+    // Auth check disabled for demo — re-enable in production
+    // if (!user) { navigate("/auth"); return; }
     if (!countryId) { navigate("/dashboard"); return; }
 
     const load = async () => {
@@ -66,9 +68,16 @@ const MissionComplete = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="font-display text-sm text-primary tracking-wider">DEBRIEFING</span>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+              <Home className="h-4 w-4" />
+              <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
+            </Link>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="font-display text-sm text-primary tracking-wider">DEBRIEFING</span>
+            </div>
           </div>
           <span className="text-xs text-muted-foreground font-display tracking-wider">
             {country?.name?.toUpperCase()} — MISSION COMPLÈTE
