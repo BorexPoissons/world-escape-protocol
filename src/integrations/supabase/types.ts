@@ -248,6 +248,47 @@ export type Database = {
           },
         ]
       }
+      user_fragments: {
+        Row: {
+          country_id: string
+          created_at: string
+          fragment_index: number
+          id: string
+          is_placed: boolean
+          obtained_at: string
+          placed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          fragment_index?: number
+          id?: string
+          is_placed?: boolean
+          obtained_at?: string
+          placed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          fragment_index?: number
+          id?: string
+          is_placed?: boolean
+          obtained_at?: string
+          placed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_fragments_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

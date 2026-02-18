@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -11,21 +11,17 @@ import {
   Sparkles,
   Globe,
   ChevronRight,
-  Home,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import WorldPathMap from "@/components/WorldPathMap";
-import PuzzlePieceSVG from "@/components/PuzzlePieceSVG";
+import CinematicWorldMap, { COUNTRY_GEO } from "@/components/CinematicWorldMap";
+import type { MapCountry } from "@/components/CinematicWorldMap";
+import FragmentInventory from "@/components/FragmentInventory";
+import type { Fragment } from "@/components/FragmentInventory";
 import MissionDetailModal from "@/components/MissionDetailModal";
 
-const TOTAL_PIECES_PER_COUNTRY = 5;
-const TOTAL_COUNTRIES_IN_WORLD = 195;
-
-const FLAG_EMOJI: Record<string, string> = {
-  CH: "🇨🇭",
-  JP: "🇯🇵",
-  EG: "🇪🇬",
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MissionRecord {
   id: string;
@@ -40,8 +36,15 @@ interface CountryPuzzleData {
   unlockedPieces: number;
   totalPieces: number;
   missions: MissionRecord[];
-  isNew?: boolean;
 }
+
+type Tier = "free" | "agent" | "director";
+type CountryVisibility = "playable" | "locked_upgrade" | "silhouette" | "hidden";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TOTAL_PIECES_PER_COUNTRY = 5;
+const TOTAL_COUNTRIES_IN_WORLD = 195;
 
 const INSPIRING_MESSAGES = [
   "Chaque pièce vous rapproche de la vérité.",
@@ -51,19 +54,59 @@ const INSPIRING_MESSAGES = [
   "Chaque mission dévoile une part du mystère global.",
 ];
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getTier(subscriptionType: string): Tier {
+  if (subscriptionType === "director") return "director";
+  if (subscriptionType === "agent") return "agent";
+  return "free";
+}
+
+function getCountryVisibility(country: Tables<"countries">, tier: Tier): CountryVisibility {
+  const order = (country as any).release_order ?? 999;
+  const isSecret = (country as any).is_secret ?? false;
+
+  if (tier === "director") return "playable";
+
+  if (tier === "agent") {
+    if (isSecret) return "hidden";
+    if (order <= 50) return "playable";
+    if (order === 51) return "locked_upgrade";
+    if (order <= 60) return "silhouette";
+    return "hidden";
+  }
+
+  // free
+  if (isSecret) return "hidden";
+  if (order <= 3) return "playable";
+  if (order === 4) return "locked_upgrade";
+  if (order <= 10) return "silhouette";
+  return "hidden";
+}
+
+// ─── Snap notification ───────────────────────────────────────────────────────
+
+interface SnapNotif {
+  id: string;
+  countryName: string;
+  success: boolean;
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const Puzzle = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
   const [puzzleData, setPuzzleData] = useState<CountryPuzzleData[]>([]);
+  const [fragments, setFragments] = useState<Fragment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<CountryPuzzleData | null>(null);
   const [inspireIdx, setInspireIdx] = useState(0);
-  const prevPiecesRef = useRef<Record<string, number>>({});
-
-  useEffect(() => {
-    // Auth check disabled for demo — re-enable in production
-    // if (!authLoading && !user) navigate("/auth");
-  }, [user, authLoading, navigate]);
+  const [tier, setTier] = useState<Tier>("free");
+  const [draggingFragmentId, setDraggingFragmentId] = useState<string | null>(null);
+  const [placedCountryIds, setPlacedCountryIds] = useState<string[]>([]);
+  const [snapNotifs, setSnapNotifs] = useState<SnapNotif[]>([]);
 
   // Rotate inspiring messages
   useEffect(() => {
@@ -73,58 +116,71 @@ const Puzzle = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Real-time subscription for new puzzle pieces
+  // Real-time subscription
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel("puzzle-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "puzzle_pieces",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchData(true);
-        }
-      )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "puzzle_pieces", filter: `user_id=eq.${user.id}` }, () => fetchData())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_fragments", filter: `user_id=eq.${user.id}` }, () => fetchFragments())
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const fetchData = async (checkNew = false) => {
+  const fetchFragments = useCallback(async () => {
     if (!user) return;
+    const { data } = await supabase
+      .from("user_fragments" as any)
+      .select("*, countries(code, name)")
+      .eq("user_id", user.id);
 
-    const [countriesRes, piecesRes, missionsRes] = await Promise.all([
-      supabase.from("countries").select("*").order("difficulty_base"),
-      supabase
-        .from("puzzle_pieces")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("unlocked", true),
-      supabase
-        .from("missions")
-        .select("id, mission_title, score, completed_at, mission_data, country_id")
-        .eq("user_id", user.id)
-        .eq("completed", true)
-        .order("completed_at"),
+    if (data) {
+      const frags: Fragment[] = (data as any[]).map((f) => ({
+        id: f.id,
+        countryId: f.country_id,
+        countryCode: f.countries?.code ?? "??",
+        countryName: f.countries?.name ?? "Inconnu",
+        fragmentIndex: f.fragment_index,
+        isPlaced: f.is_placed,
+      }));
+      setFragments(frags);
+      setPlacedCountryIds(frags.filter(f => f.isPlaced).map(f => f.countryId));
+    }
+  }, [user]);
+
+  const fetchData = useCallback(async () => {
+    if (!user) {
+      // Demo mode — load countries only
+      const { data: countriesData } = await supabase.from("countries").select("*").order("release_order");
+      if (countriesData) {
+        setPuzzleData(countriesData.map(c => ({
+          country: c,
+          unlockedPieces: 0,
+          totalPieces: TOTAL_PIECES_PER_COUNTRY,
+          missions: [],
+        })));
+      }
+      setLoading(false);
+      return;
+    }
+
+    const [countriesRes, piecesRes, missionsRes, profileRes] = await Promise.all([
+      supabase.from("countries").select("*").order("release_order"),
+      supabase.from("puzzle_pieces").select("*").eq("user_id", user.id).eq("unlocked", true),
+      supabase.from("missions").select("id, mission_title, score, completed_at, mission_data, country_id").eq("user_id", user.id).eq("completed", true).order("completed_at"),
+      supabase.from("profiles").select("subscription_type").eq("user_id", user.id).single(),
     ]);
 
     const countries = countriesRes.data || [];
     const pieces = piecesRes.data || [];
     const missions = missionsRes.data || [];
 
+    // Set tier
+    const subType = (profileRes.data as any)?.subscription_type ?? "free";
+    setTier(getTier(subType));
+
     const data: CountryPuzzleData[] = countries.map((country) => {
       const countryPieces = pieces.filter((p) => p.country_id === country.id).length;
-      const prevCount = prevPiecesRef.current[country.id] ?? countryPieces;
-      const isNew = checkNew && countryPieces > prevCount;
-
       return {
         country,
         unlockedPieces: countryPieces,
@@ -138,47 +194,132 @@ const Puzzle = () => {
             completed_at: m.completed_at,
             mission_data: m.mission_data,
           })),
-        isNew,
       };
     });
 
-    // Update ref
-    const newRef: Record<string, number> = {};
-    data.forEach((d) => (newRef[d.country.id] = d.unlockedPieces));
-    prevPiecesRef.current = newRef;
-
     setPuzzleData(data);
     setLoading(false);
-  };
+    await fetchFragments();
+  }, [user, fetchFragments]);
 
   useEffect(() => {
-    if (!user) return;
     fetchData();
-  }, [user]);
+  }, [fetchData]);
+
+  // ─── Fragment drag & drop ─────────────────────────────────────────────────
+
+  const handleDropOnCountry = async (countryId: string) => {
+    if (!draggingFragmentId || !user) return;
+
+    const fragment = fragments.find(f => f.id === draggingFragmentId);
+    if (!fragment) return;
+
+    const isCorrect = fragment.countryId === countryId;
+
+    if (isCorrect) {
+      // Update DB
+      await supabase
+        .from("user_fragments" as any)
+        .update({ is_placed: true, placed_at: new Date().toISOString() })
+        .eq("id", draggingFragmentId);
+
+      setFragments(prev => prev.map(f => f.id === draggingFragmentId ? { ...f, isPlaced: true } : f));
+      setPlacedCountryIds(prev => [...prev, countryId]);
+
+      // Snap notification
+      const notifId = crypto.randomUUID();
+      setSnapNotifs(prev => [...prev, { id: notifId, countryName: fragment.countryName, success: true }]);
+      setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 3000);
+    } else {
+      // Wrong country — error notification
+      const notifId = crypto.randomUUID();
+      setSnapNotifs(prev => [...prev, { id: notifId, countryName: fragment.countryName, success: false }]);
+      setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 2500);
+    }
+
+    setDraggingFragmentId(null);
+  };
+
+  // ─── Derived data ─────────────────────────────────────────────────────────
 
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-primary font-display animate-pulse-gold text-xl tracking-widest">
-          ASSEMBLAGE DU PUZZLE...
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-primary font-display animate-pulse text-sm tracking-widest">
+            ASSEMBLAGE DU PUZZLE MONDIAL...
+          </p>
         </div>
       </div>
     );
   }
 
   const totalUnlocked = puzzleData.reduce((sum, d) => sum + d.unlockedPieces, 0);
-  // Progress on 195 countries (current countries contribute their piece ratio)
   const globalProgressOn195 = Math.round((totalUnlocked / (TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY)) * 100 * 10) / 10;
-  const totalPiecesUnlocked = totalUnlocked;
 
-  // Next country to unlock
-  const nextCountry = puzzleData.find((d) => d.unlockedPieces === 0);
-  const continueCountry = puzzleData.find((d) => d.unlockedPieces > 0 && d.unlockedPieces < d.totalPieces) || nextCountry;
+  // Build map countries
+  const mapCountries: MapCountry[] = puzzleData
+    .filter(d => getCountryVisibility(d.country, tier) !== "hidden")
+    .map(d => {
+      const geo = COUNTRY_GEO[d.country.code] ?? { x: 50, y: 50 };
+      return {
+        id: d.country.id,
+        name: d.country.name,
+        code: d.country.code,
+        unlockedPieces: d.unlockedPieces,
+        totalPieces: d.totalPieces,
+        visibility: getCountryVisibility(d.country, tier),
+        x: geo.x,
+        y: geo.y,
+      };
+    });
+
+  const continueCountry = puzzleData.find(d => {
+    const vis = getCountryVisibility(d.country, tier);
+    return vis === "playable" && d.unlockedPieces < d.totalPieces;
+  });
+
+  const handleCountryClick = (mapCountry: MapCountry) => {
+    const data = puzzleData.find(d => d.country.id === mapCountry.id);
+    if (data) setSelectedCountry(data);
+  };
 
   return (
-    <div className="min-h-screen bg-background bg-grid">
+    <div className="min-h-screen bg-background">
+      {/* Snap notifications */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+        <AnimatePresence>
+          {snapNotifs.map(notif => (
+            <motion.div
+              key={notif.id}
+              initial={{ opacity: 0, x: 60, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 60, scale: 0.8 }}
+              className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-display tracking-wider shadow-lg ${
+                notif.success
+                  ? "bg-card border-primary/50 text-primary"
+                  : "bg-card border-destructive/50 text-destructive"
+              }`}
+            >
+              {notif.success ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  FRAGMENT INTÉGRÉ — {notif.countryName.toUpperCase()}
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4" />
+                  FRAGMENT REJETÉ — MAUVAIS PAYS
+                </>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Header */}
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
@@ -189,12 +330,40 @@ const Puzzle = () => {
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>
+
+          {/* Global stats */}
+          <div className="hidden md:flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-xs font-display tracking-widest text-muted-foreground">PROGRESSION</p>
+              <p className="text-sm font-display font-bold text-primary">{globalProgressOn195}%</p>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div className="text-right">
+              <p className="text-xs font-display tracking-widest text-muted-foreground">FRAGMENTS</p>
+              <p className="text-sm font-display font-bold text-foreground">
+                {totalUnlocked}/{TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY}
+              </p>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div className="text-right">
+              <p className="text-xs font-display tracking-widest text-muted-foreground">TIER</p>
+              <p
+                className="text-sm font-display font-bold"
+                style={{
+                  color: tier === "director"
+                    ? "hsl(280 60% 65%)"
+                    : tier === "agent"
+                    ? "hsl(220 80% 65%)"
+                    : "hsl(var(--muted-foreground))",
+                }}
+              >
+                {tier === "director" ? "DIRECTEUR" : tier === "agent" ? "AGENT" : "EXPLORATEUR"}
+              </p>
+            </div>
+          </div>
+
           <Link to="/dashboard">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground font-display tracking-wider"
-            >
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground font-display tracking-wider">
               <ArrowLeft className="h-4 w-4 mr-2" />
               RETOUR
             </Button>
@@ -202,21 +371,19 @@ const Puzzle = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Globe className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-display font-bold text-foreground tracking-widest">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Globe className="h-7 w-7 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground tracking-widest">
               PUZZLE MONDIAL
             </h1>
           </div>
-
-          {/* Rotating inspiring message */}
           <AnimatePresence mode="wait">
             <motion.p
               key={inspireIdx}
@@ -224,138 +391,122 @@ const Puzzle = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.5 }}
-              className="text-muted-foreground text-sm font-display tracking-wider italic max-w-md mx-auto"
+              className="text-muted-foreground text-sm font-display tracking-wider italic"
             >
               "{INSPIRING_MESSAGES[inspireIdx]}"
             </motion.p>
           </AnimatePresence>
         </motion.div>
 
-        {/* Global Progress — 195 countries */}
+        {/* Progress bar */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="max-w-2xl mx-auto bg-card border border-border rounded-xl p-6"
-          style={{ boxShadow: "0 0 20px hsl(40 80% 55% / 0.06)" }}
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="max-w-2xl mx-auto"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs font-display tracking-widest text-muted-foreground mb-0.5">
-                PROGRESSION MONDIALE
-              </p>
-              <p className="text-2xl font-display font-bold text-primary">
-                {globalProgressOn195}%
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-display tracking-widest text-muted-foreground mb-0.5">
-                PIÈCES OBTENUES
-              </p>
-              <p className="text-xl font-display font-bold text-foreground">
-                {totalPiecesUnlocked}
-                <span className="text-muted-foreground text-sm font-normal">
-                  /{TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY}
-                </span>
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-1.5 text-xs font-display text-muted-foreground tracking-wider">
+            <span>PROGRESSION MONDIALE</span>
+            <span>{globalProgressOn195}% — {puzzleData.filter(d => d.unlockedPieces > 0).length} PAYS ACTIFS</span>
           </div>
-
-          {/* Progress bar */}
-          <div className="h-3 bg-secondary rounded-full overflow-hidden border border-border">
+          <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
             <motion.div
               className="h-full rounded-full relative overflow-hidden"
-              style={{
-                background:
-                  "linear-gradient(90deg, hsl(40 80% 55%), hsl(40 60% 40%))",
-              }}
+              style={{ background: "linear-gradient(90deg, hsl(40 80% 55%), hsl(40 60% 40%))" }}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(globalProgressOn195, 100)}%` }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
             >
-              {/* Shimmer */}
               <motion.div
                 className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent 0%, hsl(40 90% 80% / 0.4) 50%, transparent 100%)",
-                }}
+                style={{ background: "linear-gradient(90deg, transparent 0%, hsl(40 90% 80% / 0.4) 50%, transparent 100%)" }}
                 animate={{ x: ["-100%", "200%"] }}
                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
               />
             </motion.div>
           </div>
-
-          <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground font-display tracking-wider">
-            <span>PAYS ACTIFS: {puzzleData.length}/{TOTAL_COUNTRIES_IN_WORLD}</span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-primary" />
-              {puzzleData.filter((d) => d.unlockedPieces > 0).length} PAYS DÉBLOQUÉS
-            </span>
-          </div>
         </motion.div>
 
-        {/* World path map */}
-        <WorldPathMap
-          countries={puzzleData.map((d) => ({
-            id: d.country.id,
-            name: d.country.name,
-            code: d.country.code,
-            unlocked: d.unlockedPieces > 0,
-          }))}
-        />
+        {/* ═══ CINEMATIC WORLD MAP ═══ */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <CinematicWorldMap
+            countries={mapCountries}
+            draggingFragmentId={draggingFragmentId}
+            placedCountryIds={placedCountryIds}
+            onDropOnCountry={handleDropOnCountry}
+            onCountryClick={handleCountryClick}
+          />
+        </motion.div>
 
-        {/* Countries grid */}
-        <div className="space-y-8">
-          <h2 className="font-display text-lg text-muted-foreground tracking-widest text-center">
-            — PAYS DISPONIBLES —
-          </h2>
+        {/* ═══ FRAGMENT INVENTORY ═══ */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <FragmentInventory
+            fragments={fragments}
+            draggingId={draggingFragmentId}
+            onDragStart={(id) => setDraggingFragmentId(id)}
+            onDragEnd={() => setDraggingFragmentId(null)}
+          />
+        </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {puzzleData.map((data, i) => (
-              <motion.div
-                key={data.country.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * i }}
-              >
-                <CountryPuzzleCard
-                  data={data}
-                  onSelect={() => setSelectedCountry(data)}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA — Continue Adventure */}
+        {/* ═══ CONTINUE ADVENTURE CTA ═══ */}
         {continueCountry && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.6 }}
             className="text-center pb-8"
           >
-            <div className="inline-block bg-card border border-primary/30 rounded-xl px-8 py-6"
-              style={{ boxShadow: "0 0 30px hsl(40 80% 55% / 0.1)" }}
+            <div
+              className="inline-block bg-card border border-primary/30 rounded-xl px-8 py-6"
+              style={{ boxShadow: "0 0 40px hsl(40 80% 55% / 0.08)" }}
             >
-              <Compass className="h-10 w-10 text-primary mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-display tracking-wider mb-4">
-                VOTRE PROCHAINE DESTINATION
+              <Compass className="h-8 w-8 text-primary mx-auto mb-3" />
+              <p className="text-xs text-muted-foreground font-display tracking-widest mb-2">
+                PROCHAINE DESTINATION
               </p>
-              <p className="text-lg font-display font-bold text-foreground mb-4">
-                {FLAG_EMOJI[continueCountry.country.code] || "🌍"}{" "}
+              <p className="text-lg font-display font-bold text-foreground mb-1">
                 {continueCountry.country.name.toUpperCase()}
               </p>
+              <p className="text-xs text-muted-foreground font-display mb-4">
+                {continueCountry.unlockedPieces}/{continueCountry.totalPieces} PIÈCES OBTENUES
+              </p>
               <Link to={`/mission/${continueCountry.country.id}`}>
-                <Button className="font-display tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-5 text-base gap-2">
+                <Button className="font-display tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-6">
                   CONTINUER L'AVENTURE
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </motion.div>
         )}
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-6 pb-4 text-xs font-display tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            ACTIF
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full border border-primary/50" />
+            EN COURS
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-secondary border border-border" />
+            VERROUILLÉ
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full opacity-50" style={{ background: "hsl(280 60% 30%)", border: "1px solid hsl(280 60% 40%)" }} />
+            OMEGA — DIRECTEUR
+          </div>
+        </div>
       </main>
 
       {/* Mission detail modal */}
@@ -369,106 +520,6 @@ const Puzzle = () => {
         />
       )}
     </div>
-  );
-};
-
-// ─── Country Puzzle Card ───────────────────────────────────────────────
-interface CountryPuzzleCardProps {
-  data: CountryPuzzleData;
-  onSelect: () => void;
-}
-
-const CountryPuzzleCard = ({ data, onSelect }: CountryPuzzleCardProps) => {
-  const { country, unlockedPieces, totalPieces, isNew } = data;
-  const isComplete = unlockedPieces >= totalPieces;
-  const hasAny = unlockedPieces > 0;
-
-  return (
-    <motion.div
-      className={`relative bg-card border rounded-xl overflow-hidden transition-all duration-300 cursor-pointer group ${
-        isComplete
-          ? "border-primary/50"
-          : hasAny
-          ? "border-primary/25"
-          : "border-border"
-      }`}
-      style={
-        isComplete
-          ? { boxShadow: "0 0 20px hsl(40 80% 55% / 0.15)" }
-          : undefined
-      }
-      onClick={onSelect}
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    >
-      {/* New badge */}
-      {isNew && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-xs font-display tracking-wider px-2 py-0.5 rounded-full"
-        >
-          NOUVEAU !
-        </motion.div>
-      )}
-
-      {/* Header */}
-      <div className="p-5 pb-3 flex items-center gap-3">
-        <motion.span
-          className="text-3xl"
-          animate={isNew ? { scale: [1, 1.3, 1] } : {}}
-          transition={{ repeat: 2, duration: 0.4 }}
-        >
-          {FLAG_EMOJI[country.code] || "🏳️"}
-        </motion.span>
-        <div className="flex-1">
-          <h3 className="font-display font-bold text-foreground tracking-wider group-hover:text-primary transition-colors">
-            {country.name.toUpperCase()}
-          </h3>
-          <p className="text-xs text-muted-foreground font-display">
-            {unlockedPieces}/{totalPieces} PIÈCES
-          </p>
-        </div>
-        {isComplete && (
-          <span className="text-xs font-display text-primary tracking-wider bg-primary/10 px-2 py-0.5 rounded">
-            COMPLET
-          </span>
-        )}
-      </div>
-
-      {/* Puzzle Pieces SVG Grid */}
-      <div className="px-4 pb-2">
-        <div className="flex flex-wrap gap-0.5 justify-center">
-          {Array.from({ length: totalPieces }).map((_, idx) => (
-            <PuzzlePieceSVG
-              key={idx}
-              index={idx}
-              total={totalPieces}
-              unlocked={idx < unlockedPieces}
-              isNew={isNew && idx === unlockedPieces - 1}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="px-5 pb-3">
-        <div className="h-1 bg-secondary rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-primary rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${(unlockedPieces / totalPieces) * 100}%` }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-          />
-        </div>
-      </div>
-
-      {/* Footer link */}
-      <div className="border-t border-border px-5 py-3 flex items-center justify-center gap-2 text-sm font-display tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
-        {isComplete ? "VOIR LES DÉTAILS" : hasAny ? "CONTINUER" : "DÉCOUVRIR"}
-        <ChevronRight className="h-3.5 w-3.5" />
-      </div>
-    </motion.div>
   );
 };
 

@@ -1,0 +1,40 @@
+{
+  "code": "JP",
+  "name": "Japon",
+  "flag": "🇯🇵",
+  "phase": 1,
+  "difficulty": 1,
+  "narrative_intro": "Agent, le Japon n'est pas ce qu'il semble être. Derrière la technologie et les traditions ancestrales se cache un réseau d'influence mondial.",
+  "missions": [
+    {
+      "id": "jp-001",
+      "title": "OPÉRATION SOLEIL LEVANT",
+      "type": "quiz",
+      "questions": [
+        {
+          "id": "q1",
+          "text": "Quel château médiéval japonais est surnommé 'Château du Héron Blanc' ?",
+          "options": ["Château d'Osaka", "Château de Himeji", "Château de Nagoya", "Château de Matsumoto"],
+          "correct": 1,
+          "explanation": "Le Château de Himeji (Shirasagijo) est classé au patrimoine mondial de l'UNESCO."
+        },
+        {
+          "id": "q2",
+          "text": "Quelle est la signification du mont Fuji dans la culture japonaise ?",
+          "options": ["Lieu de guerre historique", "Montagne sacrée et symbole national", "Source principale d'eau potable", "Premier site industriel"],
+          "correct": 1,
+          "explanation": "Le mont Fuji est une montagne sacrée pour les religions Shinto et Bouddhiste, symbole du Japon."
+        },
+        {
+          "id": "q3",
+          "text": "Qu'est-ce que le 'Bushido' ?",
+          "options": ["Art culinaire japonais", "Code d'honneur des samouraïs", "Technique de méditation", "Style architectural"],
+          "correct": 1,
+          "explanation": "Le Bushido est le code moral des guerriers samouraïs, valorisant l'honneur, la loyauté et la discipline."
+        }
+      ]
+    }
+  ],
+  "fragment_reward_text": "Fragment du Soleil Levant obtenu. Les archives secrètes du Japon révèlent une organisation plus ancienne que l'état lui-même...",
+  "lore": "Des sociétés secrètes opèrent depuis des siècles dans l'ombre des grandes corporations japonaises."
+}
