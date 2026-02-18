@@ -18,6 +18,7 @@ interface Enigme {
   type: string;
   choices: string[];
   answer: string;
+  explanation?: string;
 }
 
 interface MoralChoice {
@@ -135,6 +136,7 @@ const Mission = () => {
         body: {
           country: countryData,
           player_level: profileData?.level || 1,
+          base_url: window.location.origin,
           ...story,
         },
       });
@@ -614,12 +616,29 @@ const Mission = () => {
 
               {answerRevealed && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+
+                  {/* Explanation — shown for static content countries */}
+                  {mission.enigmes[currentEnigme].explanation && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-card border border-primary/20 rounded-lg p-4 flex items-start gap-3"
+                    >
+                      <BookOpen className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-primary font-display tracking-wider mb-1.5">ANALYSE HISTORIQUE</p>
+                        <p className="text-sm text-foreground leading-relaxed">{mission.enigmes[currentEnigme].explanation}</p>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* False hint after enigme 2 */}
                   {currentEnigme === 1 && (
                     <div
                       className="bg-card border border-classified/30 rounded-lg p-4 flex items-start gap-3 cursor-pointer hover:border-classified/60 transition-all"
                       onClick={() => {
-                        setIgnoredFakeClue(false); // player interacted with the fake clue
+                        setIgnoredFakeClue(false);
                         toast({ title: "🚨 Faux indice détecté", description: "Ce message est une désinformation. Ne vous laissez pas piéger !", variant: "destructive" });
                       }}
                     >
@@ -631,6 +650,7 @@ const Mission = () => {
                       </div>
                     </div>
                   )}
+
                   <Button onClick={nextStep} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90">
                     {currentEnigme < mission.enigmes.length - 1 ? "ÉNIGME SUIVANTE →" : "CHOIX MORAL"}
                   </Button>

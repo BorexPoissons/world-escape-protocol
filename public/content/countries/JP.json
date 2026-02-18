@@ -1,40 +1,85 @@
 {
-  "code": "JP",
-  "name": "Japon",
-  "flag": "🇯🇵",
-  "phase": 1,
-  "difficulty": 1,
-  "narrative_intro": "Agent, le Japon n'est pas ce qu'il semble être. Derrière la technologie et les traditions ancestrales se cache un réseau d'influence mondial.",
-  "missions": [
+  "mission_title": "OPÉRATION SOLEIL LEVANT",
+  "intro": "Agent, vous atterrissez à Tokyo à 3h47 du matin.\n\nLe message codé reçu hier dit : *« L'homme au château rouge sait où est caché le second fragment. Il parle uniquement à ceux qui comprennent le Bushido. »*\n\nVotre couverture : professeur d'histoire médiévale, en visite d'échange universitaire à l'Université de Tokyo.\n\nLe Japon est une paradoxe vivant. La nation la plus technologiquement avancée du monde coexiste avec des temples millénaires, des codes d'honneur ancestraux et des organisations secrètes qui opèrent dans l'ombre des grandes corporations — les **Keiretsu de l'Ombre**, réseaux d'influence qui controlent bien plus que l'économie.\n\nVotre mission : atteindre le Château de Himeji avant l'aube du 4ème jour, récupérer le **Fragment du Soleil Levant** dissimulé sous la 7ème lame du plancher du donjon principal. Le contact local s'appelle Kenji. Il ne vous adressera la parole que si vous démontrez une connaissance parfaite de l'histoire japonaise.\n\nLe Cercle de Davos a un agent à Tokyo. Vous l'avez peut-être déjà croisé.\n\nFaites confiance à votre instinct. Et n'oubliez pas : au Japon, le silence est souvent la réponse la plus éloquente.",
+  "enigmes": [
     {
-      "id": "jp-001",
-      "title": "OPÉRATION SOLEIL LEVANT",
-      "type": "quiz",
-      "questions": [
-        {
-          "id": "q1",
-          "text": "Quel château médiéval japonais est surnommé 'Château du Héron Blanc' ?",
-          "options": ["Château d'Osaka", "Château de Himeji", "Château de Nagoya", "Château de Matsumoto"],
-          "correct": 1,
-          "explanation": "Le Château de Himeji (Shirasagijo) est classé au patrimoine mondial de l'UNESCO."
-        },
-        {
-          "id": "q2",
-          "text": "Quelle est la signification du mont Fuji dans la culture japonaise ?",
-          "options": ["Lieu de guerre historique", "Montagne sacrée et symbole national", "Source principale d'eau potable", "Premier site industriel"],
-          "correct": 1,
-          "explanation": "Le mont Fuji est une montagne sacrée pour les religions Shinto et Bouddhiste, symbole du Japon."
-        },
-        {
-          "id": "q3",
-          "text": "Qu'est-ce que le 'Bushido' ?",
-          "options": ["Art culinaire japonais", "Code d'honneur des samouraïs", "Technique de méditation", "Style architectural"],
-          "correct": 1,
-          "explanation": "Le Bushido est le code moral des guerriers samouraïs, valorisant l'honneur, la loyauté et la discipline."
-        }
-      ]
+      "question": "Le Château de Himeji, surnommé 'Château du Héron Blanc', est classé au patrimoine mondial de l'UNESCO. En quelle période a-t-il été construit dans sa forme actuelle ?",
+      "type": "culture",
+      "choices": [
+        "Période Edo, vers 1609",
+        "Période Meiji, vers 1871",
+        "Période Nara, vers 710",
+        "Période Jomon, vers 300 avant J.-C."
+      ],
+      "answer": "Période Edo, vers 1609",
+      "explanation": "Himeji-jo a été reconstruit dans sa forme actuelle par le daimyo Ikeda Terumasa vers 1609. Il est remarquable car il est l'un des rares châteaux japonais à avoir survécu intact aux guerres et à la Seconde Guerre mondiale. Sa structure complexe de 83 bâtiments était conçue pour désorienter les envahisseurs."
+    },
+    {
+      "question": "Le Bushido — le code des samouraïs — repose sur 8 vertus fondamentales. Laquelle n'en fait PAS partie ?",
+      "type": "logique",
+      "choices": [
+        "Gi (Justice / Rectitude)",
+        "Yu (Courage héroïque)",
+        "Jin (Bienveillance / Compassion)",
+        "Fuku (Richesse personnelle)"
+      ],
+      "answer": "Fuku (Richesse personnelle)",
+      "explanation": "Les 8 vertus du Bushido sont : Gi (rectitude), Yu (courage), Jin (bienveillance), Rei (respect), Makoto (honnêteté), Meiyo (honneur), Chugi (loyauté), et Chi (sagesse). La richesse personnelle — Fuku — est antithétique au code du guerrier, qui doit se détacher des biens matériels."
+    },
+    {
+      "question": "En 1853, le commodore américain Matthew Perry force le Japon à s'ouvrir au commerce occidental après 250 ans d'isolement. Comment appelle-t-on cette période d'isolement volontaire ?",
+      "type": "culture",
+      "choices": [
+        "Le Sakoku (pays enchaîné)",
+        "Le Meiji (ère lumineuse)",
+        "Le Shogunato final",
+        "L'Edo fermé"
+      ],
+      "answer": "Le Sakoku (pays enchaîné)",
+      "explanation": "Le Sakoku (1633-1853) était une politique d'isolement strict : les étrangers ne pouvaient pas entrer, les Japonais ne pouvaient pas sortir, sous peine de mort. Seuls les Chinois et les Hollandais avaient accès à un comptoir commercial à Dejima (Nagasaki). Cette politique a préservé la culture japonaise tout en l'isolant des révolutions industrielles mondiales."
+    },
+    {
+      "question": "Le mont Fuji est un stratovolcan actif. Quelle est la signification de son ascension rituelle dans la tradition Shinto ?",
+      "type": "observation",
+      "choices": [
+        "Une purification spirituelle — chaque grimpeur nettoie ses péchés de l'année",
+        "Un acte de soumission aux esprits de la montagne",
+        "Un rite de passage pour obtenir le statut de samouraï",
+        "Une pratique météorologique pour prédire les récoltes"
+      ],
+      "answer": "Une purification spirituelle — chaque grimpeur nettoie ses péchés de l'année",
+      "explanation": "Pour les bouddhistes et shintoïstes, Fuji-san est une montagne sacrée (shintai — corps d'une divinité). Son ascension est un pèlerinage de purification. Le proverbe dit : 'Celui qui ne monte pas le Fuji une fois est un fou. Celui qui le monte deux fois est un double fou.' Environ 300 000 personnes le grimpent chaque été."
     }
   ],
-  "fragment_reward_text": "Fragment du Soleil Levant obtenu. Les archives secrètes du Japon révèlent une organisation plus ancienne que l'état lui-même...",
-  "lore": "Des sociétés secrètes opèrent depuis des siècles dans l'ombre des grandes corporations japonaises."
+  "false_hint": "Le fragment est caché dans la tour d'observation du Château d'Osaka, accessible uniquement lors de la pleine lune.",
+  "moral_choice": {
+    "description": "Kenji vous remet le Fragment du Soleil Levant. Mais il vous apprend quelque chose de bouleversant : son maître — le vrai gardien du fragment — a été assassiné par l'agent du Cercle il y a 3 jours. Kenji veut de la vengeance. Il demande votre aide pour piéger l'agent du Cercle cette nuit même. Mais votre mission est de rentrer avec le fragment.",
+    "option_a": "Vous aidez Kenji à tendre l'embuscade — vous neutralisez l'agent du Cercle ensemble.",
+    "option_b": "Vous refusez. La mission prime. Vous disparaissez dans la nuit avec le fragment.",
+    "impact_a": {
+      "trust": 5,
+      "suspicion": 10
+    },
+    "impact_b": {
+      "trust": -5,
+      "suspicion": -5
+    }
+  },
+  "final_fragment": "Fragment du Soleil Levant — Niveau 1 obtenu.\n\nLe fragment révèle une gravure microscopique, visible uniquement sous lumière UV : *« Deux fragments réunis forment la première coordonnée. Le troisième est gardé par les sables qui ont vu naître l'écriture. Remontez le Nil vers ses sources. »*\n\nL'intrigue s'épaissit. L'Égypte vous attend.",
+  "historical_fact": "Le Japon est le pays avec le plus grand nombre d'entreprises centenaires au monde — plus de 33 000 sociétés fondées il y a plus de 100 ans, dont certaines ont plus de 1 000 ans. Le plus ancien hôtel au monde encore en activité est le Nishiyama Onsen Keiunkan, fondé en 705 après J.-C. Cette culture de la longévité, appelée 'Shinise', est profondément ancrée dans la philosophie japonaise.",
+  "next_hint": "Le troisième fragment repose là où les dieux avaient des têtes d'animaux et où des rois furent enterrés avec leurs trésors. Cherchez le pharaon qui a osé parler à un seul dieu.",
+  "lore": {
+    "titre": "LES KEIRETSU DE L'OMBRE",
+    "texte": "Derrière les groupes industriels japonais (Toyota, Sony, Mitsubishi) se cachent des réseaux de loyauté ancestraux — les Keiretsu. Mais les membres du Cercle de Davos ont identifié un réseau encore plus profond : des familles qui dirigent ces keiretsu dans l'ombre depuis l'ère Edo. Ils appellent ça les 'Cinquante Maisons'. Le gardien du château était l'un des leurs.",
+    "personnages": [
+      {
+        "nom": "Kenji Watanabe",
+        "role": "Contact local. Dernier héritier d'une lignée de gardiens du fragment. Sa loyauté est à l'épreuve."
+      },
+      {
+        "nom": "L'Agent du Cercle — Nom de code : RONIN",
+        "role": "Un opérateur retourné. Il travaillait autrefois pour la même agence que vous."
+      }
+    ]
+  }
 }
