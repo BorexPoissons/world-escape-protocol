@@ -1,40 +1,85 @@
 {
-  "code": "EG",
-  "name": "Égypte",
-  "flag": "🇪🇬",
-  "phase": 1,
-  "difficulty": 2,
-  "narrative_intro": "Agent, l'Égypte est le berceau de civilisations dont les secrets n'ont jamais été pleinement déchiffrés. Votre mission : accéder aux archives du Protocole Omega.",
-  "missions": [
+  "mission_title": "OPÉRATION DÉSERT NOIR",
+  "intro": "Agent, Le Caire. 42°C à l'ombre.\n\nVotre téléphone satellite a émis un seul message à votre arrivée : *« Le Fragment du Nil est dans la chambre que nul pharaon n'a jamais habitée. Cherchez là où l'hérétique a tout détruit pour tout reconstruire. »*\n\nVotre couverture : archéologue indépendant, mandaté par une fondation culturelle européenne pour documenter le site de Tell el-Amarna.\n\nL'Égypte est le berceau de toute civilisation connue. Et peut-être de choses inconnues encore. Ici, l'histoire n'est pas seulement dans les manuels — elle est dans les pierres, dans le sable, dans les hiéroglyphes que personne n'a encore déchiffrés entièrement. Le **Fragment du Nil** est la troisième pièce du Protocole Omega, et selon les données de l'Opérateur Zéro, il se trouverait dissimulé dans les ruines d'Akhenaton — le pharaon hérétique qui a tout renversé.\n\nMais le Cercle de Davos est déjà en Égypte. Trois hommes en costumes noirs ont été aperçus au musée du Caire il y a 48 heures. Ils cherchent la même chose.\n\nVous avez une avance de 12 heures. Utilisez-la.\n\nIci, les morts gardent leurs secrets depuis 3 000 ans. À vous de prouver que vous méritez de les entendre.",
+  "enigmes": [
     {
-      "id": "eg-001",
-      "title": "OPÉRATION DÉSERT NOIR",
-      "type": "quiz",
-      "questions": [
-        {
-          "id": "q1",
-          "text": "Combien de pyramides de Gizeh sont classées parmi les 7 merveilles du monde antique ?",
-          "options": ["Toutes les trois", "Une seule", "Deux", "Aucune"],
-          "correct": 1,
-          "explanation": "Seule la Grande Pyramide de Khéops est considérée comme l'une des 7 merveilles du monde antique — et la seule encore debout."
-        },
-        {
-          "id": "q2",
-          "text": "Quel pharaon a fait construire le temple d'Abou Simbel ?",
-          "options": ["Toutankhamon", "Cléopâtre", "Ramsès II", "Akhenaton"],
-          "correct": 2,
-          "explanation": "Ramsès II a fait construire les deux temples d'Abou Simbel au XIIIe siècle avant J.-C."
-        },
-        {
-          "id": "q3",
-          "text": "Quelle rivière est essentielle à la survie de l'Égypte depuis l'Antiquité ?",
-          "options": ["Le Congo", "Le Zambèze", "Le Nil", "Le Niger"],
-          "correct": 2,
-          "explanation": "Le Nil, le plus long fleuve du monde, a permis le développement de la civilisation égyptienne grâce à ses crues fertiles."
-        }
-      ]
+      "question": "Akhenaton — pharaon de la XVIIIe dynastie — a déclenché la première révolution monothéiste de l'histoire. Quel dieu unique a-t-il imposé ?",
+      "type": "culture",
+      "choices": [
+        "Aton, le disque solaire",
+        "Amon-Rê, roi des dieux",
+        "Osiris, dieu des morts",
+        "Horus, dieu du ciel"
+      ],
+      "answer": "Aton, le disque solaire",
+      "explanation": "Akhenaton (vers 1353-1336 av. J.-C.) a aboli le panthéon égyptien et imposé le culte exclusif d'Aton — le disque solaire — dans un monothéisme radical. Il a déplacé la capitale à Amarna, fait effacer le nom d'Amon partout dans l'empire, et fermé les temples. Après sa mort, ses successeurs (dont Toutankhamon) ont tout effacé en retour. Il reste l'un des personnages les plus mystérieux de l'Antiquité."
+    },
+    {
+      "question": "La Grande Pyramide de Gizeh est la seule des Sept Merveilles du monde antique encore debout. Quelle est la théorie la plus récente et scientifiquement soutenue sur la méthode de construction de son sommet ?",
+      "type": "logique",
+      "choices": [
+        "Une rampe hélicoïdale interne aux parois de la pyramide",
+        "Leviers géants en bois de cèdre importé du Liban",
+        "Transport sur eau grâce à un réseau de canaux artificiels",
+        "Travail d'esclaves organisés en équipes de 20 000 hommes"
+      ],
+      "answer": "Une rampe hélicoïdale interne aux parois de la pyramide",
+      "explanation": "En 2017, l'archéologue français Jean-Pierre Houdin a proposé — avec support de simulation 3D — qu'une rampe hélicoïdale interne permettait de monter les blocs supérieurs (les rampes externes deviennent physiquement impossibles au-delà de 40 mètres). Les ouvriers étaient en réalité des travailleurs libres, payés en bière et pain — une vérité redécouverte dans les archives du site de Gizeh."
+    },
+    {
+      "question": "Le Nil traverse 11 pays africains. Mais en Égypte, une mécanique naturelle spécifique a permis la naissance de la civilisation. Laquelle ?",
+      "type": "observation",
+      "choices": [
+        "La crue annuelle du Nil déposait un limon fertile — la 'Terre Noire' (Kemet)",
+        "La présence d'or pur dans les sédiments du fleuve",
+        "Un courant sous-marin reliant le Nil à la mer Rouge",
+        "La transparence de l'eau permettant une navigation nocturne unique"
+      ],
+      "answer": "La crue annuelle du Nil déposait un limon fertile — la 'Terre Noire' (Kemet)",
+      "explanation": "Chaque été, les eaux du Nil montaient et inondaient la vallée, laissant derrière elles un dépôt de limon noir hyper-fertile — le Kemet ('terre noire'). C'est ce cycle prévisible qui a permis l'agriculture intensive et la naissance d'une civilisation stable pendant 3 000 ans. Les Égyptiens appelaient leur pays 'Kemet' (la noire) par opposition au 'Deshret' (le rouge) — le désert inhospitalier."
+    },
+    {
+      "question": "La Pierre de Rosette, découverte en 1799 par les soldats de Napoléon, a permis de déchiffrer les hiéroglyphes. Quel érudit français l'a finalement décodée en 1822 ?",
+      "type": "culture",
+      "choices": [
+        "Jean-François Champollion",
+        "Napoléon Bonaparte lui-même",
+        "Thomas Young, physicien anglais",
+        "Gaspard Monge, mathématicien"
+      ],
+      "answer": "Jean-François Champollion",
+      "explanation": "Jean-François Champollion (1790-1832) a déchiffré les hiéroglyphes en 1822 grâce à la Pierre de Rosette, qui contenait le même texte en hiéroglyphes, démotique et grec ancien. Il avait appris le copte — descendant de l'égyptien ancien — pour y parvenir. La Pierre de Rosette est aujourd'hui au British Museum de Londres, et l'Égypte en réclame le retour depuis 200 ans."
     }
   ],
-  "fragment_reward_text": "Fragment du Nil Éternel obtenu. Les hiéroglyphes cachent un message destiné au Directeur...",
-  "lore": "Sous les pyramides, des tunnels secrets connectent l'Égypte antique aux réseaux modernes d'information."
+  "false_hint": "Le fragment est caché sous la Sphinx de Gizeh, dans une chambre secrète accessible uniquement par la patte droite.",
+  "moral_choice": {
+    "description": "Vous avez le Fragment du Nil. Dans la chambre secrète, vous découvrez aussi les restes d'un agent — un collègue disparu il y a 2 ans, que tout le monde croyait mort en mission. Il est vivant, mais gravement blessé. Le Cercle le cherche. Vous pouvez l'emmener avec vous — mais ça ralentit votre extraction et risque de compromettre les 3 fragments. Ou vous le laissez en sécurité dans la chambre, avec votre radio de secours.",
+    "option_a": "Vous l'emmenez. Personne ne reste derrière.",
+    "option_b": "Vous le laissez avec la radio et des coordonnées d'extraction. La mission prime.",
+    "impact_a": {
+      "trust": 12,
+      "suspicion": 8
+    },
+    "impact_b": {
+      "trust": -8,
+      "suspicion": -10
+    }
+  },
+  "final_fragment": "Fragment du Nil Éternel — Niveau 1 obtenu.\n\nLes trois fragments réunis révèlent la première coordonnée du Protocole Omega : **31°08'N — 29°58'E**. Une position en mer Méditerranée, à 40 kilomètres des côtes égyptiennes.\n\nL'Opérateur Zéro vous envoie un message chiffré : *« Vous avez prouvé votre valeur. La phase deux commence. Le Cercle de Davos sait maintenant qui vous êtes. Il n'y a plus de retour en arrière. »*\n\nBienvenue dans la véritable mission, Agent.",
+  "historical_fact": "L'Égypte ancienne a duré environ 3 000 ans — soit plus longtemps que l'intervalle entre Cléopâtre et aujourd'hui. Pour mettre en perspective : Cléopâtre (69-30 av. J.-C.) vivait plus près de nous dans le temps que des premières pyramides. Elle aurait pu visiter les pyramides de Gizeh comme un touriste visitant des monuments 'antiques' vieux de 2 500 ans. L'Égypte pharaonique est si ancienne qu'elle s'est elle-même redécouverte.",
+  "next_hint": "La coordonnée pointe vers les eaux profondes. Mais la prochaine pièce du puzzle n'est pas sous la mer — elle est dans un pays qui a traversé deux guerres mondiales et reste debout comme une forteresse culturelle au cœur de l'Europe.",
+  "lore": {
+    "titre": "LA CHAMBRE D'AMARNA",
+    "texte": "Tell el-Amarna, la cité abandonnée d'Akhenaton, n'a jamais été entièrement fouillée. Les archéologues ont trouvé des chambres sous les fondations qui ne correspondent à aucun plan architectural connu. Certains pensent que le pharaon hérétique cachait quelque chose — non pas de la révolution religieuse, mais d'une connaissance bien plus ancienne. Les tablettes d'Amarna (découvertes en 1887) contenaient une correspondance diplomatique avec 14 royaumes. Deux tablettes manquent encore. On dit qu'elles contiennent les vraies coordonnées du Protocole Omega.",
+    "personnages": [
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Toujours en avance. Maintenant que les 3 fragments sont réunis, sa voix prend une nouvelle teinte. Est-ce vraiment votre allié ?"
+      },
+      {
+        "nom": "Dr. Nadia El-Rashid",
+        "role": "Archéologue égyptienne. Elle sait ce que vous cherchez. Elle a été là avant vous. Elle a laissé intentionnellement une piste."
+      }
+    ]
+  }
 }

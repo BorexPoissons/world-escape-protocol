@@ -5,11 +5,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Country codes with static content (loaded from public JSON files via CDN)
+// These are served as static assets from the project's public folder
+const STATIC_CONTENT_CODES = ["CH", "JP", "EG"];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { country, player_level, trust_level, suspicion_level, secrets_unlocked } = await req.json();
+    const { country, player_level, trust_level, suspicion_level, secrets_unlocked, base_url } = await req.json();
+
+    // ── 1. Try static JSON content first (for the 3 free countries) ──────────
+    if (STATIC_CONTENT_CODES.includes(country.code)) {
+      // base_url is the origin passed from the frontend (e.g. https://myapp.lovable.app)
+      const origin = base_url || "https://hatjwbwmnfkvgimfxsnx.supabase.co";
+      
+      try {
+        // We fetch the static JSON from the same domain as the frontend
+        // The client should pass its window.location.origin as base_url
+        const staticUrl = `${origin}/content/countries/${country.code}.json`;
+        const staticRes = await fetch(staticUrl);
+        
+        if (staticRes.ok) {
+          const staticData = await staticRes.json();
+          console.log(`Loaded static content for ${country.code}`);
+          return new Response(JSON.stringify(staticData), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (staticErr) {
+        console.warn(`Could not load static content for ${country.code}:`, staticErr);
+        // Fall through to AI generation
+      }
+    }
+
+    // ── 2. AI generation for other countries ─────────────────────────────────
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -97,7 +127,6 @@ Génère exactement 4 énigmes de difficulté progressive.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     
-    // Parse JSON from the response, handling potential markdown code blocks
     let missionData;
     try {
       const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
