@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION CODEX ROMANI",
+  "intro": "Agent, bienvenue en Italie.\n\nUn message chiffré en latin médiéval est arrivé via le réseau Venise : *« Sub rosa omnia vera latent »* — Sous la rose, toutes les vérités se cachent. La rose, en franc-maçonnerie et dans les sociétés secrètes italiennes, symbolise le secret absolu — ce qui se dit sub rosa ne doit jamais être répété.\n\nVous êtes à Rome, Cité Éternelle. La chaleur des pavés antiques monte sous vos semelles. Votre couverture : consultant en conservation pour les Musées du Vatican.\n\nDans les archives secrètes du Vatican — les Archivum Secretum Apostolicum Vaticanum — un dossier est classé depuis 1308. Il concerne l'Ordre des Templiers, dissous par le pape Clément V sous pression de Philippe IV de France. Ce dossier, le **Codex Romani**, contient les coordonnées d'une cache templière jamais retrouvée.\n\nLe Cercle de Davos a obtenu une autorisation d'accès temporaire aux archives grâce à un cardinal corrompu. Vous avez 6 heures d'avance.\n\nL'Italie est une palimpseste — chaque couche de civilisation en cache une autre. Romains sur Étrusques, Chrétiens sur Romains, Renaissance sur Moyen-Âge. Ce que vous cherchez est dans la couche la plus profonde.",
+  "enigmes": [
+    {
+      "question": "Les Archives Secrètes du Vatican ont été partiellement ouvertes au public en 1881 par Léon XIII. Combien de kilomètres linéaires d'archives contiennent-elles approximativement ?",
+      "type": "observation",
+      "choices": [
+        "Environ 12 kilomètres",
+        "Environ 85 kilomètres",
+        "Environ 3 kilomètres",
+        "Environ 200 kilomètres"
+      ],
+      "answer": "Environ 85 kilomètres",
+      "explanation": "Les Archives Secrètes du Vatican s'étendent sur environ 85 kilomètres linéaires de rayonnages et couvrent 12 siècles de documents. Le mot 'secret' vient du latin secretum, signifiant 'privé' — non 'mystérieux'. Les documents les plus anciens datent du VIIIe siècle. Seuls les chercheurs accrédités y ont accès."
+    },
+    {
+      "question": "L'Ordre des Templiers fut officiellement dissous lors du Concile de Vienne en 1312. Quel fut le sort du Grand Maître Jacques de Molay ?",
+      "type": "culture",
+      "choices": [
+        "Emprisonné à vie dans une tour secrète",
+        "Exilé en Écosse avec le trésor",
+        "Brûlé vif à Paris en 1314 après avoir maudit le roi et le pape",
+        "Gracié et retiré dans un monastère sous fausse identité"
+      ],
+      "answer": "Brûlé vif à Paris en 1314 après avoir maudit le roi et le pape",
+      "explanation": "Jacques de Molay fut brûlé vif sur l'île de la Cité à Paris le 18 mars 1314. Selon les chroniqueurs, depuis les flammes, il maudit Philippe IV de France et le pape Clément V, prédisant leur mort dans l'année. Les deux moururent effectivement dans les 8 mois suivants. Coïncidence ou malédiction — l'histoire ne tranche pas."
+    },
+    {
+      "question": "La Renaissance italienne fut le mouvement culturel le plus influent de l'histoire occidentale. Quel homme de la famille Médicis en fut le principal mécène et est considéré comme 'le Père de la patrie' florentine ?",
+      "type": "logique",
+      "choices": [
+        "Laurent de Médicis (Le Magnifique)",
+        "Cosme l'Ancien de Médicis",
+        "Jean de Médicis (futur pape Léon X)",
+        "Pierre de Médicis"
+      ],
+      "answer": "Cosme l'Ancien de Médicis",
+      "explanation": "Cosme l'Ancien (1389-1464) fut le premier grand mécène des Médicis, finançant Brunelleschi, Donatello et Fra Angelico. Son petit-fils Laurent 'le Magnifique' est plus célèbre mais c'est Cosme qui bâtit l'empire financier familial. Le sénat florentin lui décerna le titre de Pater Patriae — Père de la Patrie — à sa mort."
+    },
+    {
+      "question": "Léonard de Vinci laissa la Joconde inachevée selon certains historiens et ne la vendit jamais. Comment ce tableau est-il arrivé au Louvre à Paris ?",
+      "type": "culture",
+      "choices": [
+        "Volé par Napoléon lors de la campagne d'Italie",
+        "Acheté par François Ier roi de France à Léonard lui-même",
+        "Donné par l'Italie à la France en échange de la Savoie",
+        "Légué au Vatican par Léonard, puis vendu sous Louis XIV"
+      ],
+      "answer": "Acheté par François Ier roi de France à Léonard lui-même",
+      "explanation": "François Ier invita Léonard de Vinci à sa cour en 1516. Léonard passa ses 3 dernières années au Clos Lucé (Amboise). À sa mort en 1519, la Joconde passa dans les collections royales françaises — probablement achetée ou léguée. Elle rejoignit le Louvre à la Révolution française. Léonard ne l'a donc jamais vraiment 'vendue' — elle fut transmise."
+    }
+  ],
+  "false_hint": "Le Codex Romani est conservé dans la Bibliothèque Apostolique Vaticane, salle 14, tiroir 3, sous le numéro de référence ARV-1308-X.",
+  "moral_choice": {
+    "description": "Vous avez le Codex Romani. Il révèle non seulement la cache templière, mais aussi la liste de 40 cardinaux actuellement membres du Cercle de Davos. Publier cette information déclencherait un scandale mondial. Mais elle pourrait aussi déclencher une guerre interne au sein de l'Église.",
+    "option_a": "Transmettez uniquement les coordonnées de la cache à votre organisation, scellant le reste.",
+    "option_b": "Photographiez tout et créez une copie chiffrée à envoyer à un journaliste d'investigation.",
+    "impact_a": { "trust": 7, "suspicion": -3 },
+    "impact_b": { "trust": -4, "suspicion": 10 }
+  },
+  "final_fragment": "Codex Romani — Fragment Templier obtenu.\n\nLes dernières lignes du Codex : *« La cache n'est pas un lieu. C'est une connaissance. Celui qui sait que le soleil se lève à l'Est sans jamais l'avoir vu porte déjà le fragment suivant. Cherchez le pays qui a inventé la cryptographie moderne — derrière le mur de la guerre froide. »*\n\nDirection : Europe de l'Est.",
+  "historical_fact": "Rome a gouverné un empire de 50 millions d'habitants pendant 500 ans avec un réseau routier de 400 000 km. L'expression 'Tous les chemins mènent à Rome' était littéralement vraie. Après la chute de l'Empire en 476 ap. J.-C., l'Église catholique a récupéré exactement les mêmes structures administratives — diocèses, provinces — en les baptisant différemment.",
+  "next_hint": "Le mur est tombé mais les secrets sont restés debout. Dans les ruines de l'empire soviétique, un chiffreur a laissé une dernière clé. Cherchez là où le bear dance avec l'ours.",
+  "lore": {
+    "titre": "LES ARCHIVES ET LE CODEX ROMANI",
+    "texte": "En 2003, le Vatican a exceptionnellement ouvert les archives des procès templiers (Le Processus Contra Templarios). Une pièce manquait : le procès-verbal de la dernière séance, du 22 mars 1312. Ce document — le Codex Romani — n'a officiellement jamais existé. Officieusement, c'est le secret le mieux gardé de l'histoire chrétienne.",
+    "personnages": [
+      {
+        "nom": "Cardinal Bergmann",
+        "role": "Votre contact au Vatican. Trop serviable. A facilité votre accès trop rapidement."
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Message avant la mission : 'Ne faites confiance à aucune soutane.'"
+      }
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION LABYRINTHE DES OMBRES",
+  "intro": "Agent, bienvenue au Maroc.\n\nMarrakech, medina. 14h30. Le soleil est écrasant. Les ruelles de la médina forment un labyrinthe de 1200 ans d'âge — des passages qui s'ouvrent sur des cours intérieures, des portes qui mènent à d'autres portes, des angles droits qui n'existent pas sur les cartes. Votre GPS est inutile ici. Il ne capte rien.\n\nVotre mission : rejoindre le point de rendez-vous en place Jemaa el-Fna avant 16h00, en traversant la médina. Mais le Cercle de Davos a infiltré les guides locaux. Certains vous mèneront délibérément vers des culs-de-sac. Un **brouillard d'information** a été créé — des pistes contradictoires, des témoins qui se contredisent.\n\nDans un souk de cuivres, un marchand vous a glissé une note : le **Fragment de l'Atlas** n'est pas caché dans un monument. Il est porté par une personne. Une femme. Elle change de position dans la médina toutes les 20 minutes selon un schéma que vous devez déduire.\n\nLe Maroc est un royaume millénaire à la croisée de trois continents. Sa vraie monnaie n'a jamais été le dirham — c'est l'information.",
+  "enigmes": [
+    {
+      "question": "Le royaume du Maroc est l'une des plus anciennes monarchies du monde. La dynastie alaouite règne depuis quelle période ?",
+      "type": "culture",
+      "choices": [
+        "Depuis le XVe siècle (1450)",
+        "Depuis le XVIIe siècle (1631)",
+        "Depuis le XIIe siècle (1147)",
+        "Depuis le XIXe siècle (1860)"
+      ],
+      "answer": "Depuis le XVIIe siècle (1631)",
+      "explanation": "La dynastie alaouite règne depuis 1631. Le roi Mohammed VI, monté sur le trône en 1999, est le 23e sultan alaouite. La famille se réclame descendre du prophète Mohammed. Le Maroc est aussi l'un des rares pays arabes à n'avoir jamais été colonisé par l'Empire ottoman — et à avoir maintenu une relation diplomatique continue avec les États-Unis depuis 1777, le plus ancien traité d'amitié américain encore en vigueur."
+    },
+    {
+      "question": "Fès, capitale intellectuelle du Maroc, abrite la plus ancienne université encore en activité au monde. Comment s'appelle-t-elle et quand fut-elle fondée ?",
+      "type": "logique",
+      "choices": [
+        "Université Al-Azhar du Caire — 970 ap. J.-C.",
+        "Université de Bologne — 1088",
+        "Université Al-Qarawiyyin — 859 ap. J.-C.",
+        "Madrasa Bou Inania — 1351"
+      ],
+      "answer": "Université Al-Qarawiyyin — 859 ap. J.-C.",
+      "explanation": "Al-Qarawiyyin de Fès, fondée en 859 par Fatima al-Fihri — une femme — est reconnue par le Livre Guinness des Records comme la plus ancienne université en activité continue au monde. Elle précède Oxford (1096) de plus de 200 ans. Elle a enseigné théologie, grammaire, rhétorique, logique, astronomie et mathématiques. Parmi ses anciens élèves: Gerbert d'Aurillac, futur pape Sylvestre II, qui introduisit les chiffres arabes en Europe."
+    },
+    {
+      "question": "La place Jemaa el-Fna de Marrakech est classée au patrimoine immatériel de l'UNESCO. Quelle est la particularité unique de cette inscription ?",
+      "type": "observation",
+      "choices": [
+        "C'est la première place publique classée au patrimoine mondial",
+        "C'est le premier site classé comme 'patrimoine culturel immatériel' — non un bâtiment mais une pratique vivante",
+        "C'est le seul site marocain classé par l'UNESCO",
+        "C'est le premier classement pour un pays non-européen"
+      ],
+      "answer": "C'est le premier site classé comme 'patrimoine culturel immatériel' — non un bâtiment mais une pratique vivante",
+      "explanation": "En 2001, Jemaa el-Fna fut le premier site au monde classé 'patrimoine oral et immatériel de l'humanité' — non pour ses bâtiments mais pour ses pratiques vivantes : conteurs (halqa), musiciens gnawas, acrobates, charmeurs de serpents, herboristes. C'est une civilisation orale en action. Cette inscription a créé la catégorie qui permit ensuite de protéger le flamenco espagnol, la samba brésilienne ou le yoga indien."
+    },
+    {
+      "question": "Ibn Battuta, né à Tanger au Maroc en 1304, est considéré comme le plus grand voyageur de l'histoire médiévale. Quelle distance approximative a-t-il parcourue au cours de ses 29 ans de voyage ?",
+      "type": "logique",
+      "choices": [
+        "Environ 50 000 km",
+        "Environ 75 000 km",
+        "Environ 120 000 km",
+        "Environ 30 000 km"
+      ],
+      "answer": "Environ 120 000 km",
+      "explanation": "Ibn Battuta parcourut environ 120 000 km entre 1325 et 1354 — soit trois fois la distance parcourue par Marco Polo. Il visita l'Afrique du Nord, le Moyen-Orient, l'Asie centrale, l'Inde, la Chine, l'Afrique subsaharienne et le Mali. Son récit de voyage, la 'Rihla', est une source historique de premier ordre pour les civilisations du XIVe siècle. Sans GPS, sans téléphone, sans satellite — 120 000 kilomètres."
+    }
+  ],
+  "false_hint": "La femme qui porte le Fragment de l'Atlas porte un haïk bleu de Chefchaouen et se trouve à 14h30 dans le souk des teinturiers (Souk des Sebbaghine).",
+  "moral_choice": {
+    "description": "Vous avez trouvé la femme et le Fragment. Elle se nomme Leila, ancienne archiviste du Palais Royal, en fuite depuis 6 mois après avoir découvert que le Cercle de Davos finance des opérations intérieures marocaines. Elle peut vous révéler ces opérations en échange de protection.",
+    "option_a": "Prenez le Fragment et transmettez l'offre d'information à votre organisation — décision de protection laissée à eux.",
+    "option_b": "Prenez le Fragment ET accordez-lui personnellement une protection temporaire, sans en référer.",
+    "impact_a": { "trust": 5, "suspicion": -3 },
+    "impact_b": { "trust": -3, "suspicion": 6, "secrets_unlocked": 1 }
+  },
+  "final_fragment": "Fragment de l'Atlas — obtenu dans le labyrinthe de la médina.\n\nLeila murmure : *« Le labyrinthe n'a pas de sortie parce qu'il n'a pas d'entrée. Vous étiez déjà dedans avant d'arriver. Le prochain gardien est un chiffreur. Il parle en nombres. Cherchez le pays où le froid et les secrets coexistent depuis 70 ans. »*\n\nDirection : Europe orientale.",
+  "historical_fact": "Le Maroc est le seul pays africain membre de la Ligue arabe à être géographiquement en Afrique du Nord sans être membre de l'Union Africaine (qu'il a quittée en 1984 en signe de protestation). En 2017, il réintégra l'UA. Le Maroc est aussi le plus grand producteur mondial de phosphate — ressource critique pour les engrais alimentaires. Qui contrôle le phosphate marocain influence la sécurité alimentaire mondiale.",
+  "next_hint": "Le chiffreur parle en chiffres pairs et impairs. Dans le froid de l'hiver russe, les secrets ont survécu à l'empire. Cherchez le double agent qui a changé de camp deux fois — et qui attend la troisième occasion.",
+  "lore": {
+    "titre": "LE RÉSEAU ATLAS ET LES ROUTES DU SECRET",
+    "texte": "Depuis des siècles, les caravanes qui traversaient le Maroc transportaient plus que des épices — elles portaient des messages chiffrés entre trois continents. Le réseau Atlas est l'héritier de cette tradition. Fondé dans les années 1960, il opère sous couverture commerciale dans les souks des grandes médinas. Ses agents sont des marchands. Leur monnaie : l'information.",
+    "personnages": [
+      {
+        "nom": "Leila",
+        "role": "Archiviste en fuite. Sait exactement qui finance quoi au sein du Cercle de Davos au Maghreb."
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Premier message depuis 4 missions : 'Leila dit la vérité. Ne la laissez pas seule.'"
+      }
+    ]
+  }
+}

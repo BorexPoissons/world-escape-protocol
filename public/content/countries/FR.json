@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION LUMIÈRES NOIRES",
+  "intro": "Agent, bienvenue en France.\n\nParis, 22h30. La Tour Eiffel s'éteint comme chaque soir à minuit. Mais ce soir, quelque chose sera différent — à 23h47 exactement, selon votre contact, un signal lumineux codé sera émis depuis le 3e étage. Un message pour quelqu'un. Peut-être pour vous.\n\nVotre mission : infiltrer les archives de la **Bibliothèque Nationale de France** (site Richelieu) et récupérer le **Fragment de la Liberté** — un document relié à une société secrète fondée pendant la Révolution française et dont certains membres actuels du Cercle de Davos seraient les héritiers directs.\n\nVotre couverture : conservateur en chef invité par la BnF pour une conférence sur les manuscrits médiévaux. La bibliothèque ferme à 20h00. Il est 22h30. Vous êtes à l'intérieur.\n\nLa France a produit des Lumières qui ont éclairé le monde entier — Voltaire, Rousseau, Montesquieu. Mais elle a aussi produit des ombres proportionnelles : la Terreur, Napoléon, Vichy. Le pays des droits de l'homme est aussi le pays de la Raison d'État.\n\nTrouvez ce que les lumières cachent.",
+  "enigmes": [
+    {
+      "question": "La Déclaration des Droits de l'Homme et du Citoyen fut adoptée en 1789. Quelle organisation américaine s'en inspira directement, ayant été rédigée quelques années plus tôt ?",
+      "type": "culture",
+      "choices": [
+        "La Constitution américaine (1787)",
+        "La Déclaration d'Indépendance américaine (1776)",
+        "Le Bill of Rights américain (1791)",
+        "Les Articles de la Confédération (1781)"
+      ],
+      "answer": "La Déclaration d'Indépendance américaine (1776)",
+      "explanation": "Thomas Jefferson, rédacteur principal de la Déclaration d'Indépendance américaine (1776), était en poste à Paris comme ambassadeur en 1789 et collabora directement avec Lafayette pour rédiger la DDHC française. Les deux documents partagent l'influence de Locke et Rousseau. Lafayette — héros des deux révolutions — fit le pont entre les deux mondes. La liberté, au XVIIIe siècle, était un projet transatlantique."
+    },
+    {
+      "question": "Le Code Napoléon (1804) a influencé les systèmes juridiques de combien de pays dans le monde, approximativement ?",
+      "type": "logique",
+      "choices": [
+        "Environ 12 pays (Europe latine principalement)",
+        "Environ 30 pays",
+        "Plus de 70 pays sur tous les continents",
+        "Uniquement les anciennes colonies françaises"
+      ],
+      "answer": "Plus de 70 pays sur tous les continents",
+      "explanation": "Le Code civil napoléonien de 1804 influence plus de 70 pays : France, Belgique, Luxembourg, Québec, Louisiane, Haïti, Mexique, Colombie, Égypte, Liban, Syrie, Roumanie, Italie... Napoléon lui-même considérait le Code comme sa plus grande réalisation, plus durable que ses victoires militaires : 'Ma vraie gloire, ce n'est pas d'avoir gagné 40 batailles. Ce sont mes codes civils qui vivront éternellement.'"
+    },
+    {
+      "question": "La Bibliothèque Nationale de France conserve le 'dépôt légal' depuis 1537. Qu'est-ce que cela signifie ?",
+      "type": "observation",
+      "choices": [
+        "La BnF achète un exemplaire de chaque livre publié en France",
+        "Tout éditeur ou producteur de contenu culturel en France doit déposer obligatoirement un exemplaire à la BnF",
+        "La BnF nummérise chaque livre publié dans le monde en français",
+        "Les archives gouvernementales sont automatiquement transférées à la BnF après 30 ans"
+      ],
+      "answer": "Tout éditeur ou producteur de contenu culturel en France doit déposer obligatoirement un exemplaire à la BnF",
+      "explanation": "L'ordonnance de Montpellier (1537) de François Ier instaura le premier dépôt légal au monde. Depuis lors, un exemplaire de chaque livre, journal, film, musique, site web et œuvre audiovisuelle produit en France doit être déposé à la BnF. Elle conserve aujourd'hui plus de 14 millions de livres, 350 000 manuscrits, et depuis 1994, archive le web français. C'est la mémoire totale d'une civilisation."
+    },
+    {
+      "question": "L'affaire Dreyfus (1894-1906) divisa la France et est considérée comme l'affaire politique la plus importante du XIXe siècle français. Alfred Dreyfus fut accusé de quoi à tort ?",
+      "type": "culture",
+      "choices": [
+        "Complot contre la République",
+        "Trahison au profit de l'Allemagne — espionnage militaire",
+        "Détournement de fonds du ministère de la Guerre",
+        "Attentat contre le Président Félix Faure"
+      ],
+      "answer": "Trahison au profit de l'Allemagne — espionnage militaire",
+      "explanation": "Alfred Dreyfus, officier juif alsacien, fut accusé en 1894 de livrer des secrets militaires à l'Allemagne sur la base d'un faux document. Condamné, déporté à l'île du Diable en Guyane, réhabilité en 1906 après une bataille judiciaire et médiatique intense. Émile Zola publia 'J'Accuse' en 1898. L'affaire révéla l'antisémitisme structurel de l'armée française et nourrit la fondation du mouvement sioniste par Theodor Herzl, journaliste viennois couvrant le procès."
+    }
+  ],
+  "false_hint": "Le Fragment de la Liberté est caché dans la salle des Globes de la Bibliothèque Mazarine, accessible depuis le couloir est de la cour Mazarine après minuit.",
+  "moral_choice": {
+    "description": "Le Fragment révèle les noms des 12 fondateurs modernes du Cercle de Davos. Parmi eux, un ancien Premier ministre français toujours vivant, vénéré comme figure de la gauche progressiste. Exposer ces noms pourrait démolir des décennies de récit politique construit autour de cet homme.",
+    "option_a": "Transmettez les noms à votre organisation et laissez-les décider de la suite.",
+    "option_b": "Sécurisez le Fragment mais ne transmettez pas les noms — certaines vérités peuvent attendre.",
+    "impact_a": { "trust": 7, "suspicion": -2 },
+    "impact_b": { "trust": -4, "suspicion": 5 }
+  },
+  "final_fragment": "Fragment de la Liberté — Bibliothèque Nationale, archive secrète.\n\nUn Post-it manuscrit collé derrière le document : *« Si vous lisez ceci, vous êtes arrivé trop tard. Ou trop tôt. La même chose. Le prochain est là où l'Occident s'est arrêté et l'Orient a commencé. Entre deux empires, entre deux mers, une clé. »*\n\nDirection : Péninsule ibérique ou Méditerranée orientale.",
+  "historical_fact": "La France est le pays le plus visité du monde — 90 millions de touristes en 2019. Elle est aussi le pays qui a produit le plus de philosophes politiques influents par habitant dans l'histoire moderne : Montesquieu (séparation des pouvoirs), Rousseau (contrat social), Tocqueville (démocratie moderne), Sartre (engagement), Foucault (pouvoir et surveillance). La France pense le monde — et se contredit elle-même avec une régularité impressionnante.",
+  "next_hint": "Entre deux mondes, une péninsule. El Tesoro attend toujours. Mais le galion avait deux destinations — et la deuxième n'était pas l'Amérique du Sud.",
+  "lore": {
+    "titre": "LES HÉRITIERS DES LUMIÈRES",
+    "texte": "En 1789, une société secrète appelée 'Les Chevaliers de la Liberté' fut fondée dans les sous-sols du Palais Royal par des aristocrates qui soutinrent la Révolution tout en protégeant leurs fortunes. Leurs descendants — selon le Fragment — furent parmi les 12 fondateurs du Cercle de Davos en 1971. La liberté comme idéal. Le contrôle comme pratique.",
+    "personnages": [
+      {
+        "nom": "Le Conservateur",
+        "role": "L'homme qui vous a laissé entrer après la fermeture. Il n'était pas là quand vous êtes sorti."
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Message reçu à 23h47, depuis la Tour Eiffel : 'Bienvenue dans la Phase III.'"
+      }
+    ]
+  }
+}

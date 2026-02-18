@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION TESORO INVISIBLE",
+  "intro": "Agent, bienvenue en Espagne.\n\nUn fragment de parchemin brûlé vous a été transmis ce matin par le réseau Lisboa — trois mots en castillan ancien : *« El Tesoro Invisible »*. Un galion espagnol, le San Cristóbal, disparu en 1598 au large des Açores, n'aurait pas transporté de l'or comme les archives officielles l'indiquent. Sa vraie cargaison : un artefact codé, connu sous le nom de **Clé de Philipe**.\n\nVous êtes à Barcelone. La chaleur est sèche, les ruelles gothiques sentent l'orange et la pierre ancienne. Votre couverture : chercheur en architecture médiévale pour l'Université Complutense.\n\nLes fragments de la Clé ont été dissimulés par une confrérie secrète au sein de trois monuments : la Sagrada Família à Barcelone, l'Alhambra à Grenade, et la Plaza Mayor à Madrid. Chaque monument cache un code architectural, une date historique à inverser, et une fausse piste dirigée vers l'Amérique du Sud pour égarer les non-initiés.\n\nUn rival du Cercle de Davos — un groupe que nous nommons **La Hermandad** — est déjà sur le terrain. Ils ont un jour d'avance.\n\nDéchiffrez avant eux. L'Espagne n'a jamais oublié ses secrets.",
+  "enigmes": [
+    {
+      "question": "La Sagrada Família de Barcelone est l'œuvre d'Antoni Gaudí. En quelle année a débuté sa construction, et est-elle terminée à ce jour ?",
+      "type": "culture",
+      "choices": [
+        "1882 — non, toujours en construction",
+        "1900 — oui, terminée en 1992",
+        "1871 — non, arrêtée faute de fonds",
+        "1895 — oui, terminée en 2000"
+      ],
+      "answer": "1882 — non, toujours en construction",
+      "explanation": "La Sagrada Família est en construction depuis 1882 — 143 ans. Gaudí y consacra les 15 dernières années de sa vie avant de mourir renversé par un tramway en 1926. La cathédrale devrait être achevée vers 2026, pour le centenaire de sa mort. Gaudí disait : 'Mon client n'est pas pressé' — son client, c'était Dieu."
+    },
+    {
+      "question": "L'Alhambra de Grenade fut le dernier bastion du royaume nasride. En quelle année les Rois Catholiques l'ont-ils repris, marquant la fin de la Reconquista ?",
+      "type": "logique",
+      "choices": [
+        "1391",
+        "1492",
+        "1516",
+        "1479"
+      ],
+      "answer": "1492",
+      "explanation": "Le 2 janvier 1492, Boabdil, dernier sultan de Grenade, remet les clés de l'Alhambra à Ferdinand et Isabelle. Le même jour, Christophe Colomb signe le contrat de son voyage vers les Amériques. 1492 est l'année charnière de l'histoire espagnole et mondiale — fin d'une ère, naissance d'une autre."
+    },
+    {
+      "question": "La Plaza Mayor de Madrid a été le centre de la vie publique espagnole pendant des siècles. Quel événement y était organisé par l'Inquisition espagnole ?",
+      "type": "observation",
+      "choices": [
+        "Les corridas officielles du royaume",
+        "Les autos de fe — procès et exécutions publiques",
+        "Les mariages royaux en plein air",
+        "Les marchés aux esclaves autorisés par la couronne"
+      ],
+      "answer": "Les autos de fe — procès et exécutions publiques",
+      "explanation": "La Plaza Mayor accueillit des autos de fe (actes de foi) — cérémonies publiques de l'Inquisition espagnole où les condamnés étaient jugés, parfois brûlés vifs. Le plus grand se tint en 1680 devant 50 000 spectateurs et le roi Charles II. L'Inquisition espagnole a duré de 1478 à 1834."
+    },
+    {
+      "question": "L'Espagne est la seule démocratie européenne à avoir connu un coup d'État militaire au XXe siècle suivi d'une dictature de 40 ans. Qui en fut le dictateur ?",
+      "type": "culture",
+      "choices": [
+        "Primo de Rivera",
+        "José Antonio",
+        "Francisco Franco",
+        "Juan Carlos I"
+      ],
+      "answer": "Francisco Franco",
+      "explanation": "Francisco Franco prit le pouvoir en 1939 après la Guerre Civile (1936-1939), soutenu par l'Allemagne nazie et l'Italie fasciste. Il gouverna jusqu'à sa mort en 1975. Sa devise : 'Una, Grande, Libre'. La transition démocratique qui suivit — la Transición — est étudiée dans le monde entier comme modèle de réconciliation."
+    }
+  ],
+  "false_hint": "La Clé de Philipe est codée dans les mosaïques du sous-sol de la Sagrada Família, accessible uniquement aux artisans accrédités entre 6h et 8h du matin.",
+  "moral_choice": {
+    "description": "Vous avez reconstitué la Clé de Philipe. Mais en décryptant le parchemin final, vous découvrez que la Hermandad est en réalité composée d'anciens agents de votre propre organisation. Votre supérieur vous ordonne de tout brûler. Votre instinct vous dit de conserver la preuve.",
+    "option_a": "Suivez les ordres — brûlez les preuves et transmettez uniquement la Clé.",
+    "option_b": "Conservez tout en secret et créez une copie chiffrée pour la transmettre à un journaliste de confiance.",
+    "impact_a": { "trust": 6, "suspicion": -4 },
+    "impact_b": { "trust": -5, "suspicion": 8 }
+  },
+  "final_fragment": "Clé de Philipe — Fragment Ibérique obtenu.\n\nLe parchemin déchiffré révèle : *« La Hermandad n'est pas votre ennemi. Elle était votre protecteur. Vous venez de briser le dernier verrou. Le prochain fragment repose là où les dieux se sont battus — sur les ruines d'une civilisation qui a inventé la démocratie. »*\n\nDirection : Méditerranée orientale.",
+  "historical_fact": "L'Espagne a été la première puissance coloniale mondiale, dominant un empire sur lequel 'le soleil ne se couchait jamais'. En 1550, la Controverse de Valladolid fut le premier débat éthique officiel de l'histoire sur les droits des peuples conquis — organisé par la couronne espagnole elle-même.",
+  "next_hint": "Les dieux de l'Olympe observaient depuis les hauteurs. À Delphes, un message gravé depuis 2500 ans vous attend. Mais méfiez-vous de l'Oracle — il dit toujours la vérité, d'une manière que vous ne comprendrez qu'après.",
+  "lore": {
+    "titre": "LA HERMANDAD ET LA CLÉ DE PHILIPE",
+    "texte": "Fondée en secret en 1492 — la même année que la chute de Grenade et la découverte des Amériques — La Hermandad opère dans l'ombre des institutions espagnoles depuis plus de 500 ans. Ses membres infiltrent les cours royales, les cabinets ministériels et les ordres religieux. Leur objectif : préserver une connaissance que le Cercle de Davos cherche à monopoliser.",
+    "personnages": [
+      {
+        "nom": "Don Alejandro",
+        "role": "Chef régional de La Hermandad. Vous l'avez croisé à la Sagrada Família. Il souriait."
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Toujours présent, toujours une information d'avance. Connaît-il La Hermandad ?"
+      }
+    ]
+  }
+}

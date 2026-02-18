@@ -1,0 +1,79 @@
+{
+  "mission_title": "OPÉRATION CONNAIS-TOI TOI-MÊME",
+  "intro": "Agent, bienvenue en Grèce.\n\nLe message est arrivé gravé sur une plaquette de bronze : *« Γνῶθι σεαυτόν »* — Connais-toi toi-même. Inscription du temple d'Apollon à Delphes, IVe siècle avant J.-C.\n\nMais quelqu'un a ajouté en dessous, à l'encre moderne : *« Ou l'un de vous ne l'est pas. »*\n\nVous êtes à Athènes. L'air sent le thym sauvage et la poussière de marbre. Votre couverture : archéologue pour le Centre Hellénique d'Archéologie Classique. Votre vrai objectif : récupérer le **Fragment de l'Oracle**, dissimulé quelque part dans le labyrinthe de Knossos — l'un des plus anciens palais du monde.\n\nMais le Cercle de Davos a planté un agent parmi vos contacts locaux. L'un d'eux vous transmet de fausses informations depuis le début. Votre mission impose une règle inédite : **une phase de silence total de 3 minutes** pendant laquelle vous ne pouvez pas communiquer — vous devez déduire seul qui est le traître.\n\nLa Grèce est le berceau de la démocratie, de la philosophie et du théâtre. Elle est aussi la berceau du mensonge organisé — les Grecs l'appelaient *dolos*, la ruse stratégique. C'était une vertu.\n\nFaites confiance à votre logique. Pas à vos émotions.",
+  "enigmes": [
+    {
+      "question": "Le Parthénon d'Athènes, construit sous Périclès au Ve siècle av. J.-C., était dédié à quelle divinité et abritait une statue en or et ivoire de 12 mètres de haut ?",
+      "type": "culture",
+      "choices": [
+        "Arès, dieu de la guerre",
+        "Zeus, roi des dieux",
+        "Athéna, déesse de la sagesse",
+        "Apollon, dieu de la lumière"
+      ],
+      "answer": "Athéna, déesse de la sagesse",
+      "explanation": "Le Parthénon (447-432 av. J.-C.) abritait la chryséléphantine — statue d'Athéna Parthénos en or et ivoire sculptée par Phidias. Haute de 12 mètres, elle a disparu. Athéna était aussi déesse de la stratégie militaire — la sagesse et la guerre ne s'opposent pas en Grèce antique."
+    },
+    {
+      "question": "Delphes était considérée comme le 'nombril du monde' (omphalos). L'Oracle de Delphes rendait ses prophéties au nom de quel dieu, par la bouche d'une prêtresse nommée Pythie ?",
+      "type": "logique",
+      "choices": [
+        "Dionysos",
+        "Hermès",
+        "Apollon",
+        "Poséidon"
+      ],
+      "answer": "Apollon",
+      "explanation": "La Pythie de Delphes transmettait les oracles d'Apollon, probablement sous l'effet de vapeurs géologiques (éthylène). Ses prophéties étaient délibérément ambiguës. Crésus, roi de Lydie, demanda s'il devait attaquer la Perse. L'Oracle répondit : 'Un grand empire sera détruit.' Ce fut le sien."
+    },
+    {
+      "question": "La démocratie athénienne du Ve siècle av. J.-C. accordait le droit de vote à quelle partie de la population ?",
+      "type": "observation",
+      "choices": [
+        "Tous les habitants d'Athènes",
+        "Les hommes libres nés à Athènes de père athénien",
+        "Tous les hommes libres, y compris les métèques",
+        "Les propriétaires terriens uniquement"
+      ],
+      "answer": "Les hommes libres nés à Athènes de père athénien",
+      "explanation": "La 'démocratie' athénienne excluait les femmes (50% de la population), les esclaves (30-40%) et les métèques — étrangers résidents. Seuls ~30 000 citoyens sur 300 000 habitants votaient. Socrate fut pourtant condamné à mort par ce système en 399 av. J.-C. — la démocratie peut aussi condamner ses philosophes."
+    },
+    {
+      "question": "Le labyrinthe de Knossos en Crète était associé au Minotaure selon la mythologie grecque. Quelle était la mission de Thésée selon le mythe ?",
+      "type": "culture",
+      "choices": [
+        "Voler la toison d'or au Minotaure",
+        "Tuer le Minotaure pour mettre fin au tribut humain d'Athènes",
+        "Libérer Ariane prisonnière du labyrinthe",
+        "Trouver le trésor caché par Minos"
+      ],
+      "answer": "Tuer le Minotaure pour mettre fin au tribut humain d'Athènes",
+      "explanation": "Athènes payait un tribut annuel à Crète : 7 jeunes hommes et 7 jeunes femmes envoyés dans le labyrinthe pour être dévorés par le Minotaure. Thésée se porta volontaire, tua la créature grâce au fil d'Ariane, mais oublia de changer ses voiles — son père Égée, croyant son fils mort, se jeta à la mer. La mer Égée porte son nom."
+    }
+  ],
+  "false_hint": "Le Fragment de l'Oracle est caché dans la troisième colonne du Parthénon en partant de l'est — une cavité creusée lors de la restauration de 1921.",
+  "moral_choice": {
+    "description": "Phase de silence terminée. Vous avez identifié le traître parmi vos contacts. Mais c'est quelqu'un qui vous a sauvé la vie lors d'une opération précédente, et qui agit peut-être sous la contrainte. Vous devez décider maintenant.",
+    "option_a": "Le neutralisez immédiatement et signalez-le au quartier général — mission avant tout.",
+    "option_b": "L'affrontez en privé, cherchez la vérité derrière sa trahison avant de décider.",
+    "impact_a": { "trust": 5, "suspicion": -6 },
+    "impact_b": { "trust": -2, "suspicion": 9 }
+  },
+  "final_fragment": "Fragment de l'Oracle — Niveau Hellénique obtenu.\n\nL'Oracle gravé sur le fragment dit : *« Celui qui se connaît lui-même ne peut être trahi. Le prochain gardien n'est ni ami ni ennemi — il est gardien du temps lui-même. Cherchez là où les pharaons ont défié la mort. »*\n\nDirection : Nil, désert, éternité.",
+  "historical_fact": "La Grèce antique a inventé simultanément la démocratie, la philosophie, le théâtre, les Jeux Olympiques et le concept de géographie. Mais aussi la propagande — Périclès finançait les arts pour glorifier Athènes et dissimuler ses dépenses militaires. Le Parthénon était autant un monument politique qu'un temple.",
+  "next_hint": "Le sable garde tous les secrets. Là où les hiéroglyphes murmurent, là où les sabliers mesurent l'éternité, le prochain fragment attend dans l'obscurité d'une chambre que personne n'a ouverte depuis 3000 ans.",
+  "lore": {
+    "titre": "L'ORACLE ET LE LABYRINTHE",
+    "texte": "Les archéologues ont découvert à Knossos en 1900 un palais de 1300 pièces sur 20 000 m². Certaines salles restent inexpliquées. En 2019, une cavité de 3 mètres sur 4 fut détectée sous le sol de la salle du trône — jamais excavée officiellement. Le Cercle de Davos y finance discrètement des fouilles privées.",
+    "personnages": [
+      {
+        "nom": "Mme Papadopoulos",
+        "role": "Directrice des fouilles officielles. Sait plus qu'elle ne montre. Le traître parmi vos contacts ?"
+      },
+      {
+        "nom": "L'Opérateur Zéro",
+        "role": "Son message avant la mission : 'Faites confiance à votre instinct. Pas à vos yeux.'"
+      }
+    ]
+  }
+}
