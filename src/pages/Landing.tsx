@@ -56,10 +56,15 @@ const Landing = () => {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link to="/auth">
+            <Link to="/dashboard">
               <Button size="lg" className="text-lg px-8 py-6 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
                 COMMENCER LA MISSION
                 <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 font-display tracking-wider border-border text-muted-foreground hover:text-foreground hover:border-primary/50">
+                S'IDENTIFIER
               </Button>
             </Link>
           </motion.div>
