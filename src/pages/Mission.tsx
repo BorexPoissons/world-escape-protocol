@@ -12,6 +12,12 @@ import {
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { checkAndAwardBadges } from "@/lib/badges";
+import ArchiveHintModal from "@/components/ArchiveHintModal";
+
+interface HintImage {
+  url: string;
+  caption: string;
+}
 
 interface Enigme {
   question: string;
@@ -21,6 +27,7 @@ interface Enigme {
   answer: string;     // always the full text of the correct answer
   explanation?: string;
   narrative_unlock?: string; // only on Type C
+  hint_image?: HintImage;   // archive photo hint (optional)
 }
 
 interface MoralChoice {
@@ -137,6 +144,7 @@ const Mission = () => {
   // Tracking
   const [usedHint, setUsedHint] = useState(false);
   const [ignoredFakeClue, setIgnoredFakeClue] = useState(true);
+  const [showHintModal, setShowHintModal] = useState(false);
 
   // Static mission state (A/B/C system)
   const [isStaticMission, setIsStaticMission] = useState(false);
@@ -196,6 +204,7 @@ const Mission = () => {
           const bank = staticData.question_bank as Array<{
             id: string; type: "A" | "B" | "C"; question: string;
             choices: string[]; answer_index: number; narrative_unlock?: string;
+            hint_image?: { url: string; caption: string };
           }>;
           const qr = staticData.quiz_rules ?? {};
           const dist = qr.distribution ?? { A: 4, B: 1, C: 1 };
@@ -231,6 +240,7 @@ const Mission = () => {
               choices: shuffledChoices,
               answer: correctText,
               narrative_unlock: q.narrative_unlock,
+              hint_image: q.hint_image,
             };
           });
 
@@ -683,6 +693,7 @@ const Mission = () => {
     setAttemptsOnCurrent(0);
     setIgnoredFakeClue(true);
     setUsedHint(false);
+    setShowHintModal(false);
     setBonusPool(0);
     setNarrativeUnlockText(null);
     setIsStaticMission(false);
@@ -818,14 +829,12 @@ const Mission = () => {
           <div className="bg-primary/10 border-t border-primary/20 px-4 py-1.5 flex items-center gap-2">
             <Zap className="h-3.5 w-3.5 text-primary flex-shrink-0" />
             <p className="text-xs text-primary font-display tracking-wider">
-              CONFIANCE ÉLEVÉE — 1 indice gratuit disponible
+              CONFIANCE ÉLEVÉE — 1 dossier d'archive disponible
             </p>
             <button
               onClick={() => {
                 setUsedHint(true);
-                if (mission) {
-                  toast({ title: "💡 Indice", description: `Bonne réponse : ${mission.enigmes[currentEnigme].answer}` });
-                }
+                setShowHintModal(true);
               }}
               className="ml-auto text-xs text-primary underline font-display"
             >
@@ -1372,6 +1381,14 @@ const Mission = () => {
 
         </AnimatePresence>
       </main>
+
+      {/* Archive Hint Modal */}
+      <ArchiveHintModal
+        isOpen={showHintModal}
+        onClose={() => setShowHintModal(false)}
+        hintImage={mission?.enigmes[currentEnigme]?.hint_image}
+        countryName={country?.name}
+      />
     </div>
   );
 };
