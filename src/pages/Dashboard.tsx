@@ -676,7 +676,12 @@ const Dashboard = () => {
               <p className="text-lg font-display font-bold text-foreground">{nextRecommended.name.toUpperCase()}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{"★".repeat(nextRecommended.difficulty_base)} · {nextRecommended.description?.slice(0, 60) || "Mission disponible"}</p>
             </div>
-            <Link to={`/mission/${nextRecommended.id}`} className="flex-shrink-0">
+            <Link
+              to={((nextRecommended as any).season_number === 0)
+                ? `/free-mission/${nextRecommended.id}`
+                : `/mission/${nextRecommended.id}`}
+              className="flex-shrink-0"
+            >
               <Button className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 text-sm">
                 DÉMARRER
               </Button>
@@ -909,14 +914,18 @@ const Dashboard = () => {
                   : group.playable;
 
                 // Compute nextUnlockedCode for pulsing highlight
+                // For season 0 (FREE format), a country is "done" if it appears in completedCountries
                 const nextUnlockedCode = isSignalInitialGroup
                   ? SIGNAL_INITIAL_SEQUENCE.find((code) => {
                       const c = group.playable.find((p) => p.code === code);
                       if (!c) return false;
                       const idx = SIGNAL_INITIAL_SEQUENCE.indexOf(code);
                       const prev = idx > 0 ? SIGNAL_INITIAL_SEQUENCE[idx - 1] : null;
-                      const prevScore = prev ? (signalProgress[prev] ?? 0) : 5;
-                      const locked = idx > 0 && prevScore < 5;
+                      // Previous country is "done" if it appears in completedCountries (mission saved)
+                      const prevDone = prev
+                        ? completedCountries.includes(group.playable.find(p => p.code === prev)?.id ?? "")
+                        : true;
+                      const locked = idx > 0 && !prevDone;
                       const done = completedCountries.includes(c.id);
                       return !locked && !done;
                     })
@@ -935,17 +944,21 @@ const Dashboard = () => {
                       const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
 
                       // ── SIGNAL_INITIAL sequential lock ──────────────────────
+                      // For FREE format (season 0), unlock is based on mission completion
+                      // not on score (since format changed from 6 questions to 3 steps)
                       const seqIdx = SIGNAL_INITIAL_SEQUENCE.indexOf(country.code);
                       const isSignalInitial = seasonNum === 0 && seqIdx !== -1;
                       const prevCode = seqIdx > 0 ? SIGNAL_INITIAL_SEQUENCE[seqIdx - 1] : null;
-                      const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 5;
-                      const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
+                      const prevCountry = prevCode ? group.playable.find(p => p.code === prevCode) : null;
+                      const prevDone = prevCountry ? completedCountries.includes(prevCountry.id) : true;
+                      const seqLocked = isSignalInitial && seqIdx > 0 && !prevDone;
 
                       // Any season-0 country NOT in SIGNAL_INITIAL_SEQUENCE is locked
-                      // until the full 5-country sequence is completed (score >= 5 each)
-                      const allSeqDone = SIGNAL_INITIAL_SEQUENCE.every(
-                        code => (signalProgress[code] ?? 0) >= 5
-                      );
+                      // until the full 5-country sequence is completed
+                      const allSeqDone = SIGNAL_INITIAL_SEQUENCE.every(code => {
+                        const c = group.playable.find(p => p.code === code);
+                        return c ? completedCountries.includes(c.id) : false;
+                      });
                       const outsideSeqLocked = seasonNum === 0 && seqIdx === -1 && !allSeqDone;
 
                       const isNext = isSignalInitialGroup && country.code === nextUnlockedCode;

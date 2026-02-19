@@ -38,7 +38,7 @@ const CountryCard = ({
   const isFree = seasonNumber === 0;
 
   return (
-    <Link to={`/mission/${country.id}`} className="block h-full">
+    <Link to={isFree ? `/free-mission/${country.id}` : `/mission/${country.id}`} className="block h-full">
       <motion.div
         whileHover={{ scale: 1.02, y: -2 }}
         transition={{ type: "spring", stiffness: 300, damping: 22 }}
@@ -95,7 +95,7 @@ const CountryCard = ({
             ) : (
               <div className="flex items-center gap-1 text-xs font-display text-muted-foreground mt-1">
                 <Clock className="h-3 w-3" />
-                ~15 MIN
+                {isFree ? "~5 MIN" : "~15 MIN"}
               </div>
             )}
           </div>
@@ -127,7 +127,7 @@ const CountryCard = ({
               </span>
               <span className="flex items-center gap-1">
                 <Star className="h-3 w-3" />
-                4 ÉNIGMES
+                {isFree ? "3 ÉTAPES" : "4 ÉNIGMES"}
               </span>
             </div>
             {/* REJOUER always visible when completed, otherwise appears on hover */}
