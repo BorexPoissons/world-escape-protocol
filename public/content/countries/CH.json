@@ -9,7 +9,7 @@
     "phase": "SIGNAL_INITIAL",
     "is_free": true,
     "detective": "Jasper Velcourt",
-    "intro": "Berne. Aube froide.\n\nJasper suit une trace discrète. Trop d'événements internationaux semblent converger ici.\n\nNeutralité. Institutions. Finance.\n\nS'il existe un modèle mondial, il laissera forcément une empreinte dans un pays où tout transite."
+    "intro": "Berne. Aube froide.\n\nJasper Velcourt suit une trace discrète.\nTrop d'événements internationaux semblent converger ici.\n\nNeutralité. Institutions. Finance.\n\nLa Suisse n'est pas un centre de commandement.\nC'est un lieu de passage.\n\nDepuis 1815, sa neutralité en fait un terrain de médiation.\nÀ Genève, les organisations internationales négocient.\nÀ Bâle, les banques centrales coopèrent.\nÀ Berne, les institutions fonctionnent avec une stabilité rare.\n\nSi un modèle mondial existe,\nil ne s'impose pas par la force.\n\nIl circule.\n\nVotre mission :\nComprendre pourquoi ce pays agit comme un nœud stratégique."
   },
   "quiz_rules": {
     "total_questions": 10,
