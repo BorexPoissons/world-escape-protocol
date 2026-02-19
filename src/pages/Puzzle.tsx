@@ -258,11 +258,15 @@ const Puzzle = () => {
   const totalUnlocked = puzzleData.reduce((sum, d) => sum + d.unlockedPieces, 0);
   const globalProgressOn195 = Math.round((totalUnlocked / (TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY)) * 100 * 10) / 10;
 
-  // Build map countries
+  // Build map countries — DB coords take priority over COUNTRY_GEO fallback
   const mapCountries: MapCountry[] = puzzleData
     .filter(d => getCountryVisibility(d.country, tier) !== "hidden")
     .map(d => {
-      const geo = COUNTRY_GEO[d.country.code] ?? { x: 50, y: 50 };
+      const dbX = (d.country as any).puzzle_position_x;
+      const dbY = (d.country as any).puzzle_position_y;
+      const geo = (dbX != null && dbY != null)
+        ? { x: dbX as number, y: dbY as number }
+        : COUNTRY_GEO[d.country.code] ?? { x: 50, y: 50 };
       return {
         id: d.country.id,
         name: d.country.name,
