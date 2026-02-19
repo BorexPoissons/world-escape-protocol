@@ -9,6 +9,7 @@ import { Puzzle, MapPin, ArrowRight, Shield, Eye, EyeOff, Home, Trophy, Flame } 
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 import missionCompleteCH from "@/assets/mission-complete-ch.png";
+import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
 const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
@@ -300,48 +301,18 @@ const MissionComplete = () => {
                   </div>
                 )}
 
-                {/* Animated puzzle piece */}
-                <motion.div
-                  className="flex justify-center"
-                  initial={{ scale: 0, y: -40, rotate: -15, opacity: 0 }}
-                  animate={{ scale: 1, y: 0, rotate: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: cinematicImg ? 0.1 : 0.3 }}
-                >
-                  <div className="relative">
-                    <svg width="96" height="96" viewBox="-0.35 -0.35 1.7 1.7" overflow="visible">
-                      <defs>
-                        <linearGradient id="piece-grad-complete" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="hsl(40 80% 65%)" />
-                          <stop offset="100%" stopColor="hsl(40 60% 40%)" />
-                        </linearGradient>
-                        <filter id="piece-glow-complete" x="-30%" y="-30%" width="160%" height="160%">
-                          <feGaussianBlur stdDeviation="0.06" result="blur" />
-                          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                      </defs>
-                      <path
-                        d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
-                        fill="hsl(40 80% 55% / 0.2)"
-                        stroke="hsl(40 80% 65%)"
-                        strokeWidth="0.04"
-                        filter="url(#piece-glow-complete)"
-                      />
-                      <path
-                        d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
-                        fill="url(#piece-grad-complete)"
-                        stroke="hsl(40 80% 70%)"
-                        strokeWidth="0.025"
-                        opacity="0.95"
-                      />
-                    </svg>
-                    <motion.div
-                      className="absolute inset-[-12px] rounded-full pointer-events-none"
-                      style={{ border: "1px solid hsl(40 80% 55% / 0.5)" }}
-                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-                      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                {/* WEP Unique Puzzle Piece — country-specific */}
+                <div className="flex justify-center">
+                  {country && (
+                    <WEPPuzzlePiece
+                      countryCode={country.code}
+                      size={120}
+                      animated={true}
+                      mode="complete"
+                      showKeyword={true}
                     />
-                  </div>
-                </motion.div>
+                  )}
+                </div>
 
                 {/* Fragment info */}
                 {fragmentName && (

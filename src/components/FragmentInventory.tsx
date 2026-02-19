@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Package, X, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 export interface Fragment {
   id: string;
@@ -21,39 +22,13 @@ interface FragmentInventoryProps {
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const PIECE_PATHS = [
-  "M 4 4 L 16 4 Q 14 8 16 10 L 20 10 L 20 20 Q 16 18 14 20 L 4 20 Q 6 16 4 14 Z",
-  "M 4 4 L 20 4 Q 18 8 20 10 L 20 20 L 12 20 Q 14 16 12 14 L 4 14 Q 6 10 4 8 Z",
-  "M 4 4 Q 8 6 10 4 L 20 4 L 20 16 Q 16 14 14 16 L 4 16 Z",
-  "M 6 4 Q 8 8 6 10 L 4 10 L 4 20 L 20 20 L 20 8 Q 16 10 14 8 L 14 4 Z",
-  "M 4 4 L 14 4 Q 12 8 14 10 L 20 10 L 20 20 L 4 20 Q 6 16 4 14 Z",
-];
-
-const COUNTRY_COLORS: Record<string, string> = {
-  CH: "hsl(40 80% 55%)",
-  JP: "hsl(0 70% 55%)",
-  EG: "hsl(45 90% 50%)",
-  FR: "hsl(220 70% 55%)",
-  DE: "hsl(50 80% 50%)",
-  IT: "hsl(120 50% 45%)",
-  ES: "hsl(25 80% 50%)",
-  GB: "hsl(215 70% 50%)",
-  BR: "hsl(130 60% 40%)",
-  CN: "hsl(0 75% 50%)",
-  IN: "hsl(30 85% 55%)",
-  RU: "hsl(220 60% 55%)",
-  MA: "hsl(155 55% 40%)",
-  GR: "hsl(200 70% 50%)",
-  DEFAULT: "hsl(40 50% 45%)",
-};
-
 const FLAG_EMOJIS: Record<string, string> = {
   CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", US: "🇺🇸",
   DE: "🇩🇪", IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷",
   CN: "🇨🇳", IN: "🇮🇳", RU: "🇷🇺", MA: "🇲🇦", GR: "🇬🇷",
 };
 
-// ─── Fragment Piece 3D SVG ─────────────────────────────────────────────────────
+// ─── Fragment Piece Wrapper (draggable WEPPuzzlePiece) ──────────────────────────
 
 const FragmentPiece3D = ({
   fragment,
@@ -70,12 +45,6 @@ const FragmentPiece3D = ({
   onClick: () => void;
   size?: number;
 }) => {
-  const color = COUNTRY_COLORS[fragment.countryCode] || COUNTRY_COLORS.DEFAULT;
-  const path = PIECE_PATHS[fragment.fragmentIndex % PIECE_PATHS.length];
-  const gradId = `frag-grad-${fragment.id}`;
-  const glowId = `frag-glow-${fragment.id}`;
-  const shineId = `frag-shine-${fragment.id}`;
-
   return (
     <motion.div
       draggable
@@ -83,110 +52,19 @@ const FragmentPiece3D = ({
       onDragEnd={onDragEnd}
       onClick={onClick}
       className="relative cursor-pointer select-none"
-      whileHover={{ scale: 1.18, y: -6 }}
+      whileHover={{ scale: 1.15, y: -6 }}
       whileTap={{ scale: 0.93 }}
       animate={isDragging ? { opacity: 0.4, scale: 0.85 } : { opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 340, damping: 22 }}
       title={`${fragment.countryName} — cliquez pour détails`}
-      style={{ perspective: "400px" }}
     >
-      <div
-        className="relative"
-        style={{ transform: "rotateX(12deg) rotateY(-8deg)", transformStyle: "preserve-3d" }}
-      >
-        {/* Animated pulse halo */}
-        <motion.div
-          className="absolute inset-0 rounded-lg blur-md"
-          style={{ background: color, opacity: 0.25 }}
-          animate={{ opacity: [0.2, 0.45, 0.2], scale: [1, 1.08, 1] }}
-          transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
-        />
-
-        {/* SVG Piece */}
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 24 24"
-          className="relative z-10"
-          style={{ filter: `drop-shadow(0 6px 12px ${color}55) drop-shadow(0 2px 4px rgba(0,0,0,0.6))` }}
-        >
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="110%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.25" />
-              <stop offset="30%" stopColor={color} stopOpacity="1" />
-              <stop offset="80%" stopColor={color} stopOpacity="0.85" />
-              <stop offset="100%" stopColor="hsl(220 25% 6%)" stopOpacity="0.95" />
-            </linearGradient>
-            <linearGradient id={shineId} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.5" />
-              <stop offset="40%" stopColor="white" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
-            </linearGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="0.6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Deep shadow */}
-          <path d={path} fill="hsl(220 30% 3%)" transform="translate(1.2 1.5)" opacity="0.7" />
-          {/* Mid shadow */}
-          <path d={path} fill="hsl(220 25% 8%)" transform="translate(0.6 0.8)" opacity="0.5" />
-
-          {/* Main piece */}
-          <path
-            d={path}
-            fill={`url(#${gradId})`}
-            stroke={color}
-            strokeWidth="0.7"
-            filter={`url(#${glowId})`}
-          />
-
-          {/* Top edge highlight (simulates top-lit 3D) */}
-          <path
-            d={path}
-            fill={`url(#${shineId})`}
-            opacity="0.6"
-          />
-
-          {/* Fine edge line */}
-          <path
-            d={path}
-            fill="none"
-            stroke="white"
-            strokeWidth="0.35"
-            opacity="0.2"
-            strokeDasharray="1.5 2.5"
-          />
-        </svg>
-
-        {/* Fragment index badge */}
-        <div
-          className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center z-20"
-          style={{
-            background: "hsl(220 25% 10%)",
-            border: `1px solid ${color}`,
-            color,
-            fontSize: "8px",
-            fontWeight: 700,
-            fontFamily: "monospace",
-            boxShadow: `0 0 6px ${color}66`,
-          }}
-        >
-          {fragment.fragmentIndex + 1}
-        </div>
-      </div>
-
-      {/* Country code label */}
-      <p
-        className="text-center font-display mt-1.5 tracking-widest"
-        style={{ color, fontSize: "9px", textShadow: `0 0 8px ${color}88` }}
-      >
-        {fragment.countryCode}
-      </p>
+      <WEPPuzzlePiece
+        countryCode={fragment.countryCode}
+        size={size}
+        animated={!isDragging}
+        mode="inventory"
+        showKeyword={false}
+      />
     </motion.div>
   );
 };
@@ -225,12 +103,7 @@ const FragmentDetailModal = ({
       .catch(() => setLoading(false));
   }, [fragment.countryCode]);
 
-  const color = COUNTRY_COLORS[fragment.countryCode] || COUNTRY_COLORS.DEFAULT;
   const flag = FLAG_EMOJIS[fragment.countryCode] || "🏳️";
-  const path = PIECE_PATHS[fragment.fragmentIndex % PIECE_PATHS.length];
-  const gradId = `detail-grad-${fragment.id}`;
-  const glowId = `detail-glow-${fragment.id}`;
-  const shineId = `detail-shine-${fragment.id}`;
 
   const narrativeUnlocks = countryData?.question_bank
     ?.filter(q => q.type === "C" && q.narrative_unlock)
@@ -249,24 +122,15 @@ const FragmentDetailModal = ({
       />
 
       <motion.div
-        className="relative w-full max-w-md bg-card border rounded-2xl overflow-hidden shadow-2xl"
-        style={{
-          borderColor: `${color}44`,
-          boxShadow: `0 0 60px ${color}20, 0 20px 60px rgba(0,0,0,0.5)`,
-        }}
+        className="relative w-full max-w-md bg-card border border-border rounded-2xl overflow-hidden shadow-2xl"
+        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
         initial={{ scale: 0.85, y: 30, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.85, y: 30, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 22 }}
       >
-        {/* Header gradient */}
-        <div
-          className="px-6 pt-6 pb-5 border-b"
-          style={{
-            background: `linear-gradient(135deg, ${color}12 0%, transparent 60%)`,
-            borderColor: `${color}25`,
-          }}
-        >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 border-b border-border bg-gradient-to-br from-primary/8 to-transparent">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
@@ -275,60 +139,21 @@ const FragmentDetailModal = ({
           </button>
 
           <div className="flex items-center gap-5">
-            {/* Large 3D piece */}
-            <div className="relative flex-shrink-0" style={{ perspective: "500px" }}>
-              <motion.div
-                style={{ transform: "rotateX(10deg) rotateY(-10deg)", transformStyle: "preserve-3d" }}
-                animate={{ rotateY: [-10, 10, -10] }}
-                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              >
-                {/* Halo */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl blur-xl"
-                  style={{ background: color, opacity: 0.3 }}
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ repeat: Infinity, duration: 2.5 }}
-                />
-                <svg
-                  width={110}
-                  height={110}
-                  viewBox="0 0 24 24"
-                  className="relative z-10"
-                  style={{ filter: `drop-shadow(0 10px 24px ${color}66) drop-shadow(0 3px 6px rgba(0,0,0,0.7))` }}
-                >
-                  <defs>
-                    <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="110%">
-                      <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                      <stop offset="30%" stopColor={color} stopOpacity="1" />
-                      <stop offset="80%" stopColor={color} stopOpacity="0.85" />
-                      <stop offset="100%" stopColor="hsl(220 25% 6%)" stopOpacity="0.95" />
-                    </linearGradient>
-                    <linearGradient id={shineId} x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="white" stopOpacity="0.55" />
-                      <stop offset="50%" stopColor="white" stopOpacity="0.08" />
-                      <stop offset="100%" stopColor="white" stopOpacity="0" />
-                    </linearGradient>
-                    <filter id={glowId}>
-                      <feGaussianBlur stdDeviation="0.5" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <path d={path} fill="hsl(220 30% 3%)" transform="translate(1.5 2)" opacity="0.7" />
-                  <path d={path} fill="hsl(220 25% 8%)" transform="translate(0.7 0.9)" opacity="0.5" />
-                  <path d={path} fill={`url(#${gradId})`} stroke={color} strokeWidth="0.6" filter={`url(#${glowId})`} />
-                  <path d={path} fill={`url(#${shineId})`} opacity="0.65" />
-                  <path d={path} fill="none" stroke="white" strokeWidth="0.3" opacity="0.18" strokeDasharray="1.5 2.5" />
-                </svg>
-              </motion.div>
+            {/* WEP Piece — detail mode (slow rotation) */}
+            <div className="flex-shrink-0">
+              <WEPPuzzlePiece
+                countryCode={fragment.countryCode}
+                size={110}
+                animated={true}
+                mode="detail"
+                showKeyword={true}
+              />
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-2xl">{flag}</span>
-                <h3 className="font-display font-bold text-lg tracking-wider" style={{ color }}>
+                <h3 className="font-display font-bold text-lg tracking-wider text-primary">
                   {fragment.countryName.toUpperCase()}
                 </h3>
               </div>
@@ -350,31 +175,25 @@ const FragmentDetailModal = ({
             <>
               {countryData?.fragment_reward && (
                 <div
-                  className="rounded-lg p-4 space-y-3"
-                  style={{
-                    background: `${color}0D`,
-                    border: `1px solid ${color}30`,
-                  }}
+                  className="rounded-lg p-4 space-y-3 border border-primary/25"
+                  style={{ background: "hsl(var(--primary) / 0.06)" }}
                 >
                   <p className="text-xs font-display tracking-widest text-muted-foreground">DONNÉES DU FRAGMENT</p>
                   <div>
                     <p className="text-xs text-muted-foreground font-display tracking-wider">NOM</p>
-                    <p className="text-sm font-display font-bold" style={{ color }}>
+                    <p className="text-sm font-display font-bold text-primary">
                       {countryData.fragment_reward.name}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-display tracking-wider">CONCEPT GÉOPOLITIQUE</p>
-                    <p
-                      className="text-xs font-display font-bold tracking-widest px-2 py-1 rounded inline-block mt-0.5"
-                      style={{ background: `${color}20`, color }}
-                    >
+                    <p className="text-xs font-display font-bold tracking-widest px-2 py-1 rounded inline-block mt-0.5 text-primary bg-primary/15">
                       {countryData.fragment_reward.concept}
                     </p>
                   </div>
-                  <div className="pt-2 border-t" style={{ borderColor: `${color}20` }}>
+                  <div className="pt-2 border-t border-primary/20">
                     <p className="text-xs text-muted-foreground font-display tracking-wider mb-1">INDICE NARRATIF</p>
-                    <p className="text-sm italic leading-relaxed" style={{ color: `${color}` }}>
+                    <p className="text-sm italic leading-relaxed text-primary">
                       « {countryData.fragment_reward.unlocked_message} »
                     </p>
                   </div>
@@ -388,8 +207,7 @@ const FragmentDetailModal = ({
                     {narrativeUnlocks.map((unlock, i) => (
                       <motion.div
                         key={i}
-                        className="flex items-start gap-2 px-3 py-2 rounded-lg"
-                        style={{ background: "hsl(220 20% 8%)", border: "1px solid hsl(220 20% 15%)" }}
+                        className="flex items-start gap-2 px-3 py-2 rounded-lg bg-secondary border border-border"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
@@ -426,8 +244,7 @@ const FragmentDetailModal = ({
           </Button>
           {!fragment.isPlaced && (
             <Button
-              className="flex-1 font-display tracking-wider text-xs gap-2"
-              style={{ background: color }}
+              className="flex-1 font-display tracking-wider text-xs gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={onPlaceOnMap}
             >
               <MapPin className="h-3.5 w-3.5" />
