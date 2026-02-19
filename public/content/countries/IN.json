@@ -1,79 +1,128 @@
 {
-  "mission_title": "OPÉRATION MAYA — L'ILLUSION DU RÉEL",
-  "intro": "Agent, bienvenue en Inde.\n\nVaranasi, aube. La ville la plus ancienne du monde encore habitée s'éveille sur les ghâts du Gange. Des milliers de pèlerins descendent vers les eaux sacrées. La fumée des bûchers funèbres de Manikarnika monte dans un ciel rose orangé. Ici, la frontière entre les vivants et les morts est aussi fine qu'un voile de soie.\n\nVous avez reçu un message d'un maître yogi reconnu sous le seul nom de **Agastya** : *« Ce que vous cherchez existe et n'existe pas simultanément. Le fragment est à votre droite. Et à votre gauche. »*\n\nLe **Fragment du Lotus** — dernier artefact de la Phase I du Protocole Omega — est dissimulé dans un mandala tibétain de 4 mètres de diamètre, en cours de réalisation par des moines au temple de Sarnath. Mais le mandala est conçu comme un puzzle : les pièces peuvent être assemblées dans plusieurs ordres, menant à plusieurs centres différents — et donc à plusieurs fragments différents.\n\nUn seul est réel. Les autres sont des copies. Et l'ordre dans lequel vous assemblez le mandala révèle qui vous êtes vraiment.\n\nMāyā — l'illusion — est le concept fondamental de la philosophie hindoue. Ce que vous voyez n'est peut-être pas ce qui est.",
-  "enigmes": [
+  "country": {
+    "code": "IN",
+    "name_fr": "Inde"
+  },
+  "mission": {
+    "mission_id": "IN-S1-005",
+    "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
+    "phase": "DEMOGRAPHIQUE_PIVOT",
+    "is_free": false,
+    "detective": "Jasper Valcourt",
+    "intro": "New Delhi.\nChaleur sèche. Poussière suspendue.\n\nLe bruit est constant.\nMoteurs, voix, sirènes, prières.\n\nAprès les flux suisses,\nle rythme américain,\nle réseau chinois,\net les ressources brésiliennes…\n\nJasper Valcourt découvre une autre force.\n\nLa masse.\n\nPlus d'un milliard d'habitants.\nUne population jeune.\nUn secteur technologique en expansion rapide.\n\nUne démocratie immense.\nUn carrefour stratégique entre Occident et Asie.\n\nL'Inde ne domine pas encore le système.\nMais elle peut en modifier l'équilibre.\n\nQuand une population grandit,\nle marché suit.\n\nQuand la technologie se développe,\nl'influence se diffuse.\n\nVotre mission :\nComprendre comment la démographie et l'innovation transforment un pays en futur pivot mondial.\n\nLe pouvoir de demain ne se décrète pas.\nIl se prépare."
+  },
+  "quiz_rules": {
+    "total_questions": 10,
+    "draw_per_run": 6,
+    "distribution": {
+      "A": 4,
+      "B": 1,
+      "C": 1
+    },
+    "max_mistakes": 1
+  },
+  "question_bank": [
     {
-      "question": "Le concept bouddhiste d'Anattā (non-soi) enseigne que l'identité personnelle est une illusion. Dans quel lieu le Bouddha Gautama donna-t-il son premier sermon, fondant ainsi le bouddhisme comme enseignement public ?",
-      "type": "culture",
-      "choices": [
-        "Bodh Gaya, sous l'arbre de la Bodhi",
-        "Sarnath, dans le Parc des Gazelles",
-        "Varanasi, sur les ghâts du Gange",
-        "Lumbini, lieu de sa naissance au Népal"
-      ],
-      "answer": "Sarnath, dans le Parc des Gazelles",
-      "explanation": "Gautama atteignit l'Éveil à Bodh Gaya sous l'arbre de la Bodhi, mais donna son premier sermon à Sarnath (parc des gazelles de Isipatana) — à quelques kilomètres de Varanasi. Ce discours, 'Dhammacakkappavattana Sutta', posa les bases des Quatre Nobles Vérités et du Noble Octuple Sentier. Sarnath est l'un des quatre sites de pèlerinage bouddhiste les plus sacrés."
+      "id": "IN_Q1",
+      "type": "A",
+      "question": "Quelle est la capitale de l'Inde ?",
+      "choices": ["Mumbai", "Kolkata", "New Delhi", "Chennai"],
+      "answer_index": 2
     },
     {
-      "question": "L'Inde a développé le système numérique décimal et le zéro. Qui est considéré comme l'inventeur du zéro en tant que concept mathématique utilisable en calcul ?",
-      "type": "logique",
-      "choices": [
-        "Aryabhata au Ve siècle",
-        "Brahmagupta au VIIe siècle",
-        "Fibonacci au XIIIe siècle",
-        "Al-Khwarizmi au IXe siècle"
-      ],
-      "answer": "Brahmagupta au VIIe siècle",
-      "explanation": "Brahmagupta (598-668 ap. J.-C.) fut le premier à définir le zéro comme nombre utilisable en calcul et à établir les règles arithmétiques avec zéro dans son traité Brahmasphutasiddhanta (628). Aryabhata utilisa un placeholder pour zéro mais sans en faire un nombre. Al-Khwarizmi et Fibonacci transmirent ces concepts en Europe. Sans le zéro indien, ni l'informatique ni les mathématiques modernes n'existeraient."
+      "id": "IN_Q2",
+      "type": "A",
+      "question": "En 2023, l'Inde est devenue le pays le plus peuplé du monde, devançant quel autre pays ?",
+      "choices": ["États-Unis", "Russie", "Chine", "Indonésie"],
+      "answer_index": 2,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Simple_world_map.svg/640px-Simple_world_map.svg.png",
+        "caption": "L'Inde a dépassé la Chine en 2023 pour devenir la nation la plus peuplée du monde"
+      }
     },
     {
-      "question": "Le Mahatma Gandhi utilisa une stratégie de résistance non-violente — la Satyagraha — contre la colonisation britannique. Quelle marche symbolique en 1930 lança le mouvement de désobéissance civile massive ?",
-      "type": "observation",
-      "choices": [
-        "La Marche de Dandi (ou Marche du Sel)",
-        "La Marche de Amritsar",
-        "La Marche de Calcutta",
-        "La Marche de Bombay"
-      ],
-      "answer": "La Marche de Dandi (ou Marche du Sel)",
-      "explanation": "Du 12 mars au 6 avril 1930, Gandhi marcha 388 km de Sabarmati à Dandi pour protester contre le monopole britannique sur le sel. À Dandi, il ramassa du sel de la mer en violation de la loi coloniale. 60 000 Indiens furent arrêtés dans les semaines suivantes. Cette marche fut un tournant — elle montra qu'une résistance non-violente pouvait mobiliser des millions. L'indépendance suivit en 1947."
+      "id": "IN_Q3",
+      "type": "A",
+      "question": "Quelle ville indienne est considérée comme le principal hub mondial de l'externalisation technologique (IT) ?",
+      "choices": ["Mumbai", "Bangalore", "Hyderabad", "Pune"],
+      "answer_index": 1
     },
     {
-      "question": "Dans la philosophie du Vedanta, la réalité ultime — Brahman — est décrite par une formule fondamentale. Laquelle de ces formules ('Mahāvākyas') est considérée comme la plus haute vérité ?",
-      "type": "culture",
+      "id": "IN_Q4",
+      "type": "A",
+      "question": "L'Inde est membre fondateur de quel groupement regroupant également le Brésil, la Russie, la Chine et l'Afrique du Sud ?",
+      "choices": ["G7", "ASEAN", "BRICS", "OPEP"],
+      "answer_index": 2
+    },
+    {
+      "id": "IN_Q5",
+      "type": "A",
+      "question": "Quelle est la monnaie officielle de l'Inde ?",
+      "choices": ["Taka", "Roupie", "Rupiah", "Dirham"],
+      "answer_index": 1
+    },
+    {
+      "id": "IN_Q6",
+      "type": "A",
+      "question": "Quel grand fleuve sacré traversant l'Inde est au cœur de la culture et de l'agriculture du pays ?",
+      "choices": ["Indus", "Brahmapoutre", "Gange", "Yamuna"],
+      "answer_index": 2
+    },
+    {
+      "id": "IN_Q7",
+      "type": "B",
+      "question": "Pourquoi une population jeune et nombreuse est-elle un atout géopolitique ?",
       "choices": [
-        "'Sarve khalu idam brahma' — Tout ceci est Brahman",
-        "'Aham brahmāsmi' — Je suis Brahman",
-        "'Tat tvam asi' — Tu es cela",
-        "'Prajñānam brahma' — La conscience est Brahman"
+        "Elle consomme uniquement des ressources locales",
+        "Elle représente un marché intérieur et une main-d'œuvre compétitive à l'échelle mondiale",
+        "Elle fragilise automatiquement les institutions",
+        "Elle n'a aucun impact sur la croissance économique"
       ],
-      "answer": "'Tat tvam asi' — Tu es cela",
-      "explanation": "'Tat tvam asi' (Tu es cela) apparaît 9 fois dans la Chandogya Upanishad et est considéré comme la formule la plus directe de la non-dualité (Advaita). Elle signifie que l'âme individuelle (Atman) et la réalité universelle (Brahman) sont identiques. Pour le Vedanta, la séparation entre le moi et l'univers est l'illusion fondamentale — Maya. Résoudre cette illusion, c'est la libération."
+      "answer_index": 1
+    },
+    {
+      "id": "IN_Q8",
+      "type": "B",
+      "question": "Comment le secteur technologique indien influence-t-il l'économie mondiale ?",
+      "choices": [
+        "En isolant l'Inde des marchés étrangers",
+        "En fournissant des services numériques et en formant des ingénieurs pour les grandes entreprises mondiales",
+        "En remplaçant les industries manufacturières globales",
+        "En créant une dépendance aux matières premières"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "IN_Q9",
+      "type": "C",
+      "question": "Dans la logique du système mondial, que représente la montée en puissance de l'Inde ?",
+      "choices": [
+        "Un facteur régional sans portée internationale",
+        "Un contre-poids potentiel modifiant les équilibres entre grandes puissances",
+        "Une menace militaire directe",
+        "Un phénomène purement culturel"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "La démographie est le levier le plus lent — et le plus puissant."
+    },
+    {
+      "id": "IN_Q10",
+      "type": "C",
+      "question": "Quel lien relie démographie, technologie et influence géopolitique indienne ?",
+      "choices": [
+        "Un hasard historique",
+        "La capacité à peser sur les chaînes d'approvisionnement mondiales et les alliances stratégiques",
+        "Une domination militaire régionale",
+        "Un isolement volontaire"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "Le pouvoir de demain ne se décrète pas. Il se prépare."
     }
   ],
-  "false_hint": "Le vrai Fragment du Lotus est toujours au centre du mandala — c'est la pièce rouge en forme de pétale au milieu, qui ne bougera pas quelle que soit l'ordre d'assemblage.",
-  "moral_choice": {
-    "description": "Agastya vous révèle que le mandala entier est le fragment — que le démontrer pour l'emporter le détruirait. Il propose une alternative : laissez-le intact, et il vous enseignera la connaissance qu'il contient. Mais votre organisation attend un artefact physique.",
-    "option_a": "Démontez le mandala et emportez la pièce centrale — mission accomplie, artefact sécurisé.",
-    "option_b": "Acceptez l'enseignement d'Agastya et repartez avec une copie numérique du mandala — sans l'original.",
-    "impact_a": { "trust": 4, "suspicion": -2 },
-    "impact_b": { "trust": -3, "suspicion": 3, "secrets_unlocked": 1 }
-  },
-  "final_fragment": "Fragment du Lotus — Phase I du Protocole Omega complétée.\n\nAgastya murmure en partant : *« Vous avez choisi. Ce choix était déjà écrit. La Phase II commence là où les ombres dansent sur le sable rouge du désert, là où personne ne parle mais où tout le monde entend. »*\n\nLa Phase I est terminée. 10 fragments. 10 pays. Le Protocole Omega commence à prendre forme.",
-  "historical_fact": "L'Inde est la plus grande démocratie du monde avec 950 millions d'électeurs inscrits. Elle a aussi produit le premier texte de stratégie politique — l'Arthashastra de Kautilya (321 av. J.-C.), précurseur du Prince de Machiavel de 1800 ans. Kautilya y décrit avec une précision froide comment manipuler, espionner, et gouverner. Certains chapitres semblent avoir été écrits ce matin.",
-  "next_hint": "Phase II. Le désert rouge. Là où les caravanes portaient les secrets du monde avant les routes maritimes. Le labyrinthe des ombres attend dans les médinas. Cherchez le Navigateur des Ombres.",
-  "lore": {
-    "titre": "MAYA ET LE MANDALA DU PROTOCOLE",
-    "texte": "Les moines tibétains de Sarnath créent ce mandala depuis 40 jours. Selon leurs dires, ils ont reçu les instructions dans un rêve collectif. Les 84 cases du mandala correspondent exactement aux 84 coordonnées géographiques identifiées dans le Protocole Omega. Ce n'est pas une coïncidence. C'est une carte.",
-    "personnages": [
-      {
-        "nom": "Agastya",
-        "role": "Maître yogi. Sait ce qu'est le Protocole Omega. Ne dit jamais directement ce qu'il sait."
-      },
-      {
-        "nom": "L'Opérateur Zéro",
-        "role": "Absent depuis 3 missions. Son dernier message : 'Ne me cherchez pas. Je vous trouverai.'"
-      }
-    ]
+  "fragment_reward": {
+    "id": "FRAG-IN-005",
+    "name": "Fragment Subcontinent",
+    "concept": "NŒUD_DEMOGRAPHIQUE",
+    "unlocked_message": "La démographie est le levier le plus lent — et le plus puissant."
   }
 }
