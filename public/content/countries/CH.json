@@ -8,8 +8,8 @@
     "mission_title": "OPÉRATION ALPES BLANCHES",
     "phase": "SIGNAL_INITIAL",
     "is_free": true,
-    "detective": "Jasper Velcourt",
-    "intro": "Berne. Aube froide.\n\nJasper suit une trace discrète. Trop d’événements internationaux semblent converger ici.\n\nNeutralité. Institutions. Finance.\n\nS’il existe un modèle mondial, il laissera forcément une empreinte dans un pays où tout transite."
+    "detective": "Jasper Valcourt",
+    "intro": "Berne. 05h42.\nLa neige tombe avec cette précision presque insolente que seule la Suisse maîtrise.\n\nJe m'appelle Jasper Valcourt.\n\nJe ne travaille ni pour un gouvernement.\nNi pour une banque.\nNi pour une agence.\n\nJe travaille pour les incohérences.\n\nDepuis quelques années, des crises apparaissent comme des dominos parfaitement alignés.\nDes décisions prises à des milliers de kilomètres semblent obéir à une logique invisible.\n\nCe n'est pas du hasard.\nC'est un système.\n\nEt chaque système laisse des traces.\n\nOn commence ici. En Suisse.\n\nUn pays qui ne dirige rien…\nmais par lequel tout transite.\n\nSi vous êtes encore là, c'est que vous avez remarqué quelque chose vous aussi.\n\nParfait.\n\nRegardons ensemble où passent les flux.\n\n— Jasper Valcourt"
   },
   "quiz_rules": {
     "total_questions": 10,
@@ -50,7 +50,7 @@
     {
       "id": "CH_Q4",
       "type": "A",
-      "question": "Quelle ville accueille de nombreuses organisations internationales comme l’ONU et l’OMC ?",
+      "question": "Quelle ville accueille de nombreuses organisations internationales comme l'ONU et l'OMC ?",
       "choices": ["Berne", "Genève", "Lucerne", "Lugano"],
       "answer_index": 1
     },
@@ -76,10 +76,10 @@
       "type": "B",
       "question": "Pourquoi la neutralité suisse attire-t-elle négociations et institutions internationales ?",
       "choices": [
-        "Parce qu’elle est militairement dominante",
-        "Parce qu’elle offre stabilité et absence d’alignement militaire",
-        "Parce qu’elle impose ses lois aux autres pays",
-        "Parce qu’elle contrôle l’ONU"
+        "Parce qu'elle est militairement dominante",
+        "Parce qu'elle offre stabilité et absence d'alignement militaire",
+        "Parce qu'elle impose ses lois aux autres pays",
+        "Parce qu'elle contrôle l'ONU"
       ],
       "answer_index": 1
     },
@@ -104,7 +104,7 @@
       "choices": [
         "La puissance militaire",
         "Les flux internationaux",
-        "L’isolement géographique",
+        "L'isolement géographique",
         "Le tourisme alpin"
       ],
       "answer_index": 1,
@@ -114,7 +114,7 @@
     {
       "id": "CH_Q10",
       "type": "C",
-      "question": "Dans la logique de l’enquête, que représente la Suisse dans le modèle mondial ?",
+      "question": "Dans la logique de l'enquête, que représente la Suisse dans le modèle mondial ?",
       "choices": [
         "Un centre de commandement secret",
         "Un nœud de transit stratégique",
@@ -122,7 +122,7 @@
         "Un pays isolé sans influence"
       ],
       "answer_index": 1,
-      "narrative_unlock": "Un modèle n’a pas besoin d’un chef. Il a besoin de passages."
+      "narrative_unlock": "Un modèle n'a pas besoin d'un chef. Il a besoin de passages."
     }
 
   ],

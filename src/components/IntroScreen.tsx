@@ -169,7 +169,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
               </div>
             )}
 
-            {/* ═══ SLIDE 3 — Jasper Velcourt ═══ */}
+            {/* ═══ SLIDE 3 — Jasper Valcourt ═══ */}
             {slideIndex === 2 && (
               <div className="h-full flex items-center justify-center px-4 bg-gradient-to-br from-zinc-950 via-stone-950 to-black">
                 <div className="max-w-4xl w-full flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -192,7 +192,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                   <div className="flex-1 space-y-4 text-center md:text-left">
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }}>
                       <p className="text-xs font-display tracking-[0.3em] mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        AGENT INDÉPENDANT
+                        BERNE — 05H42
                       </p>
                       <h2
                         className="text-3xl md:text-5xl font-display font-bold"
@@ -203,19 +203,26 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     </motion.div>
                     <TypeLines
                       lines={[
-                        { text: "Détective international indépendant.", style: "text-base md:text-lg font-body text-white/80" },
-                        { text: "Spécialiste des systèmes cachés et des fausses pistes.", style: "text-base md:text-lg font-body text-white/70" },
-                        { text: "Il ne traque pas des criminels.", style: "text-base md:text-lg font-body text-white/60 italic" },
-                        { text: "Il traque des structures invisibles.", style: "text-base md:text-lg font-body text-white/60 italic" },
+                        { text: "Je ne travaille ni pour un gouvernement.", style: "text-base md:text-lg font-body text-white/80 italic" },
+                        { text: "Ni pour une banque. Ni pour une agence.", style: "text-base md:text-lg font-body text-white/70 italic" },
+                        { text: "Je travaille pour les incohérences.", style: "text-base md:text-lg font-body font-semibold italic", },
                       ]}
-                      delay={1.2}
+                      delay={1.1}
                     />
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 3.4, duration: 0.9 }}
+                      className="text-sm md:text-base font-body text-white/50 italic"
+                    >
+                      — Jasper Valcourt
+                    </motion.p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ═══ SLIDE 4 — La Mission ═══ */}
+            {/* ═══ SLIDE 4 — La Suisse / Le Système ═══ */}
             {slideIndex === 3 && (
               <div className="h-full flex flex-col items-center justify-center px-8 bg-gradient-to-b from-black via-slate-950 to-black">
                 <div className="absolute inset-0 bg-grid opacity-[0.07] pointer-events-none" />
@@ -227,43 +234,36 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     className="text-sm font-display tracking-[0.3em] text-center"
                     style={{ color: "hsl(var(--muted-foreground))" }}
                   >
-                    🕵️ JASPER NE PEUT PAS AGIR SEUL
+                    🇨🇭 POINT DE DÉPART — SUISSE
                   </motion.p>
                   <TypeLines
                     lines={[
-                      { text: "Chaque pays cache un fragment d'une carte cryptée mondiale.", style: "text-xl md:text-2xl font-body text-white/80 text-center leading-relaxed" },
+                      { text: "Des crises apparaissent comme des dominos parfaitement alignés.", style: "text-xl md:text-2xl font-body text-white/80 text-center leading-relaxed italic" },
+                      { text: "Ce n'est pas du hasard.", style: "text-xl md:text-2xl font-body text-white/60 text-center" },
+                      { text: "C'est un système.", style: "text-xl md:text-2xl font-display font-bold text-center", },
                     ]}
                     delay={0.6}
                   />
                   <motion.div
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.8, duration: 0.8 }}
-                    className="grid grid-cols-3 gap-3 mt-2"
+                    transition={{ delay: 2.6, duration: 0.8 }}
+                    className="mt-2 border rounded-lg p-4"
+                    style={{ borderColor: "hsl(var(--primary) / 0.25)", background: "hsl(var(--primary) / 0.05)" }}
                   >
-                    {[
-                      { icon: "🔍", label: "Une enquête" },
-                      { icon: "🧩", label: "Trois énigmes" },
-                      { icon: "🗺️", label: "Un fragment" },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="text-center py-4 px-2 rounded-lg border"
-                        style={{ borderColor: "hsl(var(--primary) / 0.2)", background: "hsl(var(--primary) / 0.05)" }}
-                      >
-                        <div className="text-2xl mb-1">{item.icon}</div>
-                        <p className="text-xs font-display tracking-wider text-white/60">{item.label}</p>
-                      </div>
-                    ))}
+                    <p className="text-base md:text-lg font-body text-white/80 text-center leading-relaxed">
+                      "Un pays qui ne dirige rien…<br />
+                      <span style={{ color: "hsl(var(--primary))" }}>mais par lequel tout transite.</span>"
+                    </p>
                   </motion.div>
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 3.2 }}
-                    className="text-center font-display tracking-widest pt-2"
-                    style={{ color: "hsl(var(--primary))" }}
+                    transition={{ delay: 4.2 }}
+                    className="text-center font-display tracking-widest pt-2 text-xs"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
                   >
-                    195 pays.&nbsp;&nbsp;195 fragments.
+                    Et chaque système laisse des traces.
                   </motion.p>
                 </div>
               </div>
