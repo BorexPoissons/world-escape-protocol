@@ -1,10 +1,32 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Globe, Key, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/hero-bg.jpg";
+import IntroScreen from "@/components/IntroScreen";
+
+const INTRO_SEEN_KEY = "wep_intro_seen";
 
 const Landing = () => {
+  const navigate = useNavigate();
+  const [showIntro, setShowIntro] = useState(false);
+
+  useEffect(() => {
+    const seen = localStorage.getItem(INTRO_SEEN_KEY);
+    if (!seen) setShowIntro(true);
+  }, []);
+
+  const handleIntroComplete = () => {
+    localStorage.setItem(INTRO_SEEN_KEY, "true");
+    setShowIntro(false);
+    navigate("/dashboard");
+  };
+
+  if (showIntro) {
+    return <IntroScreen onComplete={handleIntroComplete} />;
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Hero Section */}
@@ -92,8 +114,22 @@ const Landing = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Replay intro button */}
+      <button
+        onClick={() => setShowIntro(true)}
+        className="fixed bottom-4 right-4 text-xs font-display tracking-widest px-3 py-1.5 rounded border transition-all z-40"
+        style={{
+          borderColor: "hsl(var(--border))",
+          color: "hsl(var(--muted-foreground))",
+          background: "hsl(var(--background) / 0.8)",
+        }}
+      >
+        ▶ REVOIR L'INTRO
+      </button>
     </div>
   );
 };
 
 export default Landing;
+
