@@ -4,6 +4,7 @@ import { X, Star, Shield, Eye, CheckCircle, CheckCircle2, Lock } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
+import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 interface MissionRecord {
   id: string;
@@ -33,68 +34,11 @@ interface MissionDetailModalProps {
   onClose: () => void;
 }
 
-// Puzzle piece SVG path
-const PIECE_PATH = "M 4 4 L 16 4 Q 14 8 16 10 L 20 10 L 20 20 Q 16 18 14 20 L 4 20 Q 6 16 4 14 Z";
 
 const FLAG_EMOJIS: Record<string, string> = {
   CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", US: "🇺🇸",
   DE: "🇩🇪", IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷",
   CN: "🇨🇳", IN: "🇮🇳", RU: "🇷🇺", MA: "🇲🇦", GR: "🇬🇷",
-};
-
-const FragmentSVG = ({ collected, size = 80 }: { collected: boolean; size?: number }) => {
-  const color = collected ? "hsl(40 80% 55%)" : "hsl(220 15% 35%)";
-  const gradId = `modal-frag-grad-${collected ? "yes" : "no"}`;
-  const glowId = `modal-frag-glow-${collected ? "yes" : "no"}`;
-
-  return (
-    <motion.div
-      className="relative"
-      initial={{ scale: 0.7, rotate: -10 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 18 }}
-    >
-      {/* Glow halo */}
-      {collected && (
-        <motion.div
-          className="absolute inset-0 rounded-full blur-xl"
-          style={{ background: "hsl(40 80% 55% / 0.35)" }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ repeat: Infinity, duration: 2.5 }}
-        />
-      )}
-      <svg width={size} height={size} viewBox="0 0 24 24" className="relative z-10 drop-shadow-2xl">
-        <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity="1" />
-            <stop offset="60%" stopColor={color} stopOpacity="0.8" />
-            <stop offset="100%" stopColor="hsl(220 20% 8%)" stopOpacity="0.9" />
-          </linearGradient>
-          <filter id={glowId}>
-            <feGaussianBlur stdDeviation="0.6" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        {/* Shadow */}
-        <path d={PIECE_PATH} fill="hsl(220 20% 4%)" transform="translate(1 1.2)" opacity="0.7" />
-        {/* Main */}
-        <path
-          d={PIECE_PATH}
-          fill={`url(#${gradId})`}
-          stroke={color}
-          strokeWidth="0.8"
-          filter={`url(#${glowId})`}
-        />
-        {/* Shine */}
-        <path d={PIECE_PATH} fill="none" stroke="white" strokeWidth="0.5" opacity={collected ? 0.3 : 0.08} strokeDasharray="2 3" />
-        {/* Top highlight */}
-        <path d={PIECE_PATH} fill="white" opacity={collected ? 0.12 : 0.03} transform="translate(0.5 0.5) scale(0.7)" style={{ transformOrigin: "12px 12px" }} />
-      </svg>
-    </motion.div>
-  );
 };
 
 const MissionDetailModal = ({
@@ -153,8 +97,14 @@ const MissionDetailModal = ({
             </button>
 
             <div className="flex items-center gap-5">
-              {/* Fragment SVG */}
-              <FragmentSVG collected={collected} size={80} />
+              {/* WEP Unique Piece */}
+              <WEPPuzzlePiece
+                countryCode={country.code}
+                size={80}
+                animated={collected}
+                mode="inventory"
+                showKeyword={false}
+              />
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
