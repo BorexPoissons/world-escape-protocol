@@ -197,6 +197,7 @@ export type Database = {
           has_completed_puzzle: boolean
           id: string
           last_mission_at: string | null
+          leaderboard_visible: boolean
           level: number
           longest_streak: number
           streak: number
@@ -211,6 +212,7 @@ export type Database = {
           has_completed_puzzle?: boolean
           id?: string
           last_mission_at?: string | null
+          leaderboard_visible?: boolean
           level?: number
           longest_streak?: number
           streak?: number
@@ -225,6 +227,7 @@ export type Database = {
           has_completed_puzzle?: boolean
           id?: string
           last_mission_at?: string | null
+          leaderboard_visible?: boolean
           level?: number
           longest_streak?: number
           streak?: number
@@ -496,7 +499,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          display_name: string | null
+          level: number | null
+          subscription_type: string | null
+          xp: number | null
+        }
+        Insert: {
+          display_name?: string | null
+          level?: number | null
+          subscription_type?: string | null
+          xp?: number | null
+        }
+        Update: {
+          display_name?: string | null
+          level?: number | null
+          subscription_type?: string | null
+          xp?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       complete_country_attempt: {
@@ -507,6 +530,16 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      get_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          display_name: string
+          level: number
+          rank: number
+          subscription_type: string
+          xp: number
+        }[]
       }
       has_role: {
         Args: {
