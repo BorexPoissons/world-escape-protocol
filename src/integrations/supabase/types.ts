@@ -50,10 +50,13 @@ export type Database = {
           historical_events: string[] | null
           id: string
           is_secret: boolean
+          is_strategic_final: boolean
           latitude: number | null
           longitude: number | null
           monuments: string[] | null
           name: string
+          operation_name: string
+          operation_number: number
           phase: number
           puzzle_position_x: number | null
           puzzle_position_y: number | null
@@ -70,10 +73,13 @@ export type Database = {
           historical_events?: string[] | null
           id?: string
           is_secret?: boolean
+          is_strategic_final?: boolean
           latitude?: number | null
           longitude?: number | null
           monuments?: string[] | null
           name: string
+          operation_name?: string
+          operation_number?: number
           phase?: number
           puzzle_position_x?: number | null
           puzzle_position_y?: number | null
@@ -90,10 +96,13 @@ export type Database = {
           historical_events?: string[] | null
           id?: string
           is_secret?: boolean
+          is_strategic_final?: boolean
           latitude?: number | null
           longitude?: number | null
           monuments?: string[] | null
           name?: string
+          operation_name?: string
+          operation_number?: number
           phase?: number
           puzzle_position_x?: number | null
           puzzle_position_y?: number | null

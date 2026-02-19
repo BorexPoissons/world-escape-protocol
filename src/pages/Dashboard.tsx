@@ -60,13 +60,71 @@ function isCountryUnlocked(country: CountryRow, playerLevel: number): boolean {
   return playerLevel >= requiredLevel;
 }
 
-// Season metadata
-const SEASON_META: Record<number, { label: string; subtitle: string; price?: string; upgradeType?: "season1" | "season2" | "season3" | "director" }> = {
-  0: { label: "ACCÈS GRATUIT", subtitle: "5 pays — Introduction à l'enquête" },
-  1: { label: "SAISON 1 — MISSION OMÉGA", subtitle: "43 pays · Opération mondiale", price: "19.90 CHF", upgradeType: "season1" },
-  2: { label: "SAISON 2", subtitle: "50 pays · Bientôt disponible", price: "À venir", upgradeType: "season2" },
-  3: { label: "SAISON 3", subtitle: "50 pays · Bientôt disponible", price: "À venir", upgradeType: "season3" },
-  4: { label: "SAISON 4", subtitle: "47 pays · Bientôt disponible", price: "À venir", upgradeType: "director" },
+// Operation metadata — narrative branding
+const SEASON_META: Record<number, {
+  label: string;
+  codename: string;
+  subtitle: string;
+  theme: string;
+  reward: string;
+  rewardIcon: string;
+  price?: string;
+  upgradeType?: "season1" | "season2" | "season3" | "director";
+  accentColor: string;
+}> = {
+  0: {
+    label: "SIGNAL INITIAL",
+    codename: "OP-00 · ACCÈS GRATUIT",
+    subtitle: "5 pays — Découvrez qu'un réseau mondial existe",
+    theme: "Finance · Géopolitique · Premiers indices",
+    reward: "Badge Agent Initié",
+    rewardIcon: "🎖",
+    accentColor: "hsl(40 85% 62%)",
+  },
+  1: {
+    label: "PROTOCOLE OMÉGA",
+    codename: "OP-01 · OPÉRATION I",
+    subtitle: "43 pays · Fondations du système mondial",
+    theme: "Finance · Ressources · Technologie · Influence",
+    reward: "Clé Oméga + Accès Opération Atlas",
+    rewardIcon: "🔐",
+    price: "19.90 CHF",
+    upgradeType: "season1",
+    accentColor: "hsl(220 80% 65%)",
+  },
+  2: {
+    label: "RÉSEAU ATLAS",
+    codename: "OP-02 · OPÉRATION II",
+    subtitle: "50 pays · Les connexions entre États",
+    theme: "Organisations internationales · Zones économiques stratégiques",
+    reward: "Fragment Atlas + Badge Stratège Global",
+    rewardIcon: "🗺",
+    price: "À venir",
+    upgradeType: "season2",
+    accentColor: "hsl(160 60% 52%)",
+  },
+  3: {
+    label: "DOMINION SHADOW",
+    codename: "OP-03 · OPÉRATION III",
+    subtitle: "50 pays · Manipulation indirecte",
+    theme: "Crises contrôlées · Routes énergétiques · Pouvoir invisible",
+    reward: "Fragment Dominion + Badge Architecte du Réseau",
+    rewardIcon: "⚡",
+    price: "À venir",
+    upgradeType: "season3",
+    accentColor: "hsl(280 65% 62%)",
+  },
+  4: {
+    label: "CONVERGENCE 195",
+    codename: "OP-04 · OPÉRATION IV · FINALE",
+    subtitle: "47 pays · Les nœuds finaux — Tout converge",
+    theme: "Pays Stratégiques · La révélation finale",
+    reward: "Carte mondiale révélée + Titre Maître du Protocole",
+    rewardIcon: "🧩",
+    price: "À venir",
+    upgradeType: "director",
+    accentColor: "hsl(0 70% 58%)",
+  },
 };
 
 const FLAG_EMOJI: Record<string, string> = {
@@ -331,10 +389,18 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* ====== SEASONS ====== */}
+        {/* ====== OPERATIONS ====== */}
         {sortedSeasons.map((seasonNum, idx) => {
           const group = seasonGroupsRaw[seasonNum];
-          const meta = SEASON_META[seasonNum] ?? { label: `SAISON ${seasonNum}`, subtitle: "Bientôt disponible" };
+          const meta = SEASON_META[seasonNum] ?? {
+            label: `OPÉRATION ${seasonNum}`,
+            codename: `OP-0${seasonNum}`,
+            subtitle: "Bientôt disponible",
+            theme: "",
+            reward: "",
+            rewardIcon: "🔒",
+            accentColor: "hsl(220 20% 50%)",
+          };
           const isUnlocked = seasonNum <= maxSeason;
           const totalInSeason = group.playable.length + group.locked.length + group.silhouette.length;
           if (totalInSeason === 0) return null;
@@ -345,42 +411,97 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * idx }}
-              className="mb-12"
+              className="mb-14"
             >
-              {/* Season banner */}
-              <div className={`flex items-center justify-between mb-6 pb-4 border-b ${isUnlocked ? "border-primary/30" : "border-border/40"}`}>
-                <div className="flex items-center gap-3">
-                  {isUnlocked ? (
-                    <Globe className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Lock className="h-5 w-5 text-muted-foreground/50" />
-                  )}
-                  <div>
-                    <h2 className={`text-lg font-display font-bold tracking-wider ${isUnlocked ? "text-foreground" : "text-muted-foreground/60"}`}>
-                      {meta.label}
-                    </h2>
-                    <p className="text-xs text-muted-foreground font-display tracking-wider">{meta.subtitle}</p>
+              {/* Operation Banner */}
+              <div
+                className="rounded-xl mb-6 overflow-hidden border"
+                style={{
+                  borderColor: isUnlocked ? meta.accentColor.replace(")", " / 0.35)") : "hsl(var(--border) / 0.4)",
+                  background: isUnlocked
+                    ? `linear-gradient(135deg, hsl(var(--card)), ${meta.accentColor.replace(")", " / 0.06)")})`
+                    : "hsl(var(--card))",
+                }}
+              >
+                <div className="px-6 py-5 flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    {/* Operation icon */}
+                    <div
+                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-xl border"
+                      style={{
+                        background: isUnlocked ? meta.accentColor.replace(")", " / 0.12)") : "hsl(var(--secondary))",
+                        borderColor: isUnlocked ? meta.accentColor.replace(")", " / 0.4)") : "hsl(var(--border) / 0.3)",
+                        boxShadow: isUnlocked ? `0 0 18px ${meta.accentColor.replace(")", " / 0.2)")}` : "none",
+                      }}
+                    >
+                      {isUnlocked ? meta.rewardIcon : "🔒"}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      {/* Codename */}
+                      <p
+                        className="text-[10px] font-display tracking-[0.2em] mb-0.5"
+                        style={{ color: isUnlocked ? meta.accentColor : "hsl(var(--muted-foreground) / 0.5)" }}
+                      >
+                        {meta.codename}
+                      </p>
+                      {/* Operation Name */}
+                      <h2
+                        className="text-xl font-display font-bold tracking-wider truncate"
+                        style={{ color: isUnlocked ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.55)" }}
+                      >
+                        {meta.label}
+                      </h2>
+                      {/* Subtitle */}
+                      <p className="text-xs text-muted-foreground font-display tracking-wider mt-0.5">{meta.subtitle}</p>
+                      {/* Theme */}
+                      {meta.theme && (
+                        <p className="text-[11px] mt-2 italic" style={{ color: isUnlocked ? meta.accentColor.replace(")", " / 0.7)") : "hsl(var(--muted-foreground) / 0.4)" }}>
+                          {meta.theme}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right side: CTA or progress */}
+                  <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                    {!isUnlocked && meta.price && meta.upgradeType ? (
+                      <button
+                        onClick={() => setUpgradeModal({ open: true, type: meta.upgradeType === "director" ? "director" : "agent" })}
+                        className="flex items-center gap-2 text-xs font-display tracking-wider px-4 py-2.5 rounded-lg border transition-all hover:scale-105 active:scale-95"
+                        style={{
+                          borderColor: meta.accentColor.replace(")", " / 0.5)"),
+                          color: meta.accentColor,
+                          background: meta.accentColor.replace(")", " / 0.08)"),
+                          boxShadow: `0 0 12px ${meta.accentColor.replace(")", " / 0.15)")}`,
+                        }}
+                      >
+                        <Lock className="h-3.5 w-3.5" />
+                        {meta.price === "À venir" ? "BIENTÔT" : `DÉBLOQUER · ${meta.price}`}
+                        {meta.price !== "À venir" && <ChevronRight className="h-3.5 w-3.5" />}
+                      </button>
+                    ) : isUnlocked ? (
+                      <span
+                        className="text-xs font-display tracking-wider px-3 py-1 rounded-full border"
+                        style={{ borderColor: meta.accentColor.replace(")", " / 0.4)"), color: meta.accentColor }}
+                      >
+                        {group.playable.length} PAYS ACTIFS
+                      </span>
+                    ) : null}
+
+                    {/* Reward */}
+                    <div
+                      className="text-[10px] font-display tracking-wider px-2.5 py-1 rounded-lg border text-right"
+                      style={{
+                        borderColor: isUnlocked ? meta.accentColor.replace(")", " / 0.25)") : "hsl(var(--border) / 0.2)",
+                        color: isUnlocked ? meta.accentColor.replace(")", " / 0.8)") : "hsl(var(--muted-foreground) / 0.4)",
+                        background: isUnlocked ? meta.accentColor.replace(")", " / 0.05)") : "transparent",
+                      }}
+                    >
+                      🎁 {meta.reward}
+                    </div>
                   </div>
                 </div>
-
-                {/* Unlock CTA for locked seasons */}
-                {!isUnlocked && meta.price && meta.upgradeType && (
-                  <button
-                    onClick={() => setUpgradeModal({ open: true, type: meta.upgradeType === "director" ? "director" : "agent" })}
-                    className="flex items-center gap-2 text-xs font-display tracking-wider px-4 py-2 rounded-lg border transition-all hover:bg-primary/10"
-                    style={{ borderColor: "hsl(var(--primary) / 0.3)", color: "hsl(var(--primary))" }}
-                  >
-                    <Lock className="h-3.5 w-3.5" />
-                    DÉBLOQUER · {meta.price}
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                )}
-
-                {isUnlocked && (
-                  <span className="text-xs font-display text-primary tracking-wider px-3 py-1 rounded-full border border-primary/30">
-                    {group.playable.length} PAYS ACCESSIBLES
-                  </span>
-                )}
               </div>
 
               {/* Playable countries grid */}
@@ -390,7 +511,6 @@ const Dashboard = () => {
                     const levelOk = isCountryUnlocked(country, playerLevel);
                     const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
                     if (!levelOk) {
-                      // Level-locked within playable season
                       return (
                         <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
                           <div className="relative bg-card border border-border rounded-xl p-5 opacity-60 select-none">
@@ -415,7 +535,7 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Locked upgrade countries (first country of next paywall) */}
+              {/* Locked upgrade countries */}
               {group.locked.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
                   {group.locked.map((country, i) => (
