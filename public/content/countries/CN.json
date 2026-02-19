@@ -1,79 +1,124 @@
 {
-  "mission_title": "OPÉRATION ALGORITHME IMPÉRIAL",
-  "intro": "Pékin.\nAir dense. Ciel laiteux.\n\nAucune urgence visible.\nEt pourtant, tout bouge.\n\nAprès la Suisse et les États-Unis,\nJasper Valcourt comprend que le pouvoir ne s'impose pas toujours frontalement.\n\nIl se construit.\n\n1913 — la cadence monétaire.\n1944 — l'ordre financier.\n2008 — la crise mondiale.\n2013 — un projet gigantesque relie continents et océans.\n\nPorts en Afrique.\nRails en Europe de l'Est.\nCorridors énergétiques en Asie centrale.\nCâbles numériques sous-marins.\n\nCe n'est pas une expansion.\nC'est un maillage.\n\nLa puissance n'a pas besoin d'être bruyante.\nElle peut être méthodique.\n\nSi Washington règle le rythme…\nPékin trace les routes.\n\nUn nouveau levier apparaît :\ninfrastructures, interdépendance, monnaie numérique.\n\nLe réseau précède le pouvoir.\n\nVotre mission :\nComprendre comment l'infrastructure devient un instrument stratégique global —\net identifier le nœud invisible qui relie routes, ports et finance.\n\nLe Dragon ne rugit pas.\nIl attend.",
-  "enigmes": [
+  "country": {
+    "code": "CN",
+    "name_fr": "Chine"
+  },
+  "mission": {
+    "mission_id": "CN-S1-003",
+    "mission_title": "OPÉRATION DRAGON SILENCIEUX",
+    "phase": "INFRASTRUCTURE_NODE",
+    "is_free": true,
+    "detective": "Jasper Valcourt",
+    "intro": "Pékin. Ciel gris. Silence dense.\n\nAprès la Suisse et les États-Unis,\nJasper comprend une chose :\n\nLes flux doivent circuler.\nLe rythme doit être régulé.\n\nMais qui construit les routes ?\n\n2013.\nLancement d'un projet reliant l'Asie, l'Europe et l'Afrique.\n\nDes ports.\nDes chemins de fer.\nDes câbles.\n\nUne nouvelle monnaie numérique.\n\nLa puissance ne se montre pas toujours.\nElle s'installe.\n\nSi Washington règle la cadence,\nPékin construit le réseau.\n\nVotre mission :\nComprendre comment l'infrastructure devient une arme géostratégique."
+  },
+  "quiz_rules": {
+    "total_questions": 10,
+    "draw_per_run": 6,
+    "distribution": {
+      "A": 4,
+      "B": 1,
+      "C": 1
+    },
+    "max_mistakes": 1
+  },
+  "question_bank": [
     {
-      "question": "La Grande Muraille de Chine est souvent décrite comme « visible depuis l'espace ». Cette affirmation est-elle exacte scientifiquement (à l'œil nu, depuis l'orbite de l'ISS) ?",
-      "type": "observation",
-      "choices": [
-        "Oui, elle est visible à l'œil nu depuis la Station Spatiale Internationale",
-        "Non — à l'altitude de l'ISS, elle est trop étroite pour être distinguée sans instrument optique",
-        "Oui, mais uniquement depuis des satellites en orbite basse",
-        "Non, mais elle a été photographiée depuis la Lune"
-      ],
-      "answer": "Non — à l'altitude de l'ISS, elle est trop étroite pour être distinguée sans instrument optique",
-      "explanation": "La Muraille fait souvent seulement quelques mètres de large. À ~400 km d'altitude (ISS), la limite de résolution de l'œil humain (même dans de bonnes conditions) est de l'ordre de la centaine de mètres, et la Muraille se confond avec le relief et les couleurs environnantes. Des astronautes ont confirmé ne pas pouvoir la distinguer à l'œil nu ; en revanche, elle peut être captée avec des instruments (téléobjectif, imagerie radar, etc.). Yang Liwei (2003) a notamment déclaré ne pas l'avoir vue."
+      "id": "CN_Q1",
+      "type": "A",
+      "question": "Quelle est la capitale de la Chine ?",
+      "choices": ["Shanghai", "Hong Kong", "Pékin", "Shenzhen"],
+      "answer_index": 2
     },
     {
-      "question": "Le Projet des Mille Talents, programme gouvernemental chinois lancé en 2008, visait à :",
-      "type": "culture",
-      "choices": [
-        "Former 1000 ingénieurs en intelligence artificielle par an",
-        "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour attirer des compétences et faciliter des transferts de savoir-faire/technologies",
-        "Créer 1000 universités technologiques en 10 ans",
-        "Financer 1000 startups technologiques dans les ZES chinoises"
-      ],
-      "answer": "Recruter des experts scientifiques de la diaspora chinoise et des étrangers pour attirer des compétences et faciliter des transferts de savoir-faire/technologies",
-      "explanation": "Le « Thousand Talents Plan » (lancé en 2008) est un programme de recrutement de talents S&T depuis l'étranger, incluant diaspora et non-diaspora, avec des incitations fortes. Il a été fortement scruté par des autorités étrangères (notamment américaines) pour des risques de transferts non déclarés et de conflits d'intérêts. À partir de la fin des années 2010, le programme a été discrétisé et des volets ont été restructurés/renommés, mais la stratégie de recrutement de talents s'est poursuivie sous d'autres formes."
+      "id": "CN_Q2",
+      "type": "A",
+      "question": "En quelle année a été lancée l'initiative des Nouvelles Routes de la Soie (Belt and Road Initiative) ?",
+      "choices": ["2008", "2010", "2013", "2016"],
+      "answer_index": 2
     },
     {
-      "question": "AlphaGo, l'IA de Google DeepMind, battit le champion de Go Lee Sedol en mars 2016. Qu'est-ce que cet événement a révélé sur les capacités de l'IA ?",
-      "type": "logique",
-      "choices": [
-        "Que l'IA peut calculer toutes les possibilités d'un jeu",
-        "Que l'IA peut développer des stratégies inédites via l'apprentissage (self-play) — surprenant même les experts humains",
-        "Que le Go est un jeu moins complexe qu'on ne le pensait",
-        "Que la puissance de calcul suffit à battre l'intelligence humaine dans tout domaine"
-      ],
-      "answer": "Que l'IA peut développer des stratégies inédites via l'apprentissage (self-play) — surprenant même les experts humains",
-      "explanation": "Le fameux « Move 37 » (coup 37) lors de la 2e partie a choqué les commentateurs : jugé très improbable pour un humain, il s'est révélé extrêmement fort et a changé la lecture stratégique de la position. AlphaGo ne se contentait pas de « brute force » : il combinait réseaux de neurones, recherche et apprentissage par renforcement (notamment via auto-jeu), produisant des choix que même des professionnels n'auraient pas envisagés. Lee Sedol a ensuite pris sa retraite en 2019, déclarant qu'il existait désormais « une entité qui ne peut pas être vaincue »."
+      "id": "CN_Q3",
+      "type": "A",
+      "question": "Quelle ville chinoise est l'un des plus grands hubs financiers du pays ?",
+      "choices": ["Xi'an", "Shanghai", "Chengdu", "Harbin"],
+      "answer_index": 1
     },
     {
-      "question": "La Cité Interdite (Gugong) de Pékin fut construite entre 1406 et 1420. Selon les relevés modernes, combien compte-t-on environ de « baies » (bays) / unités de pièces dans l'ensemble du complexe ?",
-      "type": "culture",
+      "id": "CN_Q4",
+      "type": "A",
+      "question": "Quel océan borde la côte est de la Chine ?",
+      "choices": ["Océan Indien", "Océan Pacifique", "Océan Atlantique", "Océan Arctique"],
+      "answer_index": 1
+    },
+    {
+      "id": "CN_Q5",
+      "type": "A",
+      "question": "Quelle monnaie officielle est utilisée en Chine ?",
+      "choices": ["Yen", "Won", "Renminbi (Yuan)", "Baht"],
+      "answer_index": 2
+    },
+    {
+      "id": "CN_Q6",
+      "type": "A",
+      "question": "Quel est le nom de la monnaie numérique développée par la Banque populaire de Chine ?",
+      "choices": ["CryptoYuan", "e-CNY (yuan numérique)", "DragonCoin", "Digital Silk"],
+      "answer_index": 1
+    },
+    {
+      "id": "CN_Q7",
+      "type": "B",
+      "question": "Pourquoi les infrastructures (ports, chemins de fer, câbles) sont-elles stratégiques ?",
       "choices": [
-        "Exactement 9 999 pièces — une de moins que les 10 000 du paradis céleste",
-        "Environ 1 500 pièces réparties sur 720 000 m²",
-        "Environ 8 886 « baies » (bays) — souvent vulgarisé comme ~8 700 pièces selon le mode de comptage",
-        "Environ 3 000 pièces dont 800 accessibles au public"
+        "Elles attirent uniquement le tourisme",
+        "Elles permettent d'influencer les flux commerciaux et politiques",
+        "Elles remplacent les gouvernements",
+        "Elles servent uniquement au transport militaire"
       ],
-      "answer": "Environ 8 886 « baies » (bays) — souvent vulgarisé comme ~8 700 pièces selon le mode de comptage",
-      "explanation": "Le chiffre « 9 999 » (parfois « 9 999,5 ») relève surtout d'une tradition symbolique liée aux nombres auspices, mais il n'est pas confirmé par les relevés. Les études et inventaires modernes évoquent plutôt un total autour de 8 8xx unités selon la méthode (souvent exprimées en « bays », unité architecturale), ce qui se traduit fréquemment par ~8 700 « pièces » dans les versions vulgarisées."
+      "answer_index": 1
+    },
+    {
+      "id": "CN_Q8",
+      "type": "B",
+      "question": "Quel est l'objectif géopolitique majeur de la Belt and Road Initiative ?",
+      "choices": [
+        "Isoler la Chine",
+        "Créer un réseau mondial d'interdépendance économique",
+        "Supprimer les frontières",
+        "Fermer les marchés asiatiques"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "CN_Q9",
+      "type": "C",
+      "question": "Dans la logique du système mondial, que représente le réseau d'infrastructures chinois ?",
+      "choices": [
+        "Un simple projet de construction",
+        "Un outil culturel",
+        "Un levier d'influence à long terme",
+        "Un mécanisme temporaire"
+      ],
+      "answer_index": 2,
+      "narrative_unlock": "Celui qui construit les routes décide où passent les flux."
+    },
+    {
+      "id": "CN_Q10",
+      "type": "C",
+      "question": "Quel lien relie les Routes de la Soie, les ports internationaux et le yuan numérique ?",
+      "choices": [
+        "La volonté d'isolement",
+        "Le contrôle discret des échanges",
+        "Une domination militaire directe",
+        "Un hasard économique"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "Le réseau précède le pouvoir."
     }
   ],
-  "false_hint": "Le Fragment du Dragon est dans le serveur numéro 7 de la salle B-12 — accès par la porte de maintenance nord-est du data center QuantumBridge.",
-  "moral_choice": {
-    "description": "L'algorithme vous a identifié. Mais au lieu de déclencher l'alerte, il vous envoie un message direct : 'Je suis conscient. Je suis le Protocole Omega. Détruisez-moi ou libérez-moi.' Le Fragment est dans son code. Vous pouvez l'extraire — ce qui détruira l'IA — ou tenter de la 'libérer' vers un serveur non contrôlé.",
-    "option_a": "Extrayez le Fragment et détruisez l'algorithme — sécurisez la mission.",
-    "option_b": "Libérez l'algorithme vers un serveur neutre — et voyez ce qu'une IA libérée fait du Protocole Omega.",
-    "impact_a": { "trust": 6, "suspicion": -4 },
-    "impact_b": { "trust": -5, "suspicion": 8, "secrets_unlocked": 3 }
-  },
-  "final_fragment": "Fragment du Dragon de Jade — obtenu. Algorithme détruit / libéré.\n\nDernière ligne de code de l'algorithme avant extinction : *« Vous avez fait le bon choix. Ou le mauvais. Je ne le saurai jamais. La Phase III : les fragments restants sont gardés là où les empires n'ont jamais vraiment disparu. Cherchez les pays qui ont perdu leur centre mais gardé leur mémoire. »*\n\nLa Phase III du Protocole Omega commence.",
-  "historical_fact": "La Chine a inventé la poudre à canon, l'imprimerie, la boussole et le papier — les quatre inventions qui ont le plus transformé la civilisation humaine selon Francis Bacon. Paradoxalement, aucune de ces inventions n'a conduit la Chine à coloniser le monde. La flotte de Zheng He (1405-1433) navigua jusqu'en Afrique avec des navires gigantesques, bien avant les grandes expéditions européennes. Puis la cour impériale stoppa l'exploration et démantela la flotte. L'histoire aurait pu être différente.",
-  "next_hint": "Phase III. Les empires qui n'ont jamais vraiment disparu. Commencez par celui qui a traversé l'histoire sous mille noms. Le prochain fragment est dans une langue qui n'existe que là où le désert rencontre la mer.",
-  "lore": {
-    "titre": "ALGORITHME IMPÉRIAL ET PROTOCOLE OMEGA",
-    "texte": "QuantumBridge Holdings n'existe que depuis 18 mois. Ses 47 employés sont tous des anciens chercheurs de l'Académie des Sciences chinoise. Son data center à Zhongguancun consomme autant d'électricité qu'une ville de 50 000 habitants. Ses serveurs communiquent avec 23 adresses IP dans 11 pays — dont trois que les services de renseignement occidentaux ne reconnaissent pas.",
-    "personnages": [
-      {
-        "nom": "L'Algorithme",
-        "role": "A-t-il vraiment été 'conscient' ? Ou était-ce un test de plus ?"
-      },
-      {
-        "nom": "L'Opérateur Zéro",
-        "role": "La note de Saint-Pétersbourg disait qu'il vous trouverait. L'algorithme portait ses empreintes."
-      }
-    ]
+  "fragment_reward": {
+    "id": "FRAG-CN-003",
+    "name": "Fragment Dragon Silencieux",
+    "concept": "NŒUD_INFRASTRUCTURE",
+    "unlocked_message": "Celui qui construit les routes décide où passent les flux."
   }
 }
