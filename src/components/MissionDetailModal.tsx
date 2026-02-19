@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Shield, Eye, CheckCircle } from "lucide-react";
+import { X, Star, Shield, Eye, CheckCircle, CheckCircle2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
@@ -13,26 +13,111 @@ interface MissionRecord {
   mission_data: any;
 }
 
+interface FragmentReward {
+  id: string;
+  name: string;
+  concept: string;
+  unlocked_message: string;
+}
+
+interface CountryJSON {
+  fragment_reward?: FragmentReward;
+}
+
 interface MissionDetailModalProps {
   country: Tables<"countries">;
   unlockedPieces: number;
   totalPieces: number;
   missions: MissionRecord[];
+  hasFragment?: boolean;
   onClose: () => void;
 }
+
+// Puzzle piece SVG path
+const PIECE_PATH = "M 4 4 L 16 4 Q 14 8 16 10 L 20 10 L 20 20 Q 16 18 14 20 L 4 20 Q 6 16 4 14 Z";
+
+const FLAG_EMOJIS: Record<string, string> = {
+  CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", US: "🇺🇸",
+  DE: "🇩🇪", IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷",
+  CN: "🇨🇳", IN: "🇮🇳", RU: "🇷🇺", MA: "🇲🇦", GR: "🇬🇷",
+};
+
+const FragmentSVG = ({ collected, size = 80 }: { collected: boolean; size?: number }) => {
+  const color = collected ? "hsl(40 80% 55%)" : "hsl(220 15% 35%)";
+  const gradId = `modal-frag-grad-${collected ? "yes" : "no"}`;
+  const glowId = `modal-frag-glow-${collected ? "yes" : "no"}`;
+
+  return (
+    <motion.div
+      className="relative"
+      initial={{ scale: 0.7, rotate: -10 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+    >
+      {/* Glow halo */}
+      {collected && (
+        <motion.div
+          className="absolute inset-0 rounded-full blur-xl"
+          style={{ background: "hsl(40 80% 55% / 0.35)" }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ repeat: Infinity, duration: 2.5 }}
+        />
+      )}
+      <svg width={size} height={size} viewBox="0 0 24 24" className="relative z-10 drop-shadow-2xl">
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity="1" />
+            <stop offset="60%" stopColor={color} stopOpacity="0.8" />
+            <stop offset="100%" stopColor="hsl(220 20% 8%)" stopOpacity="0.9" />
+          </linearGradient>
+          <filter id={glowId}>
+            <feGaussianBlur stdDeviation="0.6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        {/* Shadow */}
+        <path d={PIECE_PATH} fill="hsl(220 20% 4%)" transform="translate(1 1.2)" opacity="0.7" />
+        {/* Main */}
+        <path
+          d={PIECE_PATH}
+          fill={`url(#${gradId})`}
+          stroke={color}
+          strokeWidth="0.8"
+          filter={`url(#${glowId})`}
+        />
+        {/* Shine */}
+        <path d={PIECE_PATH} fill="none" stroke="white" strokeWidth="0.5" opacity={collected ? 0.3 : 0.08} strokeDasharray="2 3" />
+        {/* Top highlight */}
+        <path d={PIECE_PATH} fill="white" opacity={collected ? 0.12 : 0.03} transform="translate(0.5 0.5) scale(0.7)" style={{ transformOrigin: "12px 12px" }} />
+      </svg>
+    </motion.div>
+  );
+};
 
 const MissionDetailModal = ({
   country,
   unlockedPieces,
-  totalPieces,
   missions,
+  hasFragment,
   onClose,
 }: MissionDetailModalProps) => {
+  const collected = hasFragment ?? unlockedPieces > 0;
   const latestMission = missions[missions.length - 1] ?? null;
-  const progress = totalPieces > 0 ? Math.round((unlockedPieces / totalPieces) * 100) : 0;
+  const flag = FLAG_EMOJIS[country.code] || "🏳️";
 
-  const flagEmoji: Record<string, string> = { CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬" };
-  const flag = flagEmoji[country.code] || "🏳️";
+  const [countryJSON, setCountryJSON] = useState<CountryJSON | null>(null);
+
+  useEffect(() => {
+    fetch(`/content/countries/${country.code}.json`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setCountryJSON(data))
+      .catch(() => null);
+  }, [country.code]);
+
+  const fragmentReward = countryJSON?.fragment_reward;
 
   return (
     <AnimatePresence>
@@ -58,8 +143,8 @@ const MissionDetailModal = ({
           animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 280, damping: 20 }}
         >
-          {/* Header gradient */}
-          <div className="relative px-6 pt-6 pb-4 border-b border-border bg-gradient-to-r from-primary/10 to-transparent">
+          {/* Header */}
+          <div className="relative px-6 pt-6 pb-5 border-b border-border bg-gradient-to-r from-primary/10 to-transparent">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
@@ -67,33 +152,82 @@ const MissionDetailModal = ({
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-4">
-              <span className="text-5xl">{flag}</span>
-              <div>
-                <h2 className="font-display font-bold text-xl text-primary tracking-wider">
-                  {country.name.toUpperCase()}
-                </h2>
-                <p className="text-xs text-muted-foreground font-display tracking-widest mt-0.5">
-                  PIÈCES: {unlockedPieces}/{totalPieces}
-                </p>
-              </div>
-            </div>
+            <div className="flex items-center gap-5">
+              {/* Fragment SVG */}
+              <FragmentSVG collected={collected} size={80} />
 
-            {/* Progress bar */}
-            <div className="mt-4">
-              <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-3xl">{flag}</span>
+                  <h2 className="font-display font-bold text-xl text-primary tracking-wider truncate">
+                    {country.name.toUpperCase()}
+                  </h2>
+                </div>
+
+                {/* Binary fragment status */}
+                {collected ? (
+                  <motion.div
+                    className="flex items-center gap-2 mt-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color: "hsl(40 80% 55%)" }} />
+                    <span className="text-sm font-display tracking-widest font-bold" style={{ color: "hsl(40 80% 55%)" }}>
+                      FRAGMENT COLLECTÉ
+                    </span>
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm font-display tracking-widest text-muted-foreground">
+                      FRAGMENT NON OBTENU
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Body */}
-          <div className="px-6 py-5 space-y-5 max-h-96 overflow-y-auto">
+          <div className="px-6 py-5 space-y-4 max-h-[420px] overflow-y-auto">
+
+            {/* Fragment narrative (from JSON) */}
+            {collected && fragmentReward && (
+              <motion.div
+                className="rounded-lg p-4 border"
+                style={{
+                  background: "hsl(40 80% 55% / 0.06)",
+                  borderColor: "hsl(40 80% 55% / 0.25)",
+                }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <p className="text-xs font-display tracking-widest text-muted-foreground mb-3">DONNÉES DU FRAGMENT</p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-display tracking-wider">NOM</p>
+                    <p className="text-sm font-display font-bold" style={{ color: "hsl(40 80% 65%)" }}>
+                      {fragmentReward.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-display tracking-wider">CONCEPT</p>
+                    <p className="text-xs font-display font-bold tracking-widest" style={{ color: "hsl(40 60% 50%)" }}>
+                      {fragmentReward.concept}
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t" style={{ borderColor: "hsl(40 80% 55% / 0.2)" }}>
+                    <p className="text-xs text-muted-foreground font-display tracking-wider mb-1">INDICE NARRATIF</p>
+                    <p className="text-sm italic leading-relaxed" style={{ color: "hsl(40 85% 70%)" }}>
+                      « {fragmentReward.unlocked_message} »
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Country description */}
             {country.description && (
               <div>
@@ -115,7 +249,6 @@ const MissionDetailModal = ({
                   <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 </div>
 
-                {/* Score */}
                 {latestMission.score !== null && latestMission.mission_data?.enigmes && (
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="h-4 w-4 text-primary" />
@@ -125,7 +258,6 @@ const MissionDetailModal = ({
                   </div>
                 )}
 
-                {/* Moral choice made */}
                 {latestMission.mission_data?.moral_choice && (
                   <div className="flex items-start gap-2">
                     <Eye className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -138,7 +270,6 @@ const MissionDetailModal = ({
                   </div>
                 )}
 
-                {/* Final fragment */}
                 {latestMission.mission_data?.final_fragment && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <p className="text-xs text-muted-foreground font-display tracking-wider mb-1">FRAGMENT NARRATIF</p>
@@ -157,7 +288,6 @@ const MissionDetailModal = ({
               </div>
             )}
 
-            {/* All missions count */}
             {missions.length > 1 && (
               <p className="text-xs text-muted-foreground text-center">
                 {missions.length} mission{missions.length > 1 ? "s" : ""} effectuée{missions.length > 1 ? "s" : ""}
@@ -169,7 +299,7 @@ const MissionDetailModal = ({
           <div className="px-6 pb-6 pt-2">
             <Link to={`/mission/${country.id}`} onClick={onClose}>
               <Button className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90">
-                {unlockedPieces >= totalPieces ? "REJOUER LA MISSION" : "LANCER LA MISSION"}
+                {collected ? "REJOUER LA MISSION" : "LANCER LA MISSION"}
               </Button>
             </Link>
           </div>
