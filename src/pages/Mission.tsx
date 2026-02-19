@@ -1181,7 +1181,7 @@ const Mission = () => {
                 </motion.div>
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(0 0% 70%)" }}>
                   "Le Cercle ne pardonne pas les erreurs. Mais chaque échec est un enseignement."<br />
-                  <span className="not-italic font-display tracking-widest text-[10px]">— J. Velcourt</span>
+                  <span className="not-italic font-display tracking-widest text-[10px]">— J. Valcourt</span>
                 </motion.p>
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
                   <Button onClick={retryMission} className="flex-1 font-display tracking-wider py-5 border-0" style={{ background: "hsl(0 70% 35%)", color: "white" }}>
@@ -1234,7 +1234,7 @@ const Mission = () => {
                   transition={{ delay: 0.9 }}
                   className="text-xs text-muted-foreground font-display tracking-widest"
                 >
-                  — J. Velcourt
+                  — J. Valcourt
                 </motion.p>
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }}>
                   <Button
