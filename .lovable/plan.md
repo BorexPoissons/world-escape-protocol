@@ -1,105 +1,75 @@
 
-# Affichage horizontal "gauche à droite" + pays complété grisé + pays suivant qui clignote
+# Correction : Score objectif visible en permanence pendant la mission
 
-## Ce que l'utilisateur veut (référence image)
+## Le problème identifié
 
-1. **Layout horizontal** : les pays du Signal Initial s'affichent en ligne, de gauche à droite, dans l'ordre de la séquence (CH → US → CN → BR → EG)
-2. **Pays réussi** : grisé visuellement (overlay semi-transparent), mais toujours cliquable pour rejouer — avec une icône ✓ visible
-3. **Pays suivant** (le premier non-complété) : animation de pulsation/clignotement pour attirer l'attention
+Le joueur ne comprend pas pourquoi il échoue avec 4/6 alors qu'il avait encore des vies et du bonus.
 
----
+La raison : **les vies et le bonus pool protègent seulement contre l'élimination prématurée** (si on perd toutes ses vies en cours de route). Mais la règle finale est indépendante : il faut atteindre **5 bonnes réponses sur 6** pour obtenir le fragment.
 
-## Changements prévus
+Actuellement, cet objectif n'est visible qu'à l'écran d'intro (dans le panneau de règles) et dans l'écran d'échec. Pendant le quiz lui-même, le joueur voit seulement :
+- Sa question actuelle (ex : `3/6`)
+- Ses vies (2 cœurs)
+- Son timer
+- Son bonus pool
 
-### 1. Layout du groupe Signal Initial — de grille à ligne horizontale
+Il ne voit **pas** son score actuel en temps réel ni la cible à atteindre.
 
-**Fichier :** `src/pages/Dashboard.tsx` — section grille (lignes 794–856)
+## Ce qui va changer
 
-Au lieu de `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3`, on utilise une ligne scrollable horizontalement pour la saison 0 :
+### 1. Affichage du score en temps réel dans le header pendant l'enigme
 
-```tsx
-// Pour seasonNum === 0 (Signal Initial)
-<div className="flex flex-row gap-4 overflow-x-auto pb-2">
-  {/* cartes de pays dans l'ordre */}
-</div>
-```
-
-Chaque carte aura une largeur fixe (`min-w-[260px] w-[260px]`) pour que l'alignement horizontal soit net.
-
-L'ordre est garanti par `SIGNAL_INITIAL_SEQUENCE` déjà en place — il suffit de trier les pays du groupe 0 dans cet ordre avant rendu.
-
-### 2. Pays complété — grisé mais rejouable
-
-**Fichier :** `src/components/CountryCard.tsx`
-
-Quand `completed === true`, on ajoute un overlay gris semi-transparent sur la carte :
-
-```tsx
-{completed && (
-  <div className="absolute inset-0 bg-background/50 rounded-xl pointer-events-none z-10" />
-)}
-```
-
-La carte reste cliquable (le `<Link>` encapsule toujours tout). On affiche clairement "REJOUER" et le badge ✓ reste visible.
-
-Adaptation du style de la carte complétée : `opacity-70` sur le contenu principal (texte), et la bande dorée du haut reste pour indiquer la réussite.
-
-### 3. Pays suivant à jouer — animation de pulsation
-
-**Fichier :** `src/pages/Dashboard.tsx`
-
-On calcule `nextUnlockedCode` : le premier pays de `SIGNAL_INITIAL_SEQUENCE` qui n'est pas encore complété et n'est pas verrouillé.
-
-On passe une prop `isNext` au `CountryCard` ou on enveloppe la carte dans un `motion.div` avec une animation de ring pulsant :
-
-```tsx
-// Ring pulsant autour de la prochaine carte
-<motion.div
-  animate={{ boxShadow: [
-    "0 0 0px hsl(40 80% 55% / 0)",
-    "0 0 20px hsl(40 80% 55% / 0.6)",
-    "0 0 0px hsl(40 80% 55% / 0)",
-  ]}}
-  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-  className="rounded-xl"
->
-  <CountryCard ... />
-</motion.div>
-```
-
----
-
-## Détail des modifications fichier par fichier
-
-### `src/pages/Dashboard.tsx`
-
-1. **Trier les pays de la saison 0** dans l'ordre `SIGNAL_INITIAL_SEQUENCE` avant affichage
-2. **Changer le conteneur** de grille en flex-row pour `seasonNum === 0`
-3. **Identifier `isNextCountry`** : premier code dans `SIGNAL_INITIAL_SEQUENCE` qui n'est pas complété et dont `seqLocked === false`
-4. **Envelopper la carte suivante** dans un `motion.div` avec animation de halo pulsant
-
-### `src/components/CountryCard.tsx`
-
-1. **Overlay grisé** sur les cartes complétées (overlay `bg-background/50` + `pointer-events-none`)
-2. **Badge "COMPLÉTÉ"** plus visible (déjà présent via `CheckCircle`, on peut le renforcer)
-3. **Texte REJOUER** toujours visible (pas seulement au hover) quand `completed === true`
-
----
-
-## Comportement final attendu
+Dans le header (top bar), à côté du compteur `3/6`, ajouter un indicateur de score :
 
 ```
-[🇨🇭 SUISSE ✓] → [🇺🇸 ÉTATS-UNIS ✨ pulsant] → [🔒 verrouillé] → [🔒 verrouillé] → [🔒 verrouillé]
-  grisé, rejouable     prochain à jouer            flou CN               flou BR               flou EG
+[❤️❤️]  Question 3/6  |  ✓ 2/5
 ```
 
-Pour les clients payants (saison 1+), la même logique s'applique mais sans verrouillage séquentiel.
+Concrètement : à droite du compteur de questions, afficher `✓ X/5` (score actuel / objectif) qui se met à jour à chaque bonne réponse. Il devient vert quand atteint.
 
----
+**Fichier :** `src/pages/Mission.tsx` — section header (lignes 753–758)
 
-## Résumé
+### 2. Indicateur de score sous les boutons de réponse
 
-| Fichier | Modification |
-|---|---|
-| `src/pages/Dashboard.tsx` | Layout flex-row pour saison 0, tri séquentiel, halo pulsant sur pays suivant |
-| `src/components/CountryCard.tsx` | Overlay gris sur pays complétés, REJOUER toujours visible |
+Sous les choix de réponse, à côté des cœurs, ajouter une ligne :
+
+```
+[❤️❤️  2 VIES]     [✓ 2 bonnes réponses — Objectif : 5/6]
+```
+
+Cela permet au joueur de voir à tout moment où il en est par rapport à l'objectif, pas seulement ses vies.
+
+**Fichier :** `src/pages/Mission.tsx` — section enigme (ligne 964–973)
+
+### 3. Améliorer le message d'échec "score insuffisant"
+
+L'écran d'échec actuel dit "Il faut 5/6 minimum" mais sans rappeler clairement que les vies ne compensent pas le score.
+
+Ajouter une ligne explicative :
+
+> "Vous aviez encore des vies restantes, mais le score minimum de 5/6 n'a pas été atteint. Les vies protègent contre l'élimination en cours de mission — l'objectif final reste de répondre correctement à au moins 5 questions."
+
+**Fichier :** `src/pages/Mission.tsx` — section `failed` (lignes 1126–1135)
+
+### 4. Bannière d'objectif persistante sous le timer
+
+Sous la barre de progression des questions (les points), ajouter une ligne discrète :
+
+```
+Objectif : ✓ 2 / 5 bonnes réponses
+```
+
+Cette ligne devient dorée et affiche ✅ quand l'objectif est atteint (= mission gagnée instantanément à ce moment-là).
+
+**Fichier :** `src/pages/Mission.tsx` — section enigme (lignes 923–928)
+
+## Résumé des modifications
+
+| Fichier | Section | Modification |
+|---|---|---|
+| `src/pages/Mission.tsx` | Header top bar | Score actuel `✓ X/Y` à côté du compteur de questions |
+| `src/pages/Mission.tsx` | Sous les réponses | Score en temps réel + objectif affiché avec les vies |
+| `src/pages/Mission.tsx` | Sous les dots de progression | Barre "Objectif : X/5" mise à jour en live |
+| `src/pages/Mission.tsx` | Écran d'échec | Message clarifiant que les vies ≠ score final |
+
+Aucune règle de jeu ne change — seulement la communication visuelle est améliorée pour que le joueur comprenne exactement pourquoi il a échoué et ce qu'il doit faire.
