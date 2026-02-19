@@ -1,66 +1,136 @@
 
-## Refonte du système de timer et des vies — Mission.tsx
+# Rendre le bonus d'échange de vie MANUEL (bouton explicite)
 
-### Ce qui change
+## Problème actuel
 
-**1. Timer passe de 60s à 120s**
-La constante `PUZZLE_TIMER_SECONDS` passe de `60` à `120`. Le timer pénalisé par la suspicion passe donc de `~51s` à `~102s` (−15%). L'affichage dans l'intro s'adapte automatiquement.
+Quand le joueur tombe à 0 vie avec bonus >= 120s, la vie est **automatiquement** restituée, sans que le joueur ne fasse rien. C'est invisible et frustrant.
 
-**2. Barre de bonus de temps**
-Quand le joueur répond correctement avant la fin du timer, les secondes restantes s'accumulent dans un compteur `bonusSeconds`. Cette barre est affichée de façon persistante sous le header (visible pendant toute la mission) et augmente en temps réel à chaque bonne réponse rapide. Exemple : répondu en 40s → 80s restants ajoutés au bonus.
+## Ce qui change
 
-**3. Échange vie contre bonus (règle des 3 conditions)**
-Si les 3 conditions suivantes sont réunies simultanément :
-- Le joueur n'a plus que **1 vie sur 3** (2 vies perdues)
-- Il a résolu **plus de 50% des énigmes** (ex : 2/4 ou 3/4)
-- Son **bonus de temps est ≥ 60s**
+Le rescue devient un **choix conscient du joueur** : un bouton apparaît, le joueur doit cliquer pour activer l'échange.
 
-Alors un bouton `ÉCHANGER 60s BONUS → +1 VIE` apparaît dans l'interface. Le joueur peut l'activer **une seule fois par mission**. Cela lui redonne 1 vie et déduit 60s de son bonus.
+---
 
-### Détail technique — fichier `src/pages/Mission.tsx`
+## Nouveau comportement
 
-**Nouveaux états à ajouter :**
+### Quand les vies atteignent 0
+
+Au lieu de déclencher le rescue automatiquement, on passe dans un **état intermédiaire** : `phase = "rescue_offer"`.
+
+Sur cet écran :
+- Affichage de l'état : "0 vie restante"
+- Affichage du bonus actuel : "⚡ Vous avez XXXs de bonus"
+- **Bouton principal** : `DÉPENSER 120s → RÉCUPÉRER 1 VIE`
+- **Bouton secondaire** : `Abandonner la mission`
+
+Si le bouton est cliqué :
+- `bonusPool -= 120`
+- `lives = 1`
+- Retour en `phase = "enigme"` sur la question suivante
+- Toast de confirmation
+
+Si le joueur refuse (abandon) ou si `bonusPool < 120` → `phase = "failed"`.
+
+---
+
+## Détail technique — fichier `src/pages/Mission.tsx`
+
+### 1. Nouveau type de phase
+
 ```
-bonusSeconds: number         // cumul des secondes économisées
-lifeTradeUsed: boolean       // échange déjà fait cette mission ?
-```
-
-**Logique dans `handleAnswer` (réponse correcte) :**
-```
-const saved = timeLeft;      // secondes restantes sur le timer actuel
-setBonusSeconds(prev => prev + saved);
-```
-
-**Condition d'affichage du bouton d'échange :**
-```
-lives === 1
-&& currentEnigme >= Math.floor(mission.enigmes.length / 2)
-&& bonusSeconds >= 60
-&& !lifeTradeUsed
-```
-
-**Action du bouton d'échange :**
-```
-setLives(prev => prev + 1);
-setBonusSeconds(prev => prev - 60);
-setLifeTradeUsed(true);
-toast("💛 Vie récupérée grâce à votre rapidité !");
+type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed" | "rescue_offer";
 ```
 
-**Affichage de la barre bonus :**
-La barre bonus s'affiche dans le header en-dessous des cœurs, avec un label `⚡ BONUS` en jaune/doré et la valeur en secondes. Elle grandit proportionnellement (cap visuel à 120s pour la largeur max).
+### 2. Dans `handleAnswer` et `handleTimeOut` — remplacer le rescue auto
 
-### Reset complet dans `retryMission`
+**Avant (auto) :**
+```ts
+if (newLives <= 0) {
+  if (bonusPool >= 120) {
+    setBonusPool(prev => prev - 120);
+    setLives(1);
+    toast({ title: "⚡ Bonus activé !" ... });
+  } else {
+    setTimeout(() => setPhase("failed"), 1400);
+  }
+}
 ```
-setBonusSeconds(0);
-setLifeTradeUsed(false);
+
+**Après (manuel) :**
+```ts
+if (newLives <= 0) {
+  if (bonusPool >= 120) {
+    setTimeout(() => setPhase("rescue_offer"), 1400); // après révélation de la réponse
+  } else {
+    setTimeout(() => setPhase("failed"), 1400);
+  }
+}
 ```
 
-### Résumé des fichiers modifiés
-- `src/pages/Mission.tsx` — le seul fichier à modifier
+### 3. Nouveau handler `handleRescue`
 
-### Ce qui NE change PAS
-- La logique de suspicion (malus −15% du timer)
-- Les vies initiales (3 ou 2 selon suspicion > 70)
-- Le nombre max de tentatives par énigme (2)
-- L'échange de vie n'augmente pas le maximum de vies — il permet juste de récupérer 1 vie perdue
+```ts
+const handleRescue = () => {
+  setBonusPool(prev => prev - 120);
+  setLives(1);
+  setAnswerRevealed(false);
+  setSelectedAnswer(null);
+  setAttemptsOnCurrent(0);
+  // Avancer à la question suivante
+  if (currentEnigme < mission!.enigmes.length - 1) {
+    setCurrentEnigme(c => c + 1);
+  }
+  setPhase("enigme");
+  toast({ title: "⚡ Vie récupérée !", description: "120s de bonus utilisés. Mission continue." });
+};
+```
+
+### 4. Nouvel écran `rescue_offer` dans le JSX
+
+Entre l'écran `enigme` et l'écran `failed`, ajouter :
+
+```tsx
+{phase === "rescue_offer" && (
+  <motion.div key="rescue" ... className="space-y-6 text-center">
+    <div className="text-6xl">💔</div>
+    <h2 className="text-2xl font-display text-destructive">MISSION EN DANGER</h2>
+    <p className="text-muted-foreground">Vous n'avez plus de vie.</p>
+    
+    {/* Bonus display */}
+    <div className="bg-card border border-yellow-500/40 rounded-lg p-4">
+      <p className="text-yellow-400 font-display text-lg">⚡ {bonusPool}s de bonus accumulé</p>
+      <p className="text-sm text-muted-foreground mt-1">Dépensez 120s pour continuer</p>
+    </div>
+
+    {/* Exchange button */}
+    <Button 
+      onClick={handleRescue}
+      className="w-full bg-yellow-500 text-black font-display tracking-wider hover:bg-yellow-400"
+    >
+      ⚡ DÉPENSER 120s → +1 VIE
+    </Button>
+    
+    {/* Abandon button */}
+    <Button 
+      variant="ghost" 
+      onClick={() => setPhase("failed")}
+      className="w-full text-muted-foreground"
+    >
+      Abandonner la mission
+    </Button>
+  </motion.div>
+)}
+```
+
+---
+
+## Résumé des changements
+
+| Avant | Après |
+|---|---|
+| Rescue automatique et invisible | Rescue explicite via bouton |
+| Phase passe directement à enigme | Nouvelle phase intermédiaire `rescue_offer` |
+| Toast discret | Écran dédié avec choix clair |
+
+## Fichier modifié
+- `src/pages/Mission.tsx` uniquement (ajout du type de phase, modification de `handleAnswer`/`handleTimeOut`, nouveau handler `handleRescue`, nouveau bloc JSX)
