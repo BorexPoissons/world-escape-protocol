@@ -8,8 +8,8 @@ export interface MapCountry {
   unlockedPieces: number;
   totalPieces: number;
   visibility: "playable" | "locked_upgrade" | "silhouette" | "hidden";
-  x: number; // % position on map
-  y: number;
+  x: number; // % left (puzzle_position_x)
+  y: number; // % top  (puzzle_position_y)
   seasonNumber?: number;
   isFree?: boolean;
 }
@@ -22,39 +22,35 @@ interface CinematicWorldMapProps {
   onCountryClick: (country: MapCountry) => void;
 }
 
-// Geographic positions calibrated to match the WEP map image (% of container)
+// Fallback geo positions (used if puzzle_position_x/y not yet in DB)
 export const COUNTRY_GEO: Record<string, { x: number; y: number }> = {
-  // ── SEASON 0 — 5 Free Countries ──
-  CH: { x: 51.5, y: 32 },   // Switzerland — Central Europe
-  BR: { x: 30, y: 63 },     // Brazil — South America
-  CN: { x: 76, y: 36 },     // China — East Asia
-  US: { x: 17, y: 34 },     // USA — North America
-  IN: { x: 67, y: 46 },     // India — South Asia
-  // ── SEASON 1 ──
-  JP: { x: 82, y: 33 },
-  EG: { x: 56, y: 46 },
-  ES: { x: 46, y: 37 },
-  GR: { x: 54, y: 38 },
-  IT: { x: 52, y: 37 },
-  FR: { x: 48, y: 32 },
-  MA: { x: 46, y: 44 },
-  RU: { x: 65, y: 22 },
-  DE: { x: 51, y: 29 },
-  // ── OTHERS ──
-  GB: { x: 47, y: 27 },
-  CA: { x: 16, y: 24 },
-  AU: { x: 80, y: 68 },
-  MX: { x: 15, y: 44 },
-  ZA: { x: 55, y: 72 },
-  TR: { x: 58, y: 36 },
-  AR: { x: 28, y: 76 },
-  KR: { x: 80, y: 35 },
-  PT: { x: 44, y: 37 },
-  NL: { x: 49, y: 28 },
-  SE: { x: 52, y: 23 },
+  // Season 0 — Official validated coords
+  CH: { x: 52.5, y: 26.5 },
+  BR: { x: 31.9, y: 56.7 },
+  CN: { x: 77.8, y: 42.2 },
+  US: { x: 22.0, y: 32.3 },
+  IN: { x: 64.8, y: 51.8 },
+  // Season 1 — approximate
+  JP: { x: 83,   y: 32   },
+  EG: { x: 57,   y: 45   },
+  ES: { x: 46,   y: 36   },
+  GR: { x: 54,   y: 37   },
+  IT: { x: 52,   y: 36   },
+  FR: { x: 48,   y: 31   },
+  MA: { x: 46,   y: 43   },
+  RU: { x: 65,   y: 21   },
+  DE: { x: 51,   y: 28   },
+  GB: { x: 47,   y: 26   },
+  CA: { x: 16,   y: 23   },
+  AU: { x: 80,   y: 67   },
+  MX: { x: 15,   y: 43   },
+  ZA: { x: 55,   y: 71   },
+  TR: { x: 58,   y: 35   },
+  AR: { x: 28,   y: 75   },
+  KR: { x: 80,   y: 34   },
 };
 
-// Connection lines between the 5 free countries (narrative web)
+// Narrative connections between the 5 free countries
 const FREE_CONNECTIONS: [string, string][] = [
   ["CH", "US"],
   ["CH", "CN"],
@@ -84,391 +80,355 @@ const CinematicWorldMap = ({
   const silhouetteNodes = countries.filter(c => c.visibility === "silhouette");
   const lockedNodes = countries.filter(c => c.visibility === "locked_upgrade");
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (e: React.DragEvent, countryId: string) => {
-    e.preventDefault();
-    onDropOnCountry(countryId);
-  };
-
   return (
     <div
       className="relative w-full rounded-2xl overflow-hidden select-none"
       style={{
+        aspectRatio: "16 / 9",
         border: "1px solid hsl(40 80% 55% / 0.25)",
-        boxShadow: "0 0 60px hsl(40 80% 55% / 0.08), inset 0 0 80px hsl(220 30% 3% / 0.5)",
-        aspectRatio: "16/9",
+        boxShadow: "0 0 60px hsl(40 80% 55% / 0.08)",
       }}
     >
-      {/* ── Real WEP Map Image as background ── */}
+      {/* ── Background: official WEP map image ── */}
       <img
         src={carteWep}
         alt="Carte World Escape Protocol"
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: "brightness(0.75) saturate(0.85)" }}
+        style={{ filter: "brightness(0.72) saturate(0.8)" }}
         draggable={false}
       />
 
-      {/* Dark vignette overlay */}
+      {/* Vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 50% 50%, transparent 40%, hsl(220 25% 4% / 0.6) 100%)",
+          background: "radial-gradient(ellipse at 50% 50%, transparent 35%, hsl(220 25% 4% / 0.55) 100%)",
         }}
       />
 
-      {/* Scanline effect */}
+      {/* Scanlines */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        className="absolute inset-0 pointer-events-none opacity-[0.035]"
         style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(220 15% 5%) 2px, hsl(220 15% 5%) 4px)",
+          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(220 15% 4%) 2px, hsl(220 15% 4%) 4px)",
         }}
       />
 
-      {/* SVG overlay — positioned absolutely on top of image */}
+      {/* ── SVG layer: connection lines only ──
+          Uses preserveAspectRatio="none" so SVG coords map 1:1 to % of container.
+          x in SVG = x% of width, y in SVG = y * 0.5625 (16:9 ratio) */}
       <svg
         viewBox="0 0 100 56.25"
-        className="absolute inset-0 w-full h-full"
-        preserveAspectRatio="xMidYMid meet"
-        style={{ pointerEvents: "none" }}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        preserveAspectRatio="none"
       >
         <defs>
-          <filter id="mapGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="0.8" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          <filter id="nodeGlow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          <filter id="freeGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <filter id="lineGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="0.5" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
           <linearGradient id="goldLine" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(40 80% 55%)" stopOpacity="0.05" />
-            <stop offset="50%" stopColor="hsl(40 80% 65%)" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="hsl(40 80% 55%)" stopOpacity="0.05" />
-          </linearGradient>
-          <linearGradient id="freeGoldLine" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(40 90% 65%)" stopOpacity="0.1" />
-            <stop offset="50%" stopColor="hsl(40 90% 75%)" stopOpacity="1" />
-            <stop offset="100%" stopColor="hsl(40 90% 65%)" stopOpacity="0.1" />
+            <stop offset="0%"   stopColor="hsl(40 90% 65%)" stopOpacity="0.04" />
+            <stop offset="50%"  stopColor="hsl(40 90% 72%)" stopOpacity="0.88" />
+            <stop offset="100%" stopColor="hsl(40 90% 65%)" stopOpacity="0.04" />
           </linearGradient>
         </defs>
 
-        {/* ── Connection lines between free countries ── */}
         {FREE_CONNECTIONS.map(([fromCode, toCode], idx) => {
           const from = countries.find(c => c.code === fromCode);
-          const to = countries.find(c => c.code === toCode);
+          const to   = countries.find(c => c.code === toCode);
           if (!from || !to) return null;
 
-          const bothCompleted = from.unlockedPieces > 0 && to.unlockedPieces > 0;
-          const mx = (from.x + to.x) / 2;
-          const my = Math.min(from.y, to.y) - 7;
-          const pathD = `M ${from.x} ${from.y} Q ${mx} ${my} ${to.x} ${to.y}`;
+          // y scaled: position% → SVG units (100% height = 56.25 units)
+          const x1 = from.x,       y1 = from.y * 0.5625;
+          const x2 = to.x,         y2 = to.y   * 0.5625;
+          const qx = (x1 + x2) / 2;
+          const qy = Math.min(y1, y2) - 5;
+          const d  = `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`;
+          const active = from.unlockedPieces > 0 && to.unlockedPieces > 0;
 
           return (
             <g key={idx}>
-              {/* Dim baseline — always visible */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke="hsl(40 40% 40% / 0.25)"
-                strokeWidth="0.3"
-                strokeDasharray="1.2 1.2"
-              />
-              {bothCompleted && (
+              {/* Dim dashed baseline */}
+              <path d={d} fill="none" stroke="hsl(40 50% 45% / 0.18)" strokeWidth="0.22" strokeDasharray="0.9 0.9" />
+
+              {active && (
                 <>
                   <motion.path
-                    d={pathD}
-                    fill="none"
-                    stroke="url(#freeGoldLine)"
-                    strokeWidth="0.55"
-                    filter="url(#mapGlow)"
+                    d={d} fill="none"
+                    stroke="url(#goldLine)"
+                    strokeWidth="0.45"
                     strokeLinecap="round"
+                    filter="url(#lineGlow)"
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 2, delay: 0.4 * idx, ease: "easeInOut" }}
+                    transition={{ duration: 2, delay: 0.35 * idx, ease: "easeInOut" }}
                   />
-                  {/* Traveling dot */}
                   <motion.circle
-                    r="0.7"
-                    fill="hsl(40 90% 80%)"
-                    filter="url(#mapGlow)"
+                    r="0.55" fill="hsl(40 90% 82%)"
+                    filter="url(#lineGlow)"
                     animate={{ offsetDistance: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-                    style={{ offsetPath: `path("${pathD}")` } as any}
-                    transition={{ duration: 3.5, repeat: Infinity, delay: idx * 1.1, ease: "linear" }}
+                    style={{ offsetPath: `path("${d}")` } as any}
+                    transition={{ duration: 3.5, repeat: Infinity, delay: idx * 1.3, ease: "linear" }}
                   />
                 </>
               )}
             </g>
           );
         })}
-
-        {/* ── Silhouette nodes (season 1+ locked) ── */}
-        {silhouetteNodes.map((node) => (
-          <g key={node.id} opacity="0.2">
-            <circle
-              cx={node.x} cy={node.y} r="3"
-              fill="hsl(220 15% 10%)"
-              stroke="hsl(220 15% 20%)"
-              strokeWidth="0.4"
-              strokeDasharray="0.6 0.6"
-            />
-            <text x={node.x} y={node.y + 1} textAnchor="middle" fontSize="2.5" dominantBaseline="middle" fill="hsl(220 10% 30%)">?</text>
-          </g>
-        ))}
-
-        {/* ── Locked upgrade nodes (next season CTA) ── */}
-        {lockedNodes.map((node) => (
-          <g key={node.id} opacity="0.6">
-            <circle
-              cx={node.x} cy={node.y} r="3.5"
-              fill="hsl(40 20% 8%)"
-              stroke="hsl(40 50% 30%)"
-              strokeWidth="0.5"
-              strokeDasharray="0.8 0.4"
-            />
-            <text x={node.x} y={node.y + 1.2} textAnchor="middle" fontSize="3" dominantBaseline="middle">🔒</text>
-            <text
-              x={node.x} y={node.y + 7}
-              textAnchor="middle" fontSize="1.8"
-              fontFamily="monospace" fill="hsl(40 50% 40%)" letterSpacing="0.1"
-            >
-              SAISON 1
-            </text>
-          </g>
-        ))}
-
-        {/* ── Playable country nodes ── */}
-        {playableNodes.map((node, i) => {
-          const isFree = FREE_COUNTRY_CODES.has(node.code);
-          const isComplete = node.unlockedPieces >= node.totalPieces;
-          const hasAny = node.unlockedPieces > 0;
-          const isDropTarget = draggingFragmentId !== null;
-          const wasPlaced = placedCountryIds.includes(node.id);
-
-          const nodeColor = isComplete
-            ? "hsl(40 70% 18%)"
-            : isFree
-            ? "hsl(220 22% 12%)"
-            : "hsl(220 18% 10%)";
-          const strokeColor = isComplete
-            ? "hsl(40 85% 65%)"
-            : isFree
-            ? "hsl(40 70% 50%)"
-            : "hsl(220 15% 22%)";
-
-          return (
-            <motion.g
-              key={node.id}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15 * i, type: "spring", stiffness: 220, damping: 20 }}
-              style={{
-                transformOrigin: `${node.x}px ${node.y}px`,
-                cursor: "pointer",
-                pointerEvents: "all",
-              }}
-              onClick={() => onCountryClick(node)}
-              onDragOver={(e) => { e.preventDefault(); }}
-              onDrop={(e) => handleDrop(e as any, node.id)}
-            >
-              {/* Free country ambient halo */}
-              {isFree && (
-                <motion.circle
-                  cx={node.x} cy={node.y} r="6"
-                  fill="hsl(40 80% 55% / 0.08)"
-                  stroke="none"
-                  animate={{ r: [5.5, 7, 5.5], opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 3, delay: i * 0.5, ease: "easeInOut" }}
-                />
-              )}
-
-              {/* Drop zone ring when dragging */}
-              {isDropTarget && (
-                <motion.circle
-                  cx={node.x} cy={node.y} r="6.5"
-                  fill="hsl(40 80% 55% / 0.12)"
-                  stroke="hsl(40 80% 55%)"
-                  strokeWidth="0.5"
-                  strokeDasharray="1 0.5"
-                  animate={{ r: [6, 7, 6], opacity: [0.4, 0.9, 0.4] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
-                />
-              )}
-
-              {/* Outer glow ring — active countries */}
-              {(hasAny || isComplete) && (
-                <motion.circle
-                  cx={node.x} cy={node.y} r="5"
-                  fill="none"
-                  stroke={isComplete ? "hsl(40 85% 70%)" : "hsl(40 80% 60%)"}
-                  strokeWidth="0.35"
-                  filter="url(#nodeGlow)"
-                  animate={{ opacity: [0.3, 0.85, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 2.5, delay: i * 0.4 }}
-                />
-              )}
-
-              {/* Free badge outer ring — permanent glow for free countries */}
-              {isFree && !hasAny && (
-                <motion.circle
-                  cx={node.x} cy={node.y} r="4.5"
-                  fill="none"
-                  stroke="hsl(40 70% 50%)"
-                  strokeWidth="0.25"
-                  filter="url(#freeGlow)"
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ repeat: Infinity, duration: 3, delay: i * 0.6 }}
-                />
-              )}
-
-              {/* Main node circle */}
-              <circle
-                cx={node.x} cy={node.y} r="3.8"
-                fill={nodeColor}
-                stroke={strokeColor}
-                strokeWidth={isFree ? "0.55" : "0.4"}
-              />
-
-              {/* Progress arc */}
-              {hasAny && !isComplete && (
-                <motion.circle
-                  cx={node.x} cy={node.y} r="3.8"
-                  fill="none"
-                  stroke="hsl(40 85% 60%)"
-                  strokeWidth="0.65"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(node.unlockedPieces / node.totalPieces) * 23.9} 23.9`}
-                  transform={`rotate(-90 ${node.x} ${node.y})`}
-                  initial={{ strokeDasharray: "0 23.9" }}
-                  animate={{ strokeDasharray: `${(node.unlockedPieces / node.totalPieces) * 23.9} 23.9` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-              )}
-
-              {/* Flag emoji */}
-              <text
-                x={node.x} y={node.y + 1.1}
-                textAnchor="middle" fontSize="3.2" dominantBaseline="middle"
-              >
-                {FLAG_EMOJI[node.code] || "🌍"}
-              </text>
-
-              {/* Country label */}
-              <text
-                x={node.x} y={node.y + 8}
-                textAnchor="middle" fontSize="2.1"
-                fontFamily="'JetBrains Mono', monospace"
-                letterSpacing="0.15"
-                fill={isComplete ? "hsl(40 85% 70%)" : isFree ? "hsl(40 65% 60%)" : "hsl(220 10% 50%)"}
-              >
-                {node.name.length > 9 ? node.name.substring(0, 8).toUpperCase() + "." : node.name.toUpperCase()}
-              </text>
-
-              {/* GRATUIT badge — free countries only */}
-              {isFree && (
-                <>
-                  <rect
-                    x={node.x - 5} y={node.y - 9.5}
-                    width="10" height="2.8" rx="1.4"
-                    fill="hsl(40 80% 55% / 0.2)"
-                    stroke="hsl(40 80% 55%)"
-                    strokeWidth="0.25"
-                  />
-                  <text
-                    x={node.x} y={node.y - 8.2}
-                    textAnchor="middle" fontSize="1.9"
-                    fontFamily="'JetBrains Mono', monospace"
-                    letterSpacing="0.1"
-                    fill="hsl(40 85% 70%)"
-                    dominantBaseline="middle"
-                  >
-                    GRATUIT
-                  </text>
-                </>
-              )}
-
-              {/* Piece count badge */}
-              <rect
-                x={node.x + 2.2} y={node.y - 6.2}
-                width="5.8" height="2.8" rx="1.4"
-                fill={isComplete ? "hsl(40 80% 25%)" : "hsl(220 18% 12%)"}
-                stroke={isComplete ? "hsl(40 80% 55%)" : "hsl(220 15% 25%)"}
-                strokeWidth="0.25"
-              />
-              <text
-                x={node.x + 5.1} y={node.y - 4.9}
-                textAnchor="middle" fontSize="1.9"
-                fontFamily="monospace"
-                fill={isComplete ? "hsl(40 80% 70%)" : "hsl(220 10% 55%)"}
-                dominantBaseline="middle"
-              >
-                {node.unlockedPieces}/{node.totalPieces}
-              </text>
-
-              {/* Completed dot */}
-              {wasPlaced && (
-                <motion.circle
-                  cx={node.x - 3.2} cy={node.y - 3}
-                  r="1.4"
-                  fill="hsl(140 60% 50%)"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring" }}
-                />
-              )}
-            </motion.g>
-          );
-        })}
-
-        {/* ── Omega Fragment — Director-only zone ── */}
-        <g opacity="0.65">
-          <circle cx="50" cy="50" r="4.5" fill="hsl(280 40% 7%)" stroke="hsl(280 60% 28%)" strokeWidth="0.45" strokeDasharray="0.8 0.5" />
-          <text x="50" y="51.2" textAnchor="middle" fontSize="3.5" dominantBaseline="middle">Ω</text>
-          <text x="50" y="57" textAnchor="middle" fontSize="1.9" fontFamily="monospace" fill="hsl(280 40% 45%)" letterSpacing="0.15">
-            FRAGMENT OMÉGA
-          </text>
-        </g>
       </svg>
 
-      {/* ── HUD overlays ── */}
-      <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
-        <div className="text-xs font-display tracking-widest text-primary/70 bg-background/60 backdrop-blur-sm px-2.5 py-1 rounded border border-primary/20">
+      {/* ── CSS-positioned nodes ──
+          left: x%  top: y%  transform: translate(-50%,-50%)
+          This is the responsive-correct system for 195 countries */}
+
+      {/* Silhouette nodes */}
+      {silhouetteNodes.map((node) => (
+        <div
+          key={node.id}
+          className="absolute pointer-events-none"
+          style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%,-50%)" }}
+        >
+          <div className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center text-[10px] opacity-20"
+            style={{ borderColor: "hsl(220 15% 25%)", background: "hsl(220 15% 8%)", color: "hsl(220 10% 35%)" }}>
+            ?
+          </div>
+        </div>
+      ))}
+
+      {/* Locked upgrade nodes */}
+      {lockedNodes.map((node) => (
+        <div
+          key={node.id}
+          className="absolute flex flex-col items-center gap-0.5 pointer-events-none"
+          style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%,-50%)" }}
+        >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm border border-dashed opacity-60"
+            style={{ borderColor: "hsl(40 50% 28%)", background: "hsl(40 20% 7%)" }}>
+            🔒
+          </div>
+          <span className="text-[8px] font-display tracking-wider opacity-60 whitespace-nowrap"
+            style={{ color: "hsl(40 50% 38%)" }}>
+            SAISON 1
+          </span>
+        </div>
+      ))}
+
+      {/* Playable nodes — the real interactive nodes */}
+      {playableNodes.map((node, i) => {
+        const isFree    = FREE_COUNTRY_CODES.has(node.code);
+        const isComplete = node.unlockedPieces >= node.totalPieces;
+        const hasAny    = node.unlockedPieces > 0;
+        const wasPlaced = placedCountryIds.includes(node.id);
+        const isDropTarget = draggingFragmentId !== null;
+
+        const borderColor = isComplete
+          ? "hsl(40 85% 65%)"
+          : isFree ? "hsl(40 70% 50%)"
+          : "hsl(220 15% 28%)";
+
+        const bgColor = isComplete
+          ? "hsl(40 50% 13%)"
+          : isFree ? "hsl(220 22% 11%)"
+          : "hsl(220 18% 9%)";
+
+        const labelColor = isComplete
+          ? "hsl(40 85% 70%)"
+          : isFree ? "hsl(40 65% 62%)"
+          : "hsl(220 10% 50%)";
+
+        return (
+          <motion.div
+            key={node.id}
+            className="absolute"
+            style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%,-50%)" }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 * i, type: "spring", stiffness: 260, damping: 22 }}
+          >
+            {/* Ambient halo — free countries */}
+            {isFree && (
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  inset: "-14px",
+                  background: "radial-gradient(circle, hsl(40 80% 55% / 0.2) 0%, transparent 70%)",
+                }}
+                animate={{ scale: [1, 1.35, 1], opacity: [0.4, 0.85, 0.4] }}
+                transition={{ repeat: Infinity, duration: 3.2, delay: i * 0.55, ease: "easeInOut" }}
+              />
+            )}
+
+            {/* Drop pulse ring */}
+            {isDropTarget && (
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  inset: "-10px",
+                  border: "1.5px solid hsl(40 80% 55%)",
+                  background: "hsl(40 80% 55% / 0.07)",
+                }}
+                animate={{ scale: [1, 1.25, 1], opacity: [0.35, 0.85, 0.35] }}
+                transition={{ repeat: Infinity, duration: 1.1 }}
+              />
+            )}
+
+            <button
+              className="relative flex flex-col items-center gap-1 group outline-none"
+              onClick={() => onCountryClick(node)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); onDropOnCountry(node.id); }}
+            >
+              {/* GRATUIT badge */}
+              {isFree && (
+                <div
+                  className="text-[7px] font-display tracking-widest px-1.5 py-[1px] rounded-full border whitespace-nowrap"
+                  style={{
+                    background: "hsl(40 80% 55% / 0.15)",
+                    borderColor: "hsl(40 80% 55% / 0.55)",
+                    color: "hsl(40 85% 72%)",
+                    boxShadow: "0 0 6px hsl(40 80% 55% / 0.25)",
+                  }}
+                >
+                  GRATUIT
+                </div>
+              )}
+
+              {/* Main circle */}
+              <div
+                className="relative w-9 h-9 rounded-full flex items-center justify-center border-2 transition-transform duration-150 group-hover:scale-110"
+                style={{
+                  background: bgColor,
+                  borderColor,
+                  boxShadow: (isFree || isComplete)
+                    ? `0 0 12px ${borderColor}, 0 0 3px ${borderColor}`
+                    : "none",
+                }}
+              >
+                {/* SVG progress ring */}
+                {hasAny && !isComplete && (
+                  <svg
+                    className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
+                    viewBox="0 0 36 36"
+                  >
+                    <circle
+                      cx="18" cy="18" r="16"
+                      fill="none"
+                      stroke="hsl(40 85% 60%)"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(node.unlockedPieces / node.totalPieces) * 100.5} 100.5`}
+                    />
+                  </svg>
+                )}
+
+                <span className="text-base leading-none">{FLAG_EMOJI[node.code] || "🌍"}</span>
+
+                {/* Placed checkmark */}
+                {wasPlaced && (
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold"
+                    style={{ background: "hsl(140 60% 40%)", border: "1px solid hsl(140 60% 60%)" }}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring" }}
+                  >
+                    ✓
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Label */}
+              <div className="flex flex-col items-center gap-[2px]">
+                <span
+                  className="text-[8px] font-display tracking-wide leading-none whitespace-nowrap"
+                  style={{ color: labelColor, textShadow: "0 1px 4px hsl(220 30% 3%)" }}
+                >
+                  {node.name.length > 8 ? node.name.substring(0, 7).toUpperCase() + "." : node.name.toUpperCase()}
+                </span>
+                <span
+                  className="text-[7px] font-display tabular-nums px-1 rounded leading-none"
+                  style={{
+                    background: "hsl(220 20% 8% / 0.85)",
+                    color: isComplete ? "hsl(40 80% 65%)" : "hsl(220 10% 48%)",
+                    border: "1px solid hsl(220 15% 16%)",
+                  }}
+                >
+                  {node.unlockedPieces}/{node.totalPieces}
+                </span>
+              </div>
+            </button>
+          </motion.div>
+        );
+      })}
+
+      {/* Omega Fragment — fixed at bottom-center */}
+      <div
+        className="absolute flex flex-col items-center gap-[3px] pointer-events-none"
+        style={{ left: "50%", top: "85%", transform: "translate(-50%,-50%)" }}
+      >
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center text-sm border"
+          style={{
+            background: "hsl(280 40% 6%)",
+            borderColor: "hsl(280 50% 25%)",
+            boxShadow: "0 0 10px hsl(280 50% 25% / 0.35)",
+          }}
+        >
+          Ω
+        </div>
+        <span className="text-[7px] font-display tracking-widest" style={{ color: "hsl(280 40% 42%)" }}>
+          OMÉGA
+        </span>
+      </div>
+
+      {/* ── HUD ── */}
+      <div className="absolute top-3 left-3 pointer-events-none">
+        <div
+          className="text-[10px] font-display tracking-widest px-2 py-[3px] rounded border backdrop-blur-sm"
+          style={{
+            background: "hsl(220 25% 4% / 0.75)",
+            borderColor: "hsl(40 80% 55% / 0.2)",
+            color: "hsl(40 70% 60%)",
+          }}
+        >
           CARTE OPÉRATIONNELLE
         </div>
       </div>
 
       <div className="absolute top-3 right-3 flex items-center gap-1.5 pointer-events-none">
         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-        <span className="text-xs font-display text-primary/70 tracking-wider">EN DIRECT</span>
+        <span className="text-[10px] font-display tracking-wider" style={{ color: "hsl(40 70% 60%)" }}>
+          EN DIRECT
+        </span>
       </div>
 
-      {/* Free countries legend */}
-      <div className="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-none">
+      <div className="absolute bottom-3 left-3 pointer-events-none">
         <div
-          className="flex items-center gap-1.5 text-xs font-display tracking-wider px-2.5 py-1 rounded border backdrop-blur-sm"
-          style={{ background: "hsl(40 80% 55% / 0.1)", borderColor: "hsl(40 80% 55% / 0.3)", color: "hsl(40 80% 65%)" }}
+          className="flex items-center gap-1.5 text-[10px] font-display tracking-wider px-2 py-[3px] rounded border backdrop-blur-sm"
+          style={{
+            background: "hsl(40 80% 55% / 0.08)",
+            borderColor: "hsl(40 80% 55% / 0.22)",
+            color: "hsl(40 80% 65%)",
+          }}
         >
           <span>✦</span>
           <span>5 PAYS GRATUITS ACTIFS</span>
         </div>
       </div>
 
-      {/* Drop instruction when dragging */}
       <AnimatePresence>
         {draggingFragmentId && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-3 right-3 text-xs font-display tracking-wider px-3 py-1.5 rounded border backdrop-blur-sm"
-            style={{ background: "hsl(40 80% 55% / 0.15)", borderColor: "hsl(40 80% 55% / 0.5)", color: "hsl(40 85% 70%)" }}
+            exit={{ opacity: 0, y: 8 }}
+            className="absolute bottom-3 right-3 text-[10px] font-display tracking-wider px-2.5 py-1.5 rounded border backdrop-blur-sm"
+            style={{
+              background: "hsl(40 80% 55% / 0.14)",
+              borderColor: "hsl(40 80% 55% / 0.45)",
+              color: "hsl(40 85% 70%)",
+            }}
           >
             ↓ DÉPOSEZ SUR UN PAYS
           </motion.div>
