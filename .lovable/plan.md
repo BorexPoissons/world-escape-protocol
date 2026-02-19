@@ -1,88 +1,105 @@
 
-# Déverrouillage automatique du pays suivant après réussite de mission
+# Affichage horizontal "gauche à droite" + pays complété grisé + pays suivant qui clignote
 
-## Problème identifié
+## Ce que l'utilisateur veut (référence image)
 
-Il y a une incohérence entre deux systèmes :
-
-**Dashboard** (ligne 807) : débloque le pays N+1 si `best_score >= 8`
-**Quiz** : score sur 6 questions, victoire à 5/6 — le `best_score` en base sera donc au maximum **6**
-
-Résultat : même après avoir réussi la Suisse, l'USA reste bloqué pour toujours car `signalProgress["CH"] < 8`.
+1. **Layout horizontal** : les pays du Signal Initial s'affichent en ligne, de gauche à droite, dans l'ordre de la séquence (CH → US → CN → BR → EG)
+2. **Pays réussi** : grisé visuellement (overlay semi-transparent), mais toujours cliquable pour rejouer — avec une icône ✓ visible
+3. **Pays suivant** (le premier non-complété) : animation de pulsation/clignotement pour attirer l'attention
 
 ---
 
-## Ce qui doit changer
+## Changements prévus
 
-### 1. Corriger le seuil de déverrouillage dans le Dashboard
+### 1. Layout du groupe Signal Initial — de grille à ligne horizontale
 
-**Fichier :** `src/pages/Dashboard.tsx` — ligne 807
+**Fichier :** `src/pages/Dashboard.tsx` — section grille (lignes 794–856)
 
-Remplacer :
-```ts
-const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 8;
-```
-Par :
-```ts
-const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
-```
+Au lieu de `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3`, on utilise une ligne scrollable horizontalement pour la saison 0 :
 
-La valeur `5` correspond au `min_correct_to_win` officiel (5/6 pour gagner). Le pays suivant s'ouvre dès qu'un `best_score >= 5` est enregistré.
-
-Le message d'indication verouillé sera aussi mis à jour :
-```
-RÉUSSIS {prevCode} AVEC 5/6
+```tsx
+// Pour seasonNum === 0 (Signal Initial)
+<div className="flex flex-row gap-4 overflow-x-auto pb-2">
+  {/* cartes de pays dans l'ordre */}
+</div>
 ```
 
-### 2. S'assurer que le `complete_country_attempt` RPC enregistre bien le score sur 6
+Chaque carte aura une largeur fixe (`min-w-[260px] w-[260px]`) pour que l'alignement horizontal soit net.
 
-La RPC reçoit `p_score` et `p_total` depuis `Mission.tsx` (ligne 572-578). Il faut vérifier que le score passé est bien le score sur 6 (pas transformé). C'est déjà le cas (`score` = nombre de bonnes réponses).
+L'ordre est garanti par `SIGNAL_INITIAL_SEQUENCE` déjà en place — il suffit de trier les pays du groupe 0 dans cet ordre avant rendu.
 
-### 3. MissionComplete — le bouton "POURSUIVRE L'ENQUÊTE" fonctionne déjà
+### 2. Pays complété — grisé mais rejouable
 
-Le bouton sur `MissionComplete.tsx` navigue directement vers `/mission/${nextCountry.id}`. C'est déjà implémenté correctement. Aucun changement nécessaire ici.
+**Fichier :** `src/components/CountryCard.tsx`
 
-### 4. Comportement pour les clients payants (Saison 1+)
+Quand `completed === true`, on ajoute un overlay gris semi-transparent sur la carte :
 
-Pour les clients payants, le déverrouillage est géré par `subscription_type` dans le profil. La logique `getCountryState()` et `getMaxPlayableSeason()` fonctionne déjà correctement — si `tier === "season1"`, tous les pays de `season_number <= 1` sont accessibles.
+```tsx
+{completed && (
+  <div className="absolute inset-0 bg-background/50 rounded-xl pointer-events-none z-10" />
+)}
+```
 
-La seule correction nécessaire reste le seuil de séquence pour les pays gratuits (Signal Initial).
+La carte reste cliquable (le `<Link>` encapsule toujours tout). On affiche clairement "REJOUER" et le badge ✓ reste visible.
+
+Adaptation du style de la carte complétée : `opacity-70` sur le contenu principal (texte), et la bande dorée du haut reste pour indiquer la réussite.
+
+### 3. Pays suivant à jouer — animation de pulsation
+
+**Fichier :** `src/pages/Dashboard.tsx`
+
+On calcule `nextUnlockedCode` : le premier pays de `SIGNAL_INITIAL_SEQUENCE` qui n'est pas encore complété et n'est pas verrouillé.
+
+On passe une prop `isNext` au `CountryCard` ou on enveloppe la carte dans un `motion.div` avec une animation de ring pulsant :
+
+```tsx
+// Ring pulsant autour de la prochaine carte
+<motion.div
+  animate={{ boxShadow: [
+    "0 0 0px hsl(40 80% 55% / 0)",
+    "0 0 20px hsl(40 80% 55% / 0.6)",
+    "0 0 0px hsl(40 80% 55% / 0)",
+  ]}}
+  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+  className="rounded-xl"
+>
+  <CountryCard ... />
+</motion.div>
+```
 
 ---
 
-## Résumé des changements
+## Détail des modifications fichier par fichier
 
-| Fichier | Changement | Impact |
-|---|---|---|
-| `src/pages/Dashboard.tsx` | Seuil `< 8` → `< 5` sur `seqLocked` | Pays suivant s'ouvre après réussite |
-| `src/pages/Dashboard.tsx` | Texte du verrou mis à jour : `5/6` | Cohérence UI |
+### `src/pages/Dashboard.tsx`
 
-## Fichier non modifié (déjà correct)
-- `src/pages/MissionComplete.tsx` — Le bouton "POURSUIVRE L'ENQUÊTE" navigue bien vers la prochaine mission
-- `src/pages/Mission.tsx` — Le RPC envoie le bon score
+1. **Trier les pays de la saison 0** dans l'ordre `SIGNAL_INITIAL_SEQUENCE` avant affichage
+2. **Changer le conteneur** de grille en flex-row pour `seasonNum === 0`
+3. **Identifier `isNextCountry`** : premier code dans `SIGNAL_INITIAL_SEQUENCE` qui n'est pas complété et dont `seqLocked === false`
+4. **Envelopper la carte suivante** dans un `motion.div` avec animation de halo pulsant
+
+### `src/components/CountryCard.tsx`
+
+1. **Overlay grisé** sur les cartes complétées (overlay `bg-background/50` + `pointer-events-none`)
+2. **Badge "COMPLÉTÉ"** plus visible (déjà présent via `CheckCircle`, on peut le renforcer)
+3. **Texte REJOUER** toujours visible (pas seulement au hover) quand `completed === true`
 
 ---
 
-## Flux complet après correction
+## Comportement final attendu
 
-```text
-Joueur réussit CH (5/6 ou 6/6)
-  → complete_country_attempt RPC : best_score = 5 ou 6
-  → MissionComplete s'affiche avec bouton "POURSUIVRE L'ENQUÊTE"
-  → Joueur clique → navigue vers /mission/[id_US]
-  
-  OU
-  
-  Joueur retourne au Dashboard
-  → seqLocked check : signalProgress["CH"] = 5 >= 5 → FALSE (déverrouillé)
-  → USA s'affiche comme jouable
+```
+[🇨🇭 SUISSE ✓] → [🇺🇸 ÉTATS-UNIS ✨ pulsant] → [🔒 verrouillé] → [🔒 verrouillé] → [🔒 verrouillé]
+  grisé, rejouable     prochain à jouer            flou CN               flou BR               flou EG
 ```
 
-Pour les clients payants :
-```text
-Joueur avec subscription_type = "agent" ou "season1"
-  → getTier() → "season1"
-  → getMaxPlayableSeason() → 1
-  → getCountryState() → "playable" pour tous les pays season_number <= 1
-  → Aucune restriction supplémentaire, accès direct à tous les 43 pays OP-01
-```
+Pour les clients payants (saison 1+), la même logique s'applique mais sans verrouillage séquentiel.
+
+---
+
+## Résumé
+
+| Fichier | Modification |
+|---|---|
+| `src/pages/Dashboard.tsx` | Layout flex-row pour saison 0, tri séquentiel, halo pulsant sur pays suivant |
+| `src/components/CountryCard.tsx` | Overlay gris sur pays complétés, REJOUER toujours visible |
