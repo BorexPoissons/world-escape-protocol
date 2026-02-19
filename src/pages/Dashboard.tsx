@@ -860,6 +860,13 @@ const Dashboard = () => {
                       const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 5;
                       const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
 
+                      // Any season-0 country NOT in SIGNAL_INITIAL_SEQUENCE is locked
+                      // until the full 5-country sequence is completed (score >= 5 each)
+                      const allSeqDone = SIGNAL_INITIAL_SEQUENCE.every(
+                        code => (signalProgress[code] ?? 0) >= 5
+                      );
+                      const outsideSeqLocked = seasonNum === 0 && seqIdx === -1 && !allSeqDone;
+
                       const isNext = isSignalInitialGroup && country.code === nextUnlockedCode;
 
                       const cardWrapper = (children: React.ReactNode) =>
@@ -869,7 +876,11 @@ const Dashboard = () => {
                           <>{children}</>
                         );
 
-                        if (seqLocked) {
+                        if (seqLocked || outsideSeqLocked) {
+                        const lockMsg = outsideSeqLocked
+                          ? "COMPLÈTE LES 5 MISSIONS SIGNAL INITIAL"
+                          : `RÉUSSIS ${prevCode} AVEC 5/6`;
+                        const lockScore = outsideSeqLocked ? null : `Score actuel : ${signalProgress[prevCode!] ?? 0}/6`;
                         return (
                           <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.04 * i }}>
                             {cardWrapper(
@@ -878,11 +889,13 @@ const Dashboard = () => {
                                 <div className="absolute inset-0 backdrop-blur-[4px] bg-background/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2 px-4 text-center">
                                   <Lock className="h-6 w-6 text-muted-foreground mb-1" />
                                   <p className="text-xs font-display text-muted-foreground tracking-wider">
-                                    RÉUSSIS {prevCode} AVEC 5/6
+                                    {lockMsg}
                                   </p>
-                                  <p className="text-[11px] text-muted-foreground/60 mt-1">
-                                    Score actuel : {signalProgress[prevCode!] ?? 0}/6
-                                  </p>
+                                  {lockScore && (
+                                    <p className="text-[11px] text-muted-foreground/60 mt-1">
+                                      {lockScore}
+                                    </p>
+                                  )}
                                 </div>
                                 <div className="opacity-30">
                                   <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
