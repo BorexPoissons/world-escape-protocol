@@ -456,7 +456,7 @@ export default function RevealOverlay({ globalProgress }: RevealOverlayProps) {
                 transition={{ delay: 1.2 }}
                 className="text-[9px] font-display tracking-[0.3em] text-muted-foreground mb-4"
               >
-                JASPER VELCOURT · MESSAGE FINAL
+                JASPER VALCOURT · MESSAGE FINAL
               </motion.p>
 
               {/* Quote */}

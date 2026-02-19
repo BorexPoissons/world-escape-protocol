@@ -184,7 +184,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                       className="w-52 md:w-64 rounded-xl overflow-hidden"
                       style={{ boxShadow: "0 0 40px hsl(var(--gold-glow) / 0.25), 0 0 80px hsl(var(--gold-glow) / 0.1)" }}
                     >
-                      <img src={jasperImg} alt="J. Velcourt" className="w-full h-full object-cover" />
+                      <img src={jasperImg} alt="J. Valcourt" className="w-full h-full object-cover" />
                     </div>
                   </motion.div>
 
@@ -198,7 +198,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                         className="text-3xl md:text-5xl font-display font-bold"
                         style={{ color: "hsl(var(--primary))", textShadow: "0 0 30px hsl(var(--gold-glow) / 0.4)" }}
                       >
-                        Jasper Velcourt
+                        Jasper Valcourt
                       </h2>
                     </motion.div>
                     <TypeLines
@@ -317,7 +317,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                 className="w-24 rounded-xl overflow-hidden"
                 style={{ boxShadow: "0 0 24px hsl(var(--gold-glow) / 0.3)" }}
               >
-                <img src={jasperImg} alt="J. Velcourt" className="w-full object-cover" />
+                <img src={jasperImg} alt="J. Valcourt" className="w-full object-cover" />
               </motion.div>
 
               {/* Logo */}
