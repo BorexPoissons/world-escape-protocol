@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle, XCircle, AlertTriangle, BookOpen, Home,
-  Heart, Clock, Zap, Shield, Trophy, RotateCcw, Puzzle
+  Heart, Clock, Zap, Shield, Trophy, RotateCcw, Puzzle, ShoppingBag
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { checkAndAwardBadges } from "@/lib/badges";
 import ArchiveHintModal from "@/components/ArchiveHintModal";
+import HintShopModal from "@/components/HintShopModal";
 import TypewriterText from "@/components/TypewriterText";
 
 interface HintImage {
@@ -147,6 +148,12 @@ const Mission = () => {
   const [ignoredFakeClue, setIgnoredFakeClue] = useState(true);
   const [showHintModal, setShowHintModal] = useState(false);
 
+  // XP Hint Shop
+  const [showHintShop, setShowHintShop] = useState(false);
+  const [currentXP, setCurrentXP] = useState(0);
+  const [textHintUsedForCurrent, setTextHintUsedForCurrent] = useState(false);
+  const [photoHintUsedForCurrent, setPhotoHintUsedForCurrent] = useState(false);
+
   // Static mission state (A/B/C system)
   const [isStaticMission, setIsStaticMission] = useState(false);
   const [fragmentReward, setFragmentReward] = useState<FragmentReward | null>(null);
@@ -192,8 +199,11 @@ const Mission = () => {
     setLives(initialLives);
 
     const profileData = user
-      ? (await supabase.from("profiles").select("level").eq("user_id", user.id).single()).data
+      ? (await supabase.from("profiles").select("level, xp").eq("user_id", user.id).single()).data
       : null;
+    if (profileData && (profileData as any).xp !== undefined) {
+      setCurrentXP((profileData as any).xp);
+    }
 
     // ── 0. PRIORITY: Try to load static JSON from /public/content/countries/ ──
     try {
@@ -486,6 +496,8 @@ const Mission = () => {
     setSelectedAnswer(null);
     setAnswerRevealed(false);
     setAttemptsOnCurrent(0);
+    setTextHintUsedForCurrent(false);
+    setPhotoHintUsedForCurrent(false);
     if (currentEnigme < mission.enigmes.length - 1) {
       setCurrentEnigme(c => c + 1);
     } else {
@@ -496,6 +508,25 @@ const Mission = () => {
         setPhase("failed");
       }
     }
+  };
+
+  // ── XP Hint Shop handlers ─────────────────────────────────────────────────
+  const handleBuyTextHint = async () => {
+    if (!user || currentXP < 50) return;
+    const newXP = currentXP - 50;
+    setCurrentXP(newXP);
+    setUsedHint(true);
+    setTextHintUsedForCurrent(true);
+    await (supabase.from("profiles") as any).update({ xp: newXP }).eq("user_id", user.id);
+  };
+
+  const handleBuyPhotoHint = async () => {
+    if (!user || currentXP < 100) return;
+    const newXP = currentXP - 100;
+    setCurrentXP(newXP);
+    setUsedHint(true);
+    setPhotoHintUsedForCurrent(true);
+    await (supabase.from("profiles") as any).update({ xp: newXP }).eq("user_id", user.id);
   };
 
   const continueFromNarrativeUnlock = () => {
@@ -774,6 +805,23 @@ const Mission = () => {
                 }`}>
                   ✓ {score}/{SCORE_THRESHOLD}
                 </span>
+                {/* XP Hint Shop button — only for authenticated users */}
+                {user && (
+                  <button
+                    onClick={() => setShowHintShop(true)}
+                    className="flex items-center gap-1.5 text-[11px] font-display tracking-wider px-2.5 py-1 rounded border transition-all hover:scale-105"
+                    style={{
+                      borderColor: "hsl(var(--gold-glow) / 0.4)",
+                      color: currentXP >= 50 ? "hsl(var(--gold-glow))" : "hsl(var(--muted-foreground))",
+                      background: "hsl(var(--gold-glow) / 0.06)",
+                    }}
+                    title={`Boutique d'indices — Solde : ${currentXP} XP`}
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">INDICES</span>
+                    <span className="tabular-nums">{currentXP} XP</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1394,8 +1442,27 @@ const Mission = () => {
         hintImage={mission?.enigmes[currentEnigme]?.hint_image}
         countryName={country?.name}
       />
+
+      {/* XP Hint Shop Modal */}
+      {mission && (
+        <HintShopModal
+          isOpen={showHintShop}
+          onClose={() => setShowHintShop(false)}
+          currentXP={currentXP}
+          hasHintImage={!!mission.enigmes[currentEnigme]?.hint_image}
+          hintImage={mission.enigmes[currentEnigme]?.hint_image}
+          questionType={mission.enigmes[currentEnigme]?.question_type}
+          explanation={mission.enigmes[currentEnigme]?.explanation}
+          narrativeUnlock={mission.enigmes[currentEnigme]?.narrative_unlock}
+          onBuyTextHint={handleBuyTextHint}
+          onBuyPhotoHint={handleBuyPhotoHint}
+          textHintAlreadyUsed={textHintUsedForCurrent}
+          photoHintAlreadyUsed={photoHintUsedForCurrent}
+        />
+      )}
     </div>
   );
 };
 
 export default Mission;
+
