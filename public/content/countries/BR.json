@@ -1,7 +1,12 @@
 {
   "country": {
     "code": "BR",
-    "name_fr": "Brésil"
+    "name": "Brésil",
+    "name_fr": "Brésil",
+    "description": "Rio de Janeiro, carnaval. 2 millions de personnes. Un code dans les couleurs. Une agent disparue.",
+    "monuments": ["Sambodrome", "Christ Rédempteur", "Amazonie", "Iguaçu"],
+    "historical_events": ["Colonisation portugaise 1500", "Empire brésilien 1822", "Dictature militaire 1964-1985", "Carnaval patrimoine immatériel"],
+    "symbols": ["Perroquet ara", "Samba", "Capoeira"]
   },
   "mission": {
     "mission_id": "BR-S1-001",

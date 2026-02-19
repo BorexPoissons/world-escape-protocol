@@ -200,15 +200,30 @@ const Admin = () => {
     reader.onload = (ev) => {
       try {
         const json = JSON.parse(ev.target?.result as string);
-        // Support multiple JSON formats
+        // Support multiple JSON formats + alias name_fr / name_en
         const code = (json.country?.code || json.code || file.name.replace(".json", "")).toUpperCase();
-        const name = json.country?.name || json.name;
+        const name = json.country?.name || json.country?.name_fr || json.country?.name_en || json.name;
         const description = json.country?.description || json.mission?.description || json.description;
         const monuments = json.country?.monuments || json.monuments || [];
         const historical_events = json.country?.historical_events || json.historical_events || [];
         const symbols = json.country?.symbols || json.symbols || [];
         const questionCount = (json.question_bank || json.questions || []).length;
         const missionTitle = json.mission?.mission_title || json.mission_title;
+
+        // Warnings si champs métadonnées absents
+        const missingFields: string[] = [];
+        if (!name) missingFields.push("name");
+        if (!description) missingFields.push("description");
+        if (!monuments.length) missingFields.push("monuments");
+        if (!historical_events.length) missingFields.push("historical_events");
+        if (!symbols.length) missingFields.push("symbols");
+        if (missingFields.length > 0) {
+          toast({
+            title: `⚠️ Champs manquants dans le JSON`,
+            description: `${missingFields.join(", ")} — ces champs ne seront pas importés.`,
+            variant: "destructive",
+          });
+        }
 
         setJsonImportPreview({ code, name, description, monuments, historical_events, symbols, questionCount, missionTitle });
       } catch {
