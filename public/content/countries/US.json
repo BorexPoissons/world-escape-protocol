@@ -4,12 +4,12 @@
     "name_fr": "États-Unis"
   },
   "mission": {
-    "mission_id": "US-S0-002",
+    "mission_id": "US-S1-002",
     "mission_title": "OPÉRATION FEDERAL SHADOW",
     "phase": "SIGNAL_INITIAL",
     "is_free": true,
     "detective": "Jasper Velcourt",
-    "intro": "Washington, D.C. Nuit lourde.\n\nAprès la Suisse, Jasper Velcourt suit la logique des flux.\n\nSi les capitaux transitent,\nil faut bien un endroit où le rythme est fixé.\n\nLa création d'une banque centrale moderne.\n\nUn nouvel ordre monétaire mondial à Bretton Woods.\n\nUne crise qui redéfinit l'équilibre entre sécurité et liberté.\n\nLes États-Unis ne sont pas seulement une puissance.\nIls sont un régulateur.\n\nLa monnaie, la confiance, le crédit.\nTrois leviers capables d'influencer des continents entiers.\n\nSi la Suisse canalise les flux,\nalors ici… on en règle la cadence.\n\nVotre mission :\nIdentifier comment le système monétaire devient un nœud stratégique mondial."
+    "intro": "Washington, D.C. Nuit lourde.\n\nAprès la Suisse, Jasper Velcourt suit la logique des flux.\n\nSi les capitaux transitent,\nil faut bien un endroit où le rythme est fixé.\n\n1913.\nLa création d'une banque centrale moderne.\n\n1944.\nUn nouvel ordre monétaire mondial à Bretton Woods.\n\n2001.\nUne crise qui redéfinit l'équilibre entre sécurité et liberté.\n\nLes États-Unis ne sont pas seulement une puissance.\nIls sont un régulateur.\n\nLa monnaie, la confiance, le crédit.\nTrois leviers capables d'influencer des continents entiers.\n\nSi la Suisse canalise les flux,\nalors ici… on en règle la cadence.\n\nVotre mission :\nIdentifier comment le système monétaire devient un nœud stratégique mondial."
   },
   "quiz_rules": {
     "total_questions": 10,
@@ -25,100 +25,100 @@
     {
       "id": "US_Q1",
       "type": "A",
-      "question": "En quelle année la Réserve fédérale américaine (Federal Reserve) a-t-elle été créée ?",
-      "choices": ["1893", "1907", "1913", "1929"],
-      "answer_index": 2
+      "question": "Quelle est la capitale fédérale des États-Unis ?",
+      "choices": ["New York", "Washington, D.C.", "Chicago", "Boston"],
+      "answer_index": 1
     },
     {
       "id": "US_Q2",
       "type": "A",
-      "question": "Dans quelle ville se trouve le siège principal de la Réserve fédérale (Board of Governors) ?",
-      "choices": ["New York", "Chicago", "Washington D.C.", "Boston"],
+      "question": "Combien d'États composent les États-Unis ?",
+      "choices": ["48", "49", "50", "52"],
       "answer_index": 2
     },
     {
       "id": "US_Q3",
       "type": "A",
-      "question": "En quelle année a eu lieu la conférence de Bretton Woods qui a reconfiguré le système monétaire international ?",
-      "choices": ["1939", "1944", "1947", "1952"],
+      "question": "En quelle année la Réserve fédérale (Federal Reserve) a-t-elle été créée ?",
+      "choices": ["1901", "1913", "1929", "1944"],
       "answer_index": 1
     },
     {
       "id": "US_Q4",
       "type": "A",
-      "question": "Quelle institution internationale a été créée à Bretton Woods pour stabiliser les taux de change ?",
-      "choices": ["La Banque mondiale", "Le FMI (Fonds Monétaire International)", "La BIS", "L'OMC"],
+      "question": "Quelle conférence internationale de 1944 a établi un cadre monétaire mondial d'après-guerre ?",
+      "choices": ["Yalta", "Bretton Woods", "Versailles", "San Francisco"],
       "answer_index": 1
     },
     {
       "id": "US_Q5",
       "type": "A",
-      "question": "En quelle année Nixon a-t-il suspendu la convertibilité du dollar en or, mettant fin au système de Bretton Woods ?",
-      "choices": ["1965", "1968", "1971", "1975"],
+      "question": "Quelle monnaie est utilisée comme principale devise de réserve mondiale depuis le XXe siècle ?",
+      "choices": ["Euro", "Yen", "Dollar américain", "Livre sterling"],
       "answer_index": 2
     },
     {
       "id": "US_Q6",
       "type": "A",
-      "question": "Combien de banques de réserve fédérale régionales composent le système de la Fed ?",
-      "choices": ["8", "10", "12", "15"],
-      "answer_index": 2
+      "question": "Combien de branches composent le gouvernement fédéral américain ?",
+      "choices": ["2", "3", "4", "5"],
+      "answer_index": 1
     },
     {
       "id": "US_Q7",
       "type": "B",
-      "question": "Pourquoi le statut de monnaie de réserve mondiale du dollar confère-t-il aux États-Unis un avantage stratégique ?",
+      "question": "Pourquoi une banque centrale est-elle stratégique en période de crise ?",
       "choices": [
-        "Parce qu'il empêche les autres pays d'avoir des banques centrales",
-        "Parce qu'il leur permet de financer leurs déficits en émettant une devise acceptée mondialement",
-        "Parce qu'il rend le commerce international impossible sans accord américain",
-        "Parce qu'il oblige les autres pays à fixer leurs taux d'intérêt selon la Fed"
+        "Elle organise les élections",
+        "Elle stabilise la monnaie et la confiance",
+        "Elle contrôle les frontières",
+        "Elle dirige le parlement"
       ],
       "answer_index": 1
     },
     {
       "id": "US_Q8",
       "type": "B",
-      "question": "Comment la politique monétaire de la Réserve fédérale influence-t-elle les économies mondiales ?",
+      "question": "Quel a été l'objectif principal des accords de Bretton Woods ?",
       "choices": [
-        "Elle n'a d'effets qu'aux États-Unis",
-        "En modifiant ses taux directeurs, elle affecte les flux de capitaux mondiaux et les taux de change",
-        "Elle contrôle directement les banques centrales étrangères",
-        "En imposant des sanctions commerciales bilatérales"
+        "Créer une alliance militaire",
+        "Établir un cadre financier international stable",
+        "Supprimer les monnaies nationales",
+        "Créer un gouvernement mondial"
       ],
       "answer_index": 1
     },
     {
       "id": "US_Q9",
       "type": "C",
-      "question": "Dans la logique de l'enquête, quel rôle jouent les États-Unis dans le système mondial des flux ?",
+      "question": "Dans la logique du modèle mondial, que représente le système monétaire américain ?",
       "choices": [
-        "Un empire militaire qui impose ses règles par la force",
-        "Un régulateur monétaire dont les décisions fixent la cadence des flux financiers mondiaux",
-        "Un pays isolationniste sans influence internationale",
-        "Une puissance régionale limitée à l'Amérique du Nord"
+        "Un simple outil national",
+        "Un centre militaire",
+        "Un régulateur du rythme économique mondial",
+        "Un mécanisme isolé"
       ],
-      "answer_index": 1,
-      "narrative_unlock": "La puissance ne s'impose pas toujours. Parfois, elle se règle — comme une fréquence."
+      "answer_index": 2,
+      "narrative_unlock": "Le flux a besoin d'un rythme."
     },
     {
       "id": "US_Q10",
       "type": "C",
-      "question": "Si la Suisse est le nœud de transit des flux, que représentent alors les États-Unis dans ce modèle ?",
+      "question": "Quel élément relie la Réserve fédérale, Bretton Woods et le rôle du dollar ?",
       "choices": [
-        "Le commandant secret du système",
-        "Le point de départ de tous les capitaux",
-        "Le régulateur de cadence — celui qui fixe le tempo du système",
-        "Un acteur parmi d'autres, sans rôle particulier"
+        "Le contrôle territorial",
+        "La gestion de la confiance et du crédit",
+        "La domination militaire directe",
+        "L'isolement économique"
       ],
-      "answer_index": 2,
-      "narrative_unlock": "Deux nœuds identifiés. Le modèle commence à prendre forme."
+      "answer_index": 1,
+      "narrative_unlock": "Un système ne commande pas toujours. Il ajuste."
     }
   ],
   "fragment_reward": {
     "id": "FRAG-US-002",
-    "name": "Fragment du Régulateur",
-    "concept": "CADENCE_MONÉTAIRE",
-    "unlocked_message": "Le second mécanisme est le tempo. Celui qui fixe le rythme contrôle les flux."
+    "name": "Fragment Federal Shadow",
+    "concept": "NŒUD_MONÉTAIRE",
+    "unlocked_message": "Le flux a besoin d'un rythme."
   }
 }
