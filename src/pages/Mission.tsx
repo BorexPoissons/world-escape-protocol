@@ -290,19 +290,42 @@ const Mission = () => {
     if (!countryId || !mission) return;
 
     const timeElapsed = Math.round((Date.now() - missionStartTime) / 1000);
+    const total = mission.enigmes.length;
 
-    // Compute XP
+    // ─── 80% SUCCESS RULE ────────────────────────────────────────────────
+    // Max 20% failure allowed: need at least ceil(total * 0.8) correct
+    const requiredScore = Math.ceil(total * 0.8);
+    const missionSuccess = score >= requiredScore;
+
+    if (!missionSuccess) {
+      // Update user_progress (increment attempts, no fragment)
+      if (user) {
+        await (supabase as any).from("user_progress").upsert({
+          user_id: user.id,
+          country_id: countryId,
+          attempts: 1,
+          best_score: score,
+          success: false,
+          fragment_unlocked: false,
+          last_attempt_at: new Date().toISOString(),
+        }, { onConflict: "user_id,country_id", ignoreDuplicates: false });
+      }
+      setPhase("failed");
+      return;
+    }
+
+    // Compute XP (only on success)
     const timeBonus = Math.max(0, 30 - Math.floor(timeElapsed / 10)) * 2;
-    const perfectBonus = score === mission.enigmes.length ? 50 : 0;
+    const perfectBonus = score === total ? 50 : 0;
     const xpGained = 50 + score * 25 + timeBonus + perfectBonus;
 
     if (!user) {
       // Demo mode: save to localStorage
       const prev = JSON.parse(localStorage.getItem("wep_demo_progress") || "{}");
-      prev[countryId] = { score, total: mission.enigmes.length, xp: xpGained, time: timeElapsed };
+      prev[countryId] = { score, total, xp: xpGained, time: timeElapsed };
       localStorage.setItem("wep_demo_progress", JSON.stringify(prev));
       toast({ title: "Mission accomplie! (Mode Démo)", description: `+${xpGained} XP — Créez un compte pour sauvegarder.` });
-      navigate(`/mission/${countryId}/complete?score=${score}&total=${mission.enigmes.length}&xp=${xpGained}&demo=1`);
+      navigate(`/mission/${countryId}/complete?score=${score}&total=${total}&xp=${xpGained}&demo=1`);
       return;
     }
 
@@ -317,13 +340,24 @@ const Mission = () => {
       completed_at: new Date().toISOString(),
     });
 
-    // Create puzzle piece
-    await supabase.from("puzzle_pieces").insert({
-      user_id: user.id,
-      country_id: countryId,
-      unlocked: true,
-      unlocked_at: new Date().toISOString(),
-    });
+    // Create puzzle piece + update user_progress
+    await Promise.all([
+      supabase.from("puzzle_pieces").insert({
+        user_id: user.id,
+        country_id: countryId,
+        unlocked: true,
+        unlocked_at: new Date().toISOString(),
+      }),
+      (supabase as any).from("user_progress").upsert({
+        user_id: user.id,
+        country_id: countryId,
+        attempts: 1,
+        best_score: score,
+        success: true,
+        fragment_unlocked: true,
+        last_attempt_at: new Date().toISOString(),
+      }, { onConflict: "user_id,country_id", ignoreDuplicates: false }),
+    ]);
 
     // Update XP + streak
     const { data: profileRaw } = await supabase
@@ -336,7 +370,7 @@ const Mission = () => {
     let newStreak = (profile?.streak ?? 0) + 1;
     let longestStreak = Math.max(profile?.longest_streak ?? 0, newStreak);
     const newXp = (profile?.xp ?? 0) + xpGained;
-    const streakMultiplier = Math.min(1.5, 1 + newStreak * 0.1); // +10% per mission, max +50%
+    const streakMultiplier = Math.min(1.5, 1 + newStreak * 0.1);
     const finalXp = Math.round(newXp * (newStreak >= 2 ? streakMultiplier : 1));
     const newLevel = Math.floor(finalXp / 200) + 1;
 
@@ -348,14 +382,12 @@ const Mission = () => {
       last_mission_at: new Date().toISOString(),
     }).eq("user_id", user.id);
 
-    // Count completed missions
     const { count: missionCount } = await supabase
       .from("missions")
       .select("id", { count: "exact" })
       .eq("user_id", user.id)
       .eq("completed", true);
 
-    // Count completed countries
     const { data: completedPieces } = await supabase
       .from("puzzle_pieces")
       .select("country_id")
@@ -363,12 +395,10 @@ const Mission = () => {
       .eq("unlocked", true);
     const completedCountries = new Set(completedPieces?.map(p => p.country_id) || []).size;
 
-    // Check badges
-    // Check badges (fire and forget)
     checkAndAwardBadges({
       userId: user.id,
       score,
-      total: mission.enigmes.length,
+      total,
       timeElapsed,
       usedHint,
       ignoredFakeClue,
@@ -380,8 +410,8 @@ const Mission = () => {
       xp: finalXp,
     });
 
-    toast({ title: "Mission accomplie!", description: `+${xpGained} XP · Score: ${score}/${mission.enigmes.length}` });
-    navigate(`/mission/${countryId}/complete?score=${score}&total=${mission.enigmes.length}&xp=${xpGained}&streak=${newStreak}`);
+    toast({ title: "Mission accomplie!", description: `+${xpGained} XP · Score: ${score}/${total}` });
+    navigate(`/mission/${countryId}/complete?score=${score}&total=${total}&xp=${xpGained}&streak=${newStreak}`);
   };
 
   const retryMission = () => {
