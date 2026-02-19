@@ -21,6 +21,7 @@ interface CinematicWorldMapProps {
   placedCountryIds: string[];
   onDropOnCountry: (countryId: string) => void;
   onCountryClick: (country: MapCountry) => void;
+  globalProgress?: number; // 0–100 % of countries completed out of 195
 }
 
 // Fallback geo positions
@@ -150,12 +151,24 @@ const CinematicWorldMap = ({
   placedCountryIds,
   onDropOnCountry,
   onCountryClick,
+  globalProgress = 0,
 }: CinematicWorldMapProps) => {
   const playableNodes = countries.filter(c => c.visibility === "playable");
   const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
 
   const freeCount   = playableNodes.filter(n => FREE_COUNTRY_CODES.has(n.code)).length;
   const lockedCount = lockedNodes.length;
+
+  // Map brightness evolves with global progress
+  const mapBrightness =
+    globalProgress >= 100 ? 1.0 :
+    globalProgress >= 75  ? 0.88 :
+    globalProgress >= 50  ? 0.78 :
+    globalProgress >= 25  ? 0.65 :
+    globalProgress >= 10  ? 0.55 : 0.42;
+
+  // Connection intensity (more connections glow at higher %)
+  const connectionOpacity = Math.min(0.88, 0.18 + globalProgress * 0.007);
 
   return (
     <div
@@ -167,11 +180,12 @@ const CinematicWorldMap = ({
       }}
     >
       {/* Background */}
-      <img
+      <motion.img
         src={carteWep}
         alt="Carte World Escape Protocol"
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: "brightness(0.72) saturate(0.8)" }}
+        animate={{ filter: `brightness(${mapBrightness}) saturate(${0.7 + globalProgress * 0.003})` }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
         draggable={false}
       />
 
@@ -216,7 +230,7 @@ const CinematicWorldMap = ({
           const active = from.unlockedPieces > 0 && to.unlockedPieces > 0;
           return (
             <g key={idx}>
-              <path d={d} fill="none" stroke="hsl(40 50% 45% / 0.18)" strokeWidth="0.22" strokeDasharray="0.9 0.9" />
+              <path d={d} fill="none" stroke={`hsl(40 50% 45% / ${connectionOpacity * 0.22})`} strokeWidth="0.22" strokeDasharray="0.9 0.9" />
               {active && (
                 <>
                   <motion.path

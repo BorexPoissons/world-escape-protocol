@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import type { Tables } from "@/integrations/supabase/types";
@@ -59,6 +59,31 @@ function isCountryUnlocked(country: CountryRow, playerLevel: number): boolean {
   const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
   return playerLevel >= requiredLevel;
 }
+
+// Cinematic title based on global completion percentage
+const TITLE_THRESHOLDS: Array<{ min: number; title: string; subtitle: string; color: string }> = [
+  { min: 100, title: "MAÎTRE DU PROTOCOLE", subtitle: "La vérité est entre vos mains", color: "hsl(0 70% 58%)" },
+  { min: 50,  title: "ARCHITECTE",          subtitle: "Le réseau se révèle",           color: "hsl(280 65% 62%)" },
+  { min: 20,  title: "STRATÈGE",            subtitle: "Les connexions s'assemblent",   color: "hsl(160 60% 52%)" },
+  { min: 5,   title: "AGENT",               subtitle: "L'enquête prend forme",         color: "hsl(220 80% 65%)" },
+  { min: 0,   title: "EXPLORATEUR",         subtitle: "Le plan commence à se révéler…", color: "hsl(40 85% 62%)" },
+];
+
+function getProgressTitle(globalPct: number) {
+  return TITLE_THRESHOLDS.find(t => globalPct >= t.min) ?? TITLE_THRESHOLDS[TITLE_THRESHOLDS.length - 1];
+}
+
+// Map brightness based on global completion %
+function getMapBrightness(pct: number): number {
+  if (pct >= 100) return 1.0;
+  if (pct >= 75)  return 0.88;
+  if (pct >= 50)  return 0.78;
+  if (pct >= 25)  return 0.65;
+  if (pct >= 10)  return 0.55;
+  return 0.42;
+}
+
+const TOTAL_COUNTRIES = 195;
 
 // Operation metadata — narrative branding
 const SEASON_META: Record<number, {
@@ -226,7 +251,23 @@ const Dashboard = () => {
   const streak = (profile as any)?.streak ?? 0;
 
   const nextRecommended = allPlayable.find(c => isCountryUnlocked(c, playerLevel) && !completedCountries.includes(c.id));
-  const tierLabel = tier === "director" ? "DIRECTEUR" : tier === "season1" ? "SAISON 1" : tier === "season2" ? "SAISON 2" : tier === "season3" ? "SAISON 3" : "EXPLORATEUR";
+  const tierLabel = tier === "director" ? "DIRECTEUR" : tier === "season1" ? "OP-01" : tier === "season2" ? "OP-02" : tier === "season3" ? "OP-03" : "EXPLORATEUR";
+
+  // Global progression (out of 195 total countries)
+  const globalCompletedCount = completedCountries.length;
+  const globalPct = Math.round((globalCompletedCount / TOTAL_COUNTRIES) * 1000) / 10; // 1 decimal
+  const progressTitle = getProgressTitle(globalPct);
+
+  // Per-operation completed count
+  const opCompletedMap: Record<number, number> = {};
+  const opTotalMap: Record<number, number> = {};
+  for (const country of countries) {
+    const op = (country as any).season_number ?? 0;
+    opTotalMap[op] = (opTotalMap[op] ?? 0) + 1;
+    if (completedCountries.includes(country.id)) {
+      opCompletedMap[op] = (opCompletedMap[op] ?? 0) + 1;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background bg-grid">
@@ -296,53 +337,197 @@ const Dashboard = () => {
       )}
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stats */}
+
+        {/* ═══════════════════════════════════════════════════════════
+            CINEMATIC GLOBAL PROGRESSION
+        ════════════════════════════════════════════════════════════ */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          transition={{ duration: 0.6 }}
+          className="mb-10 rounded-2xl border overflow-hidden"
+          style={{
+            borderColor: "hsl(40 80% 55% / 0.25)",
+            background: "linear-gradient(135deg, hsl(var(--card)), hsl(220 25% 6% / 0.9))",
+            boxShadow: "0 0 40px hsl(40 80% 55% / 0.06), inset 0 1px 0 hsl(40 80% 55% / 0.12)",
+          }}
         >
-          <Link to="/puzzle" className="block">
-            <div className="bg-card border border-border rounded-lg p-5 border-glow hover:border-primary/50 transition-all cursor-pointer">
-              <div className="flex items-center gap-3 mb-2">
-                <Puzzle className="h-5 w-5 text-primary" />
-                <span className="text-xs text-muted-foreground font-display tracking-wider">PUZZLE</span>
+          <div className="px-6 pt-6 pb-4">
+            {/* Title + Agent info row */}
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <motion.div
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: progressTitle.color }}
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ repeat: Infinity, duration: 2.2 }}
+                  />
+                  <span className="text-[10px] font-display tracking-[0.25em]" style={{ color: progressTitle.color }}>
+                    STATUT AGENT
+                  </span>
+                </div>
+                <motion.h2
+                  key={progressTitle.title}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-2xl md:text-3xl font-display font-bold tracking-widest"
+                  style={{ color: progressTitle.color }}
+                >
+                  {progressTitle.title}
+                </motion.h2>
+                <p className="text-xs text-muted-foreground font-display tracking-wider mt-0.5 italic">
+                  {progressTitle.subtitle}
+                </p>
               </div>
-              <p className="text-3xl font-display font-bold text-foreground">{progress}%</p>
-              <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-          </Link>
 
-          <div className="bg-card border border-border rounded-lg p-5 border-glow">
-            <div className="flex items-center gap-3 mb-2">
-              <Map className="h-5 w-5 text-primary" />
-              <span className="text-xs text-muted-foreground font-display tracking-wider">PAYS</span>
+              {/* Compact stats row */}
+              <div className="flex items-center gap-4 flex-shrink-0">
+                {!isDemo && (
+                  <>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-[10px] text-muted-foreground font-display tracking-wider">NIVEAU</p>
+                      <p className="text-lg font-display font-bold text-foreground">{playerLevel}</p>
+                    </div>
+                    <div className="h-8 w-px bg-border hidden sm:block" />
+                    <div className="text-right hidden sm:block">
+                      <p className="text-[10px] text-muted-foreground font-display tracking-wider">SÉRIE</p>
+                      <p className="text-lg font-display font-bold text-foreground flex items-center gap-1">
+                        {streak}<span className="text-sm">🔥</span>
+                      </p>
+                    </div>
+                    <div className="h-8 w-px bg-border hidden sm:block" />
+                  </>
+                )}
+                <Link to="/puzzle">
+                  <Button size="sm" variant="outline" className="font-display tracking-wider text-xs border-primary/40 text-primary hover:bg-primary/10 gap-2">
+                    <Globe className="h-3.5 w-3.5" />
+                    CARTE
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <p className="text-3xl font-display font-bold text-foreground">
-              {completedPlayable.length}<span className="text-muted-foreground text-lg">/{allPlayable.length}</span>
-            </p>
+
+            {/* ─── GLOBAL BAR ─── */}
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-display tracking-widest text-muted-foreground">🧩 PLAN MONDIAL RÉVÉLÉ</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <motion.span
+                    key={globalCompletedCount}
+                    initial={{ scale: 1.3, color: "hsl(40 90% 80%)" }}
+                    animate={{ scale: 1, color: "hsl(40 85% 62%)" }}
+                    transition={{ duration: 0.5 }}
+                    className="text-xl font-display font-bold tabular-nums"
+                  >
+                    {globalCompletedCount}
+                  </motion.span>
+                  <span className="text-sm font-display text-muted-foreground">/ {TOTAL_COUNTRIES} pays</span>
+                  <span className="text-xs font-display tracking-wider ml-2" style={{ color: progressTitle.color }}>
+                    {globalPct}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Luminous progress bar */}
+              <div className="h-3 rounded-full bg-secondary/80 overflow-hidden relative border border-border/30">
+                <motion.div
+                  className="h-full rounded-full relative overflow-hidden"
+                  style={{
+                    background: `linear-gradient(90deg, hsl(30 75% 40%), hsl(40 90% 62%), hsl(45 95% 72%))`,
+                    boxShadow: `0 0 16px hsl(40 85% 55% / 0.6), 0 0 4px hsl(40 90% 72% / 0.8)`,
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(globalPct, 100)}%` }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                >
+                  {/* Shimmer sweep */}
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(90deg, transparent 0%, hsl(40 100% 85% / 0.5) 50%, transparent 100%)" }}
+                    animate={{ x: ["-100%", "250%"] }}
+                    transition={{ repeat: Infinity, duration: 2.2, ease: "linear", repeatDelay: 1 }}
+                  />
+                </motion.div>
+
+                {/* Threshold markers */}
+                {[10, 25, 50, 75].map(t => (
+                  <div
+                    key={t}
+                    className="absolute top-0 bottom-0 w-px"
+                    style={{
+                      left: `${t}%`,
+                      background: "hsl(220 20% 30% / 0.5)",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Threshold labels */}
+              <div className="flex justify-between mt-1 px-0.5">
+                {[0, 10, 25, 50, 75, 100].map(t => (
+                  <span
+                    key={t}
+                    className="text-[9px] font-display"
+                    style={{ color: globalPct >= t ? "hsl(40 60% 55%)" : "hsl(220 10% 30%)" }}
+                  >
+                    {t}%
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Narrative flavor text */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={Math.floor(globalPct / 10)}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-[11px] font-display tracking-wider italic mt-3 text-center"
+                style={{ color: "hsl(var(--muted-foreground) / 0.6)" }}
+              >
+                {globalPct === 0
+                  ? "« L'enquête commence. Le réseau attend d'être découvert. »"
+                  : globalPct < 10
+                  ? "« Quelque chose se dessine dans l'ombre… »"
+                  : globalPct < 25
+                  ? "« Les premiers réseaux lumineux apparaissent. »"
+                  : globalPct < 50
+                  ? "« Un motif prend forme. Continuez. »"
+                  : globalPct < 75
+                  ? "« Le réseau mondial devient visible. Vous approchez de la vérité. »"
+                  : globalPct < 100
+                  ? "« Le schéma est presque complet. La révélation est imminente. »"
+                  : "« Le plan est révélé. Vous êtes Maître du Protocole. »"}
+              </motion.p>
+            </AnimatePresence>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-5 border-glow">
-            <div className="flex items-center gap-3 mb-2">
-              <Star className="h-5 w-5 text-primary" />
-              <span className="text-xs text-muted-foreground font-display tracking-wider">NIVEAU</span>
+          {/* Bottom stat strip */}
+          <div
+            className="px-6 py-3 flex items-center justify-between gap-4 border-t"
+            style={{ borderColor: "hsl(40 80% 55% / 0.12)", background: "hsl(220 25% 4% / 0.4)" }}
+          >
+            <div className="flex items-center gap-6 text-[11px] font-display tracking-wider">
+              <span style={{ color: "hsl(40 80% 60%)" }}>🌍 {globalCompletedCount} pays validés</span>
+              <span className="text-muted-foreground hidden sm:inline">·</span>
+              <span className="text-muted-foreground hidden sm:inline">
+                {TOTAL_COUNTRIES - globalCompletedCount} restants
+              </span>
+              {!isDemo && profile && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">{profile.xp} XP total</span>
+                </>
+              )}
             </div>
-            <p className="text-3xl font-display font-bold text-foreground">{playerLevel}</p>
-            {!isDemo && profile && (
-              <p className="text-xs text-muted-foreground mt-1">{profile.xp} XP total</p>
-            )}
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-5 border-glow">
-            <div className="flex items-center gap-3 mb-2">
-              <Flame className="h-5 w-5 text-primary" />
-              <span className="text-xs text-muted-foreground font-display tracking-wider">SÉRIE</span>
-            </div>
-            <p className="text-3xl font-display font-bold text-foreground">{streak}</p>
-            <p className="text-xs text-muted-foreground mt-1">missions consécutives</p>
+            <Link to="/puzzle" className="text-[10px] font-display tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              VOIR LA CARTE
+            </Link>
           </div>
         </motion.div>
 
@@ -404,6 +589,12 @@ const Dashboard = () => {
           const isUnlocked = seasonNum <= maxSeason;
           const totalInSeason = group.playable.length + group.locked.length + group.silhouette.length;
           if (totalInSeason === 0) return null;
+
+          // Per-operation progress
+          const opCompleted = opCompletedMap[seasonNum] ?? 0;
+          const opTotal = opTotalMap[seasonNum] ?? totalInSeason;
+          const opPct = opTotal > 0 ? (opCompleted / opTotal) * 100 : 0;
+          const isOpComplete = isUnlocked && opCompleted >= opTotal && opTotal > 0;
 
           return (
             <motion.div
@@ -500,9 +691,52 @@ const Dashboard = () => {
                     >
                       🎁 {meta.reward}
                     </div>
-                  </div>
                 </div>
               </div>
+
+              {/* ── Operation progress bar (bottom of banner) ── */}
+              {isUnlocked && (
+                <div
+                  className="px-6 py-3 border-t"
+                  style={{ borderColor: meta.accentColor.replace(")", " / 0.15)") }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      {isOpComplete ? (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="flex items-center gap-1.5 text-[11px] font-display tracking-wider"
+                          style={{ color: meta.accentColor }}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          OPÉRATION VALIDÉE
+                        </motion.div>
+                      ) : (
+                        <span className="text-[11px] font-display tracking-wider text-muted-foreground">
+                          PROGRESSION DE L'OPÉRATION
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-display tabular-nums" style={{ color: meta.accentColor }}>
+                      {opCompleted} / {opTotal} pays
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{
+                        background: `linear-gradient(90deg, ${meta.accentColor.replace(")", " / 0.6)")}, ${meta.accentColor})`,
+                        boxShadow: isOpComplete ? `0 0 8px ${meta.accentColor}` : "none",
+                      }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${opPct}%` }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.15 * idx }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
               {/* Playable countries grid */}
               {group.playable.length > 0 && (
