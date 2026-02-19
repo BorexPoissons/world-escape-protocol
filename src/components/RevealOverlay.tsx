@@ -5,8 +5,8 @@
  * Chaque seuil débloque une couche visuelle narrative supplémentaire.
  * Aucun changement d'image brute — tout est CSS / SVG / canvas overlay.
  */
-import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 interface RevealOverlayProps {
   globalProgress: number; // 0–100
@@ -118,15 +118,9 @@ function Sparkle({ x, y, delay }: { x: number; y: number; delay: number }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function RevealOverlay({ globalProgress }: RevealOverlayProps) {
-  const [showFinal, setShowFinal] = useState(false);
-  const [finalDismissed, setFinalDismissed] = useState(false);
   const prevProgress = useRef(globalProgress);
 
-  // Trigger final message when hitting 100%
   useEffect(() => {
-    if (prevProgress.current < 100 && globalProgress >= 100) {
-      setShowFinal(true);
-    }
     prevProgress.current = globalProgress;
   }, [globalProgress]);
 
@@ -420,87 +414,6 @@ export default function RevealOverlay({ globalProgress }: RevealOverlayProps) {
             className="absolute inset-0 z-[8] pointer-events-none"
             style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 20%, hsl(0 60% 4% / 0.3) 100%)" }}
           />
-        )}
-      </AnimatePresence>
-
-      {/* ── 100%: Jasper's final message ── */}
-      <AnimatePresence>
-        {showFinal && !finalDismissed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5 }}
-            className="absolute inset-0 z-50 flex items-center justify-center"
-            style={{ background: "hsl(220 25% 3% / 0.88)", backdropFilter: "blur(4px)" }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6, duration: 1.2 }}
-              className="max-w-sm text-center px-8"
-            >
-              {/* Portrait */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-                className="text-4xl mb-4"
-              >
-                🕵🏻
-              </motion.div>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="text-[9px] font-display tracking-[0.3em] text-muted-foreground mb-4"
-              >
-                JASPER VALCOURT · MESSAGE FINAL
-              </motion.p>
-
-              {/* Quote */}
-              <motion.blockquote
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5, duration: 1 }}
-                className="font-display text-sm leading-relaxed tracking-wide mb-6"
-                style={{ color: "hsl(0 60% 65%)" }}
-              >
-                "Le Cercle n'est pas une organisation.
-                <br />C'est une architecture."
-              </motion.blockquote>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2.5 }}
-                className="h-px w-24 mx-auto mb-4"
-                style={{ background: "hsl(0 60% 50% / 0.4)" }}
-              />
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 3 }}
-                className="text-[10px] font-display tracking-wider text-muted-foreground mb-6 leading-relaxed"
-              >
-                Vous avez révélé les 195 fragments.<br />
-                Vous êtes <span style={{ color: "hsl(0 70% 62%)" }}>MAÎTRE DU PROTOCOLE</span>.
-              </motion.p>
-
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 3.8 }}
-                onClick={() => setFinalDismissed(true)}
-                className="text-[9px] font-display tracking-[0.25em] px-5 py-2 rounded border transition-all hover:bg-primary/10"
-                style={{ borderColor: "hsl(40 80% 55% / 0.4)", color: "hsl(40 80% 65%)" }}
-              >
-                FERMER LA TRANSMISSION
-              </motion.button>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
     </>

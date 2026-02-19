@@ -24,6 +24,7 @@ interface CinematicWorldMapProps {
   onCountryClick: (country: MapCountry) => void;
   globalProgress?: number; // 0–100 % of countries completed out of 195
   collectedCountryCodes?: string[]; // country codes where user has a fragment
+  forceFullReveal?: boolean; // force map to full brightness/saturation (final state)
 }
 
 // Fallback geo positions
@@ -155,6 +156,7 @@ const CinematicWorldMap = ({
   onCountryClick,
   globalProgress = 0,
   collectedCountryCodes = [],
+  forceFullReveal = false,
 }: CinematicWorldMapProps) => {
   const playableNodes = countries.filter(c => c.visibility === "playable");
   const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
@@ -162,13 +164,15 @@ const CinematicWorldMap = ({
   const freeCount   = playableNodes.filter(n => FREE_COUNTRY_CODES.has(n.code)).length;
   const lockedCount = lockedNodes.length;
 
-  // Map brightness evolves with global progress
-  const mapBrightness =
+  // Map brightness evolves with global progress (forceFullReveal overrides)
+  const mapBrightness = forceFullReveal ? 1.0 :
     globalProgress >= 100 ? 1.0 :
     globalProgress >= 75  ? 0.88 :
     globalProgress >= 50  ? 0.78 :
     globalProgress >= 25  ? 0.65 :
     globalProgress >= 10  ? 0.55 : 0.42;
+
+  const mapSaturate = forceFullReveal ? 1.8 : 0.7 + globalProgress * 0.003;
 
   // Connection intensity (more connections glow at higher %)
   const connectionOpacity = Math.min(0.88, 0.18 + globalProgress * 0.007);
@@ -188,10 +192,10 @@ const CinematicWorldMap = ({
         alt="Carte World Escape Protocol"
         className="absolute inset-0 w-full h-full object-cover"
         animate={{
-          filter: `brightness(${mapBrightness}) saturate(${0.7 + globalProgress * 0.003})`,
-          scale: globalProgress >= 99 && globalProgress < 100 ? 1.04 : 1,
+          filter: `brightness(${mapBrightness}) saturate(${mapSaturate})`,
+          scale: (!forceFullReveal && globalProgress >= 99 && globalProgress < 100) ? 1.04 : 1,
         }}
-        transition={{ duration: globalProgress >= 99 ? 8 : 1.2, ease: "easeOut" }}
+        transition={{ duration: forceFullReveal ? 3 : globalProgress >= 99 ? 8 : 1.2, ease: "easeOut" }}
         draggable={false}
       />
 

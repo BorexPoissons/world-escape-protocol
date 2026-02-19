@@ -194,6 +194,7 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          has_completed_puzzle: boolean
           id: string
           last_mission_at: string | null
           level: number
@@ -207,6 +208,7 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          has_completed_puzzle?: boolean
           id?: string
           last_mission_at?: string | null
           level?: number
@@ -220,6 +222,7 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          has_completed_puzzle?: boolean
           id?: string
           last_mission_at?: string | null
           level?: number
