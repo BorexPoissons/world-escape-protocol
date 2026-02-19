@@ -9,6 +9,7 @@ import { Puzzle, MapPin, ArrowRight, Shield, Eye, EyeOff, Home, Trophy, Flame } 
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 import missionCompleteCH from "@/assets/mission-complete-ch.png";
+import missionCompleteUS from "@/assets/mission-complete-us.png";
 import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
@@ -23,6 +24,7 @@ function getNextSignalInitialCode(currentCode: string): string | null {
 // Map country code → cinematic image (add more as you create them)
 const CINEMATIC_IMAGES: Record<string, string> = {
   CH: missionCompleteCH,
+  US: missionCompleteUS,
 };
 
 const MissionComplete = () => {
