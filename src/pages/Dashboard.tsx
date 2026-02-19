@@ -158,7 +158,7 @@ const SEASON_META: Record<number, {
 const INTRO_SEEN_KEY = "wep_intro_seen";
 
 // Fixed SIGNAL_INITIAL sequence for free sequential unlock
-const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
 
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -647,6 +647,51 @@ const Dashboard = () => {
             </Link>
           </motion.div>
         )}
+
+        {/* Dilemme Central CTA — visible when all 5 free countries are completed */}
+        {!nextRecommended && tier === "free" && (() => {
+          const allFreeCompleted = SIGNAL_INITIAL_SEQUENCE.every(code => {
+            const c = countries.find(ct => ct.code === code);
+            return c && completedCountries.includes(c.id);
+          });
+          if (!allFreeCompleted) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="mb-8 rounded-xl overflow-hidden border border-primary/40"
+              style={{
+                background: "linear-gradient(135deg, hsl(220 25% 7%), hsl(220 20% 5%))",
+                boxShadow: "0 0 40px hsl(40 80% 55% / 0.12)",
+              }}
+            >
+              <div className="p-6 flex flex-col sm:flex-row items-center gap-5">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
+                  className="text-5xl text-primary flex-shrink-0"
+                >
+                  ◈
+                </motion.div>
+                <div className="flex-1 text-center sm:text-left">
+                  <p className="text-[10px] font-display tracking-[0.4em] text-primary/60 mb-1">SIGNAL INITIAL — COMPLÉTÉ</p>
+                  <h3 className="text-xl font-display font-bold text-primary tracking-wider mb-1">DILEMME CENTRAL</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Tu as identifié cinq leviers. Mais tout système a une origine.<br />
+                    Trouve le point central pour débloquer la suite.
+                  </p>
+                </div>
+                <Link to="/dilemme-central" className="flex-shrink-0">
+                  <Button className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                    ACCÉDER
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* ====== OPERATIONS ====== */}
         {sortedSeasons.map((seasonNum, idx) => {

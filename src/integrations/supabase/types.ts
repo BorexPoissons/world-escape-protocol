@@ -454,6 +454,10 @@ export type Database = {
       }
       user_story_state: {
         Row: {
+          central_calcul_step: number
+          central_dilemma_unlocked: boolean
+          central_word_attempts: number
+          central_word_validated: boolean
           ending_path: string | null
           id: string
           secrets_unlocked: number
@@ -463,6 +467,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          central_calcul_step?: number
+          central_dilemma_unlocked?: boolean
+          central_word_attempts?: number
+          central_word_validated?: boolean
           ending_path?: string | null
           id?: string
           secrets_unlocked?: number
@@ -472,6 +480,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          central_calcul_step?: number
+          central_dilemma_unlocked?: boolean
+          central_word_attempts?: number
+          central_word_validated?: boolean
           ending_path?: string | null
           id?: string
           secrets_unlocked?: number
