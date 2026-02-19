@@ -1,79 +1,132 @@
 {
-  "mission_title": "OPÉRATION CARNAVAL NOIR",
-  "intro": "Agent, bienvenue au Brésil.\n\nRio de Janeiro, 2h du matin. Le carnaval bat son plein. Des millions de personnes envahissent la ville. La chaleur est humide, les percussions des batucadas résonnent à plusieurs kilomètres. Impossible de penser clairement. C'est exactement pour ça que le Cercle de Davos a choisi cette nuit.\n\nVotre contact — nom de code Sereia — devait vous remettre le **Fragment Émeraude** lors du défilé de la Escola de Samba do Salgueiro. Elle ne s'est pas présentée. À la place, vous avez trouvé dans sa loge un message codé dans les couleurs de son costume : violet-or-blanc-rouge-noir.\n\nVotre couverture : photographe accrédité pour l'Agence France-Presse. Votre réalité : vous avez 40 minutes avant que le défilé s'arrête et que la loge soit fouillée par les hommes du Cercle.\n\nLe code est dans les couleurs. Les couleurs sont dans la musique. La musique est dans le chaos.\nChaque battement correspond à une réponse. Chaque réponse correspond à une couleur.\n\nBienvenue dans le chaos organisé le plus complexe du monde.",
-  "enigmes": [
+  "country": {
+    "code": "BR",
+    "name_fr": "Brésil"
+  },
+  "mission": {
+    "mission_id": "BR-S1-004",
+    "mission_title": "OPÉRATION CARNAVAL NOIR",
+    "phase": "RESSOURCES_BRUTES",
+    "is_free": true,
+    "detective": "Jasper Valcourt",
+    "intro": "Rio de Janeiro.\n2h17 du matin.\n\nLa ville ne dort pas.\nElle explose.\n\nLumières, percussions, foules compactes.\nImpossible de distinguer la célébration du chaos.\n\nAprès la Suisse, les États-Unis et la Chine,\nJasper Valcourt comprend que le pouvoir mondial ne se résume pas aux banques ou aux infrastructures.\n\nIl y a une autre variable.\n\nL'énergie brute.\n\nL'Amazonie — poumon stratégique.\nLes ressources minières — convoitées.\nUn pays capable de basculer l'équilibre d'un continent.\n\nQuand les institutions vacillent,\nd'autres forces émergent.\n\nInfluence.\nInstabilité.\nRessources.\n\nLe monde regarde Washington.\nLe monde observe Pékin.\nMais quand l'Amérique du Sud tremble…\nles marchés suivent.\n\nVotre mission :\nIdentifier comment l'instabilité et les ressources naturelles deviennent des leviers géopolitiques majeurs.\n\nDans le bruit du carnaval,\ncertaines transactions se font sans musique."
+  },
+  "quiz_rules": {
+    "total_questions": 10,
+    "draw_per_run": 6,
+    "distribution": {
+      "A": 4,
+      "B": 1,
+      "C": 1
+    },
+    "max_mistakes": 1
+  },
+  "question_bank": [
     {
-      "question": "Le Carnaval de Rio est le plus grand du monde. Combien de membres compte approximativement une grande école de samba du Grupo Especial lors du défilé officiel ?",
-      "type": "observation",
-      "choices": [
-        "Environ 500 participants",
-        "Environ 2 500 à 4 500 participants",
-        "Environ 200 participants",
-        "Environ 15 000 participants"
-      ],
-      "answer": "Environ 2 500 à 4 500 participants",
-      "explanation": "Les grandes écoles de samba du Grupo Especial alignent généralement entre 2 500 et plus de 4 000 participants — danseurs, percussionnistes, porteurs de chars, passistas et membres techniques. La préparation dure toute l'année. Le Sambodrome Marquês de Sapucaí, inauguré en 1984, accueille environ 70 000 spectateurs lors des grandes nuits."
+      "id": "BR_Q1",
+      "type": "A",
+      "question": "Quelle est la capitale fédérale du Brésil ?",
+      "choices": ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"],
+      "answer_index": 2
     },
     {
-      "question": "Le Brésil est la plus grande démocratie d'Amérique du Sud. Pourtant, il a connu une dictature militaire. De quelle période date-t-elle ?",
-      "type": "culture",
-      "choices": [
-        "1937-1945 (État Novo de Vargas)",
-        "1964-1985 (Dictature militaire)",
-        "1954-1964 (Gouvernements d'exception)",
-        "1889-1930 (République oligarchique)"
-      ],
-      "answer": "1964-1985 (Dictature militaire)",
-      "explanation": "Le coup d'État militaire du 31 mars 1964 instaura une dictature de 21 ans. Les généraux se succédèrent jusqu'en 1985. En 1968, l'AI-5 suspendit les libertés civiles et renforça la censure. Le carnaval fut maintenu et parfois encouragé comme soupape sociale."
+      "id": "BR_Q2",
+      "type": "A",
+      "question": "Quel fleuve traverse la plus grande forêt tropicale du monde en Amazonie brésilienne ?",
+      "choices": ["Rio de la Plata", "Amazone", "Paraná", "São Francisco"],
+      "answer_index": 1,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/24701-nature-natural-beauty.jpg/640px-24701-nature-natural-beauty.jpg",
+        "caption": "Le fleuve Amazone et la forêt tropicale — premier réservoir de biodiversité et ressource stratégique mondiale"
+      }
     },
     {
-      "question": "L'Amazonie brésilienne représente quelle proportion approximative de la forêt amazonienne totale ?",
-      "type": "logique",
-      "choices": [
-        "Environ 20%",
-        "Environ 40%",
-        "Environ 60%",
-        "Environ 10%"
-      ],
-      "answer": "Environ 60%",
-      "explanation": "Le Brésil abrite environ 58% à 62% de la forêt amazonienne totale, soit plus de 4 millions de km² sur environ 6,7 millions. L'Amazonie joue un rôle majeur dans la régulation climatique mondiale et abrite près de 10% des espèces connues. Selon les données officielles de l'INPE, la déforestation a dépassé 11 000 km² en 2022."
+      "id": "BR_Q3",
+      "type": "A",
+      "question": "Le Brésil est le premier producteur mondial de quelle ressource agricole ?",
+      "choices": ["Blé", "Riz", "Café", "Maïs"],
+      "answer_index": 2
     },
     {
-      "question": "La capoeira, art martial brésilien, possède une origine unique. Laquelle ?",
-      "type": "culture",
+      "id": "BR_Q4",
+      "type": "A",
+      "question": "En quelle année le Brésil a-t-il intégré le groupe des BRIC (avant l'Afrique du Sud) ?",
+      "choices": ["2001", "2006", "2009", "2011"],
+      "answer_index": 0,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/BRICS_2023_Johannesburg.jpg/640px-BRICS_2023_Johannesburg.jpg",
+        "caption": "Sommet des BRICS — coalition des grandes économies émergentes dont le Brésil est membre fondateur"
+      }
+    },
+    {
+      "id": "BR_Q5",
+      "type": "A",
+      "question": "Quelle entreprise publique brésilienne est l'un des plus grands producteurs de pétrole d'Amérique latine ?",
+      "choices": ["Vale", "Petrobras", "Embraer", "Eletrobras"],
+      "answer_index": 1
+    },
+    {
+      "id": "BR_Q6",
+      "type": "A",
+      "question": "Quelle est la principale langue officielle du Brésil ?",
+      "choices": ["Espagnol", "Français", "Portugais", "Guaraní"],
+      "answer_index": 2
+    },
+    {
+      "id": "BR_Q7",
+      "type": "B",
+      "question": "Pourquoi la déforestation de l'Amazonie est-elle considérée comme une question géopolitique mondiale ?",
       "choices": [
-        "Elle est exclusivement pratiquée par des femmes",
-        "Elle a été développée par des esclaves africains et camouflée en danse pour éviter la répression",
-        "Elle intègre des armes secrètes cachées dans les vêtements",
-        "Elle fut inventée par les Jésuites pour convertir les indigènes"
+        "Elle concerne uniquement le tourisme local",
+        "Elle affecte le climat, la biodiversité et les négociations diplomatiques à l'échelle mondiale",
+        "Elle n'a d'impact que sur l'agriculture brésilienne",
+        "Elle est uniquement liée à des conflits frontaliers"
       ],
-      "answer": "Elle a été développée par des esclaves africains et camouflée en danse pour éviter la répression",
-      "explanation": "La capoeira fut développée par des esclaves africains au Brésil à partir du XVIe siècle. Elle mélange combat, musique et danse. Criminalisée par le Code pénal de 1890, elle fut progressivement légalisée dans les années 1930, notamment sous Getúlio Vargas, devenant ensuite un symbole culturel national."
+      "answer_index": 1
+    },
+    {
+      "id": "BR_Q8",
+      "type": "B",
+      "question": "Quel rôle jouent les ressources naturelles d'un pays dans les relations géopolitiques ?",
+      "choices": [
+        "Elles sont sans influence sur la diplomatie",
+        "Elles créent des dépendances et des leviers de négociation entre États",
+        "Elles servent uniquement à l'économie intérieure",
+        "Elles provoquent automatiquement des conflits militaires"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "BR_Q9",
+      "type": "C",
+      "question": "Dans la logique du système mondial, que représentent les ressources brutes du Brésil ?",
+      "choices": [
+        "Un atout purement économique",
+        "Un facteur d'instabilité sans influence externe",
+        "Un levier d'influence géopolitique convoité par les grandes puissances",
+        "Une ressource exclusivement régionale"
+      ],
+      "answer_index": 2,
+      "narrative_unlock": "Celui qui contrôle les ressources contrôle les dépendances."
+    },
+    {
+      "id": "BR_Q10",
+      "type": "C",
+      "question": "Quel lien relie l'Amazonie, le pétrole brésilien et l'appartenance aux BRICS ?",
+      "choices": [
+        "L'isolement économique",
+        "La capacité à peser dans les équilibres mondiaux par les ressources",
+        "Une domination militaire régionale",
+        "Un simple hasard géographique"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "L'énergie brute précède la puissance structurée."
     }
   ],
-  "false_hint": "Le Fragment Émeraude serait caché « sous le septième char, là où l’ombre tombe avant le troisième tambour ». Trop précis pour être vrai — exactement le genre de piste que le Cercle adore laisser traîner.",
-  "moral_choice": {
-    "description": "Vous avez déchiffré le code couleur de Sereia et trouvé le Fragment. Mais vous avez aussi découvert qu'elle travaille pour trois organisations simultanément — dont l'une est clairement criminelle. Elle est vivante, cachée dans le sambodrome. Vous pouvez l'aider à fuir ou la livrer.",
-    "option_a": "Livrez sa position à votre organisation — une taupe est une taupe, peu importe les circonstances.",
-    "option_b": "Aidez-la à fuir, récupérez le Fragment, et dites que vous ne l'avez pas trouvée.",
-    "impact_a": { "trust": 8, "suspicion": -5 },
-    "impact_b": { "trust": -6, "suspicion": 7 }
-  },
-  "final_fragment": "Fragment Émeraude — obtenu dans le chaos du carnaval.\n\nSereia avait gravé au dos du fragment : *« Le prochain gardien est un fantôme dans la machine. Il surveille tout le monde. Et surtout — il vous surveille déjà depuis cette mission. Bienvenue dans le pays de la transparence illusoire. »*\n\nDirection : Amérique du Nord.",
-  "historical_fact": "Le Brésil est le seul pays d'Amérique latine dont la langue officielle est le portugais. Colonisé par le Portugal en 1500, il devint indépendant en 1822 et forma un empire dirigé par Pedro I puis Pedro II — le seul empire stable et reconnu internationalement des Amériques au XIXe siècle. En 1889, un coup d'État militaire proclama la République, presque sans effusion de sang.",
-  "next_hint": "Tout est observé. Chaque clic, chaque mouvement, chaque hésitation est enregistrée. Dans le pays de la liberté surveillée, les données sont la nouvelle arme. Cherchez le hacker qui surveille les surveillants.",
-  "lore": {
-    "titre": "LE RÉSEAU SEREIA",
-    "texte": "Sereia — la sirène — est le nom de code d'un réseau de contre-espionnage fondé dans les années 1970 par des opposants à la dictature brésilienne. Infiltré, démantelé puis recréé à plusieurs reprises. En 2024, un groupe se réclamant de Sereia a transmis au Cercle de Davos des informations sur 12 agents actifs dans la région. L'un d'eux était peut-être vous.",
-    "personnages": [
-      {
-        "nom": "Sereia",
-        "role": "Votre contact. Triple agent ou victime ? Les deux ne s'excluent pas."
-      },
-      {
-        "nom": "L'Opérateur Zéro",
-        "role": "Message reçu après la mission : 'Bien joué. Ou bien menti. Je ne sais pas encore.'"
-      }
-    ]
+  "fragment_reward": {
+    "id": "FRAG-BR-004",
+    "name": "Fragment Carnaval Noir",
+    "concept": "NŒUD_RESSOURCES",
+    "unlocked_message": "L'énergie brute précède la puissance structurée."
   }
 }
