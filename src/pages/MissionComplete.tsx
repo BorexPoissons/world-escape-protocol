@@ -9,6 +9,15 @@ import { Puzzle, MapPin, ArrowRight, Shield, Sparkles, Eye, EyeOff, Home, Trophy
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 
+// ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+
+function getNextSignalInitialCode(currentCode: string): string | null {
+  const idx = SIGNAL_INITIAL_SEQUENCE.indexOf(currentCode);
+  if (idx === -1 || idx === SIGNAL_INITIAL_SEQUENCE.length - 1) return null;
+  return SIGNAL_INITIAL_SEQUENCE[idx + 1];
+}
+
 const MissionComplete = () => {
   const { countryId } = useParams<{ countryId: string }>();
   const [searchParams] = useSearchParams();
@@ -24,65 +33,80 @@ const MissionComplete = () => {
   const [phase, setPhase] = useState<"reveal" | "hint">("reveal");
   const [country, setCountry] = useState<Tables<"countries"> | null>(null);
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
+  const [fragmentName, setFragmentName] = useState<string>("");
+  const [fragmentConcept, setFragmentConcept] = useState<string>("");
   const [storyState, setStoryState] = useState({ trust_level: 50, suspicion_level: 0 });
-  const [puzzleProgress, setPuzzleProgress] = useState({ unlocked: 0, total: 0 });
-  const [missionFragment, setMissionFragment] = useState("");
+  const [puzzleProgress, setPuzzleProgress] = useState({ unlocked: 0, total: 195 });
   const [newBadges, setNewBadges] = useState<BadgeKey[]>([]);
 
   useEffect(() => {
     if (!countryId) { navigate("/dashboard"); return; }
 
     const load = async () => {
-      const [countryRes, countriesRes] = await Promise.all([
-        supabase.from("countries").select("*").eq("id", countryId).single(),
-        supabase.from("countries").select("*").order("difficulty_base"),
-      ]);
+      // Load current country
+      const { data: countryData } = await supabase
+        .from("countries").select("*").eq("id", countryId).single();
+      if (!countryData) return;
+      setCountry(countryData);
 
-      if (countryRes.data) setCountry(countryRes.data);
-      const allCountries = countriesRes.data || [];
+      // Load fragment reward info from static JSON (if available)
+      try {
+        const res = await fetch(`/content/countries/${countryData.code}.json`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.fragment_reward) {
+            setFragmentName(json.fragment_reward.name ?? "");
+            setFragmentConcept(json.fragment_reward.concept ?? "");
+          }
+        }
+      } catch { /* no static file — leave fragment info empty */ }
+
+      // ── Determine next country using fixed sequence for SIGNAL_INITIAL ──
+      const nextCode = getNextSignalInitialCode(countryData.code);
+      if (nextCode) {
+        const { data: nextData } = await supabase
+          .from("countries").select("*").eq("code", nextCode).single();
+        if (nextData) setNextCountry(nextData);
+      } else {
+        // Phase complete — find first locked Season 1 country as teaser
+        const { data: season1 } = await supabase
+          .from("countries").select("*").eq("season_number", 1).order("release_order").limit(1).single();
+        if (season1) setNextCountry(season1);
+      }
 
       if (user) {
-        const [stateRes, piecesRes, missionRes, badgesRes] = await Promise.all([
+        const [stateRes, fragmentsRes, badgesRes] = await Promise.all([
           supabase.from("user_story_state").select("*").eq("user_id", user.id).single(),
-          supabase.from("puzzle_pieces").select("*").eq("user_id", user.id).eq("unlocked", true),
-          supabase.from("missions").select("mission_data").eq("user_id", user.id).eq("country_id", countryId).order("created_at", { ascending: false }).limit(1).single(),
+          supabase.from("user_fragments" as any).select("id").eq("user_id", user.id),
           supabase.from("user_badges").select("badge_key").eq("user_id", user.id).order("awarded_at", { ascending: false }).limit(5),
         ]);
 
-        if (stateRes.data) setStoryState({ trust_level: stateRes.data.trust_level, suspicion_level: stateRes.data.suspicion_level });
+        if (stateRes.data) setStoryState({
+          trust_level: stateRes.data.trust_level,
+          suspicion_level: stateRes.data.suspicion_level,
+        });
 
-        const pieces = piecesRes.data || [];
-        const completedCountryIds = [...new Set(pieces.map((p: any) => p.country_id))];
-        setPuzzleProgress({ unlocked: pieces.length, total: allCountries.length * 5 });
+        const fragmentCount = (fragmentsRes.data as any[])?.length ?? 0;
+        setPuzzleProgress({ unlocked: fragmentCount, total: 195 });
 
-        const next = allCountries.find((c: any) => !completedCountryIds.includes(c.id) && c.id !== countryId);
-        if (next) setNextCountry(next);
-
-        if (missionRes.data?.mission_data) {
-          const data = missionRes.data.mission_data as any;
-          setMissionFragment(data.final_fragment || data.next_hint || "");
-        }
-
-        if (badgesRes.data) {
-          setNewBadges(badgesRes.data.map((b: any) => b.badge_key));
-        }
+        if (badgesRes.data) setNewBadges(badgesRes.data.map((b: any) => b.badge_key));
       } else {
         // Demo mode
         try {
           const raw = localStorage.getItem("wep_demo_story");
           if (raw) setStoryState(JSON.parse(raw));
         } catch {}
-        const next = allCountries.find((c: any) => c.id !== countryId);
-        if (next) setNextCountry(next);
-        setPuzzleProgress({ unlocked: 1, total: allCountries.length * 5 });
+        setPuzzleProgress({ unlocked: 1, total: 195 });
       }
     };
 
     load();
   }, [user, countryId]);
 
-  const progressPercent = puzzleProgress.total > 0 ? Math.round((puzzleProgress.unlocked / puzzleProgress.total) * 100) : 0;
+  const progressPercent = Math.round((puzzleProgress.unlocked / puzzleProgress.total) * 100 * 100) / 100;
   const isPerfect = score === total && total > 0;
+  const isLastFreeCountry = country ? SIGNAL_INITIAL_SEQUENCE.indexOf(country.code) === SIGNAL_INITIAL_SEQUENCE.length - 1 : false;
+
 
   return (
     <div className="min-h-screen bg-background bg-grid flex flex-col">
@@ -223,13 +247,13 @@ const MissionComplete = () => {
                 )}
 
                 <Button onClick={() => setPhase("hint")} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6">
-                  VOIR L'INDICE SUIVANT
+                  CONTINUER L'ENQUÊTE
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </motion.div>
             )}
 
-            {/* Phase 2: Narrative Hint */}
+            {/* Phase 2: Fragment + Next Mission */}
             {phase === "hint" && (
               <motion.div
                 key="hint"
@@ -239,66 +263,101 @@ const MissionComplete = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-8"
               >
+                {/* Fragment unlocked card */}
                 <div className="text-center">
-                  <Sparkles className="h-10 w-10 text-primary mx-auto mb-4" />
-                  <h2 className="text-2xl font-display font-bold text-primary text-glow tracking-wider">TRANSMISSION INTERCEPTÉE</h2>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                  >
+                    <Sparkles className="h-10 w-10 text-primary mx-auto mb-4" />
+                  </motion.div>
+                  <h2 className="text-2xl font-display font-bold text-primary text-glow tracking-wider">FRAGMENT DÉBLOQUÉ</h2>
                 </div>
 
-                {missionFragment && (
+                {fragmentName && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-card border border-primary/30 rounded-lg p-6 border-glow relative overflow-hidden"
+                    transition={{ delay: 0.4 }}
+                    className="bg-card border border-primary/30 rounded-lg p-6 border-glow relative overflow-hidden text-center"
                   >
-                    <div className="scanline absolute inset-0 pointer-events-none" />
-                    <p className="text-foreground leading-relaxed italic relative z-10">"{missionFragment}"</p>
+                    <div className="scanline absolute inset-0 pointer-events-none opacity-20" />
+                    <p className="text-xs font-display tracking-[0.4em] mb-2 text-primary/60 relative z-10">FRAGMENT OBTENU</p>
+                    <p className="text-xl font-display font-bold text-primary relative z-10">{fragmentName}</p>
+                    {fragmentConcept && (
+                      <p className="text-xs font-display tracking-widest mt-1 relative z-10 text-muted-foreground">
+                        TYPE : {fragmentConcept}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-3 relative z-10">
+                      Fragment ajouté à votre inventaire — consultez le Puzzle Mondial pour le placer.
+                    </p>
                   </motion.div>
                 )}
 
-                {/* Next country teaser */}
-                {nextCountry && (
+                {/* Next country — deterministic sequence */}
+                {nextCountry && !isLastFreeCountry && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1 }}
+                    transition={{ delay: 0.8 }}
                     className="bg-card border border-border rounded-lg p-5"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <MapPin className="h-5 w-5 text-primary" />
-                      <p className="text-xs font-display text-primary tracking-wider">PROCHAINE DESTINATION</p>
+                      <p className="text-xs font-display text-primary tracking-wider">PROCHAINE DESTINATION — SIGNAL INITIAL</p>
                     </div>
                     <h3 className="text-xl font-display font-bold text-foreground tracking-wider mb-2">
                       {nextCountry.name.toUpperCase()}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {nextCountry.description || `Difficulté: ${"★".repeat(nextCountry.difficulty_base)}`}
+                      {nextCountry.description || `Mission ${SIGNAL_INITIAL_SEQUENCE.indexOf(nextCountry.code) + 1} / 5 — Phase gratuite`}
                     </p>
-                    {storyState.suspicion_level > 30 && (
-                      <p className="text-xs text-destructive mt-3 font-display tracking-wider">
-                        ⚠ NIVEAU DE SUSPICION ÉLEVÉ — Chrono réduit & vies limitées
-                      </p>
-                    )}
                   </motion.div>
                 )}
 
-                {!nextCountry && (
-                  <div className="bg-card border border-primary/20 rounded-lg p-5 text-center">
-                    <p className="text-primary font-display tracking-wider text-sm">TOUTES LES MISSIONS DISPONIBLES SONT COMPLÉTÉES</p>
-                    <p className="text-muted-foreground text-xs mt-2">De nouvelles destinations seront bientôt déclassifiées...</p>
-                  </div>
+                {/* Last free country — tease Season 1 */}
+                {isLastFreeCountry && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="bg-card border border-primary/20 rounded-lg p-5 text-center"
+                  >
+                    <p className="text-primary font-display tracking-wider text-sm mb-2">🔐 OPÉRATION 0 COMPLÈTE</p>
+                    <p className="text-muted-foreground text-xs">
+                      Tous les pays gratuits ont été explorés. Passez à l'Opération I pour continuer l'enquête.
+                    </p>
+                  </motion.div>
+                )}
+
+                {storyState.suspicion_level > 30 && (
+                  <p className="text-xs text-destructive font-display tracking-wider text-center">
+                    ⚠ NIVEAU DE SUSPICION ÉLEVÉ — Chrono réduit & vies limitées
+                  </p>
                 )}
 
                 <div className="flex gap-3">
-                  {nextCountry && (
-                    <Button onClick={() => navigate(`/mission/${nextCountry.id}`)} className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6">
+                  {nextCountry && !isLastFreeCountry ? (
+                    <Button
+                      onClick={() => navigate(`/mission/${nextCountry.id}`)}
+                      className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6"
+                    >
                       <MapPin className="h-4 w-4 mr-2" />
-                      PROCHAINE MISSION
+                      POURSUIVRE L'ENQUÊTE
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => navigate("/dashboard")}
+                      className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6"
+                    >
+                      RETOUR AU QG
                     </Button>
                   )}
                   <Button variant="outline" onClick={() => navigate("/puzzle")} className="flex-1 font-display tracking-wider border-primary/50 text-primary hover:bg-primary/10 py-6">
                     <Puzzle className="h-4 w-4 mr-2" />
-                    VOIR LE PUZZLE
+                    PUZZLE MONDIAL
                   </Button>
                 </div>
 
