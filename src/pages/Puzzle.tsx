@@ -289,11 +289,21 @@ const Puzzle = () => {
       };
     });
 
-  // Next country = first playable one with NO fragment yet (0 obtained)
-  const continueCountry = puzzleData.find(d => {
-    const vis = getCountryVisibility(d.country, tier);
-    return vis === "playable" && d.unlockedPieces === 0;
+  // Next country = respects SIGNAL INITIAL sequence (CH→US→CN→BR→EG), then other playable
+  const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+
+  // Find the first country in sequence that has no fragment yet
+  const nextSequenceCode = SIGNAL_INITIAL_SEQUENCE.find(code => {
+    const entry = puzzleData.find(d => d.country.code === code);
+    return entry && getCountryVisibility(entry.country, tier) === "playable" && entry.unlockedPieces === 0;
   });
+
+  const continueCountry = nextSequenceCode
+    ? puzzleData.find(d => d.country.code === nextSequenceCode)
+    : puzzleData.find(d => {
+        const vis = getCountryVisibility(d.country, tier);
+        return vis === "playable" && d.unlockedPieces === 0;
+      });
 
   // All free countries completed and still on free tier → show upgrade CTA
   const allFreeCompleted =
