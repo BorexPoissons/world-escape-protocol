@@ -54,19 +54,19 @@ export const FLAG_EMOJI: Record<string, string> = {
 
 const FREE_COUNTRY_CODES = new Set(["CH", "BR", "CN", "US", "IN"]);
 
-const SEASON_CONFIG: Record<number, { label: string; color: string; lockColor: string }> = {
-  0: { label: "GRATUIT",  color: "hsl(40 85% 62%)",  lockColor: "hsl(40 80% 55% / 0.6)" },
-  1: { label: "SAISON 1", color: "hsl(220 80% 65%)", lockColor: "hsl(220 70% 45% / 0.7)" },
-  2: { label: "SAISON 2", color: "hsl(160 60% 52%)", lockColor: "hsl(160 60% 35% / 0.6)" },
-  3: { label: "SAISON 3", color: "hsl(280 65% 62%)", lockColor: "hsl(280 60% 40% / 0.6)" },
-  4: { label: "SAISON 4", color: "hsl(0 70% 58%)",   lockColor: "hsl(0 65% 35% / 0.6)" },
+const SEASON_CONFIG: Record<number, { label: string; codename: string; color: string; lockColor: string }> = {
+  0: { label: "SIGNAL INITIAL",   codename: "OP-00 · GRATUIT",  color: "hsl(40 85% 62%)",  lockColor: "hsl(40 80% 55% / 0.6)" },
+  1: { label: "PROTOCOLE OMÉGA",  codename: "OP-01",             color: "hsl(220 80% 65%)", lockColor: "hsl(220 70% 45% / 0.7)" },
+  2: { label: "RÉSEAU ATLAS",     codename: "OP-02",             color: "hsl(160 60% 52%)", lockColor: "hsl(160 60% 35% / 0.6)" },
+  3: { label: "DOMINION SHADOW",  codename: "OP-03",             color: "hsl(280 65% 62%)", lockColor: "hsl(280 60% 40% / 0.6)" },
+  4: { label: "CONVERGENCE 195",  codename: "OP-04 · FINALE",    color: "hsl(0 70% 58%)",   lockColor: "hsl(0 65% 35% / 0.6)" },
 };
 
 function getSeasonTooltip(season: number): string {
-  if (season === 1) return "Disponible en Saison 1 — 43 pays";
-  if (season === 2) return "Disponible en Saison 2 — 72 pays";
-  if (season === 3) return "Disponible en Saison 3 — 40 pays";
-  if (season === 4) return "Disponible en Saison 4 — 35 pays";
+  if (season === 1) return "🔒 PROTOCOLE OMÉGA · 43 pays";
+  if (season === 2) return "🔒 RÉSEAU ATLAS · 50 pays";
+  if (season === 3) return "🔒 DOMINION SHADOW · 50 pays";
+  if (season === 4) return "🔒 CONVERGENCE 195 · 47 pays";
   return "Verrouillé";
 }
 
@@ -94,20 +94,23 @@ const LockedNode = ({ node }: { node: MapCountry }) => {
             className="absolute bottom-full left-1/2 mb-2 z-50 pointer-events-none"
             style={{ transform: "translateX(-50%)" }}
           >
-            <div
-              className="px-2 py-1.5 rounded-lg border backdrop-blur-md whitespace-nowrap text-center"
-              style={{
-                background: "hsl(220 25% 6% / 0.95)",
-                borderColor: cfg.lockColor,
-                boxShadow: `0 0 12px ${cfg.lockColor}`,
-              }}
-            >
-              <p className="text-[8px] font-display tracking-wider mb-0.5" style={{ color: cfg.color }}>
-                {node.name.toUpperCase()}
-              </p>
-              <p className="text-[7px] font-display tracking-wide" style={{ color: "hsl(220 10% 55%)" }}>
-                🔒 {getSeasonTooltip(season)}
-              </p>
+              <div
+                className="px-2 py-1.5 rounded-lg border backdrop-blur-md whitespace-nowrap text-center"
+                style={{
+                  background: "hsl(220 25% 6% / 0.95)",
+                  borderColor: cfg.lockColor,
+                  boxShadow: `0 0 12px ${cfg.lockColor}`,
+                }}
+              >
+                <p className="text-[8px] font-display tracking-wider mb-0.5" style={{ color: cfg.color }}>
+                  {node.name.toUpperCase()}
+                </p>
+                <p className="text-[7px] font-display tracking-wide" style={{ color: "hsl(220 10% 45%)" }}>
+                  {cfg.codename}
+                </p>
+                <p className="text-[7px] font-display tracking-wide" style={{ color: "hsl(220 10% 38%)" }}>
+                  {getSeasonTooltip(season)}
+                </p>
             </div>
           </motion.div>
         )}
@@ -387,14 +390,14 @@ const CinematicWorldMap = ({
         </div>
       </div>
 
-      {/* Season legend bottom-right */}
+      {/* Operation legend bottom-right */}
       <div className="absolute bottom-3 right-3 pointer-events-none z-30 flex flex-col items-end gap-[3px]">
         {([1, 2, 3, 4] as const).map(s => {
           const cfg = SEASON_CONFIG[s];
           return (
-            <div key={s} className="flex items-center gap-1 text-[7px] font-display tracking-wider opacity-65">
+            <div key={s} className="flex items-center gap-1.5 text-[7px] font-display tracking-wider opacity-65">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
-              <span style={{ color: cfg.color }}>{cfg.label}</span>
+              <span style={{ color: cfg.color }}>{cfg.codename} · {cfg.label}</span>
             </div>
           );
         })}
