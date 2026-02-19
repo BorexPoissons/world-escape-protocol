@@ -43,11 +43,11 @@ const CountryCard = ({
   const isFree = seasonNumber === 0;
 
   return (
-    <Link to={`/mission/${country.id}`}>
+    <Link to={`/mission/${country.id}`} className="block h-full">
       <motion.div
         whileHover={{ scale: 1.02, y: -2 }}
         transition={{ type: "spring", stiffness: 300, damping: 22 }}
-        className={`group relative bg-card border rounded-xl overflow-hidden transition-all duration-300 cursor-pointer ${
+        className={`group relative bg-card border rounded-xl overflow-hidden transition-all duration-300 cursor-pointer h-full ${
           completed
             ? "border-primary/50"
             : "border-border hover:border-primary/40"
@@ -66,7 +66,7 @@ const CountryCard = ({
           }}
         />
 
-        <div className="p-5">
+        <div className={`p-5 ${completed ? "opacity-60" : ""}`}>
           {/* Header row */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -84,7 +84,7 @@ const CountryCard = ({
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-primary text-xs font-display">
                     {"★".repeat(Math.min(5, Math.max(0, country.difficulty_base)))}
-                    <span className="text-muted-foreground/40">{"★".repeat(Math.max(0, 5 - country.difficulty_base))}</span>
+                    <span className="text-muted-foreground/40">{"★".repeat(Math.max(0, 5 - Math.min(5, country.difficulty_base)))}</span>
                   </span>
                   {isFree && (
                     <span className="text-xs font-display tracking-wider px-1.5 py-0.5 rounded"
@@ -135,20 +135,19 @@ const CountryCard = ({
                 4 ÉNIGMES
               </span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-primary font-display tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* REJOUER always visible when completed, otherwise appears on hover */}
+            <div className={`flex items-center gap-1 text-sm text-primary font-display tracking-wider transition-opacity ${completed ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
               {completed ? "REJOUER" : "DÉBUTER"}
               <ChevronRight className="h-3.5 w-3.5" />
             </div>
           </div>
         </div>
 
-        {/* Completed overlay shimmer */}
+        {/* Grey overlay for completed countries — keeps card clickable */}
         {completed && (
           <div
-            className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{
-              background: "linear-gradient(135deg, hsl(40 80% 55% / 0.04) 0%, transparent 60%)",
-            }}
+            className="absolute inset-0 pointer-events-none rounded-xl"
+            style={{ background: "hsl(var(--background) / 0.45)" }}
           />
         )}
       </motion.div>
