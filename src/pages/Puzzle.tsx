@@ -185,11 +185,11 @@ const Puzzle = () => {
     setTier(getTier(subType));
 
     const data: CountryPuzzleData[] = countries.map((country) => {
-      // Count user_fragments per country (each fragment = 1 unlocked piece)
-      const countryFragmentCount = fragments.filter((f: any) => f.country_id === country.id).length;
+      // 1 fragment per country max (has fragment or not)
+      const hasFragment = fragments.some((f: any) => f.country_id === country.id);
       return {
         country,
-        unlockedPieces: countryFragmentCount,
+        unlockedPieces: hasFragment ? 1 : 0,
         totalPieces: TOTAL_PIECES_PER_COUNTRY,
         missions: missions
           .filter((m) => m.country_id === country.id)
@@ -261,8 +261,9 @@ const Puzzle = () => {
     );
   }
 
-  const totalUnlocked = puzzleData.reduce((sum, d) => sum + d.unlockedPieces, 0);
-  const globalProgressOn195 = Math.round((totalUnlocked / (TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY)) * 100 * 10) / 10;
+  // Count countries with at least 1 fragment (1 per country max)
+  const countriesWithFragment = puzzleData.filter(d => d.unlockedPieces > 0).length;
+  const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
 
   // Build map countries — show ALL non-hidden countries (including locked ones) for full world view
   const mapCountries: MapCountry[] = puzzleData
@@ -352,7 +353,7 @@ const Puzzle = () => {
             <div className="text-right">
               <p className="text-xs font-display tracking-widest text-muted-foreground">PAYS ACTIFS</p>
               <p className="text-sm font-display font-bold text-foreground">
-                {puzzleData.filter(d => d.unlockedPieces > 0).length}/{TOTAL_COUNTRIES_IN_WORLD}
+                {countriesWithFragment}/{TOTAL_COUNTRIES_IN_WORLD}
               </p>
             </div>
             <div className="h-8 w-px bg-border" />
@@ -422,7 +423,7 @@ const Puzzle = () => {
         >
           <div className="flex items-center justify-between mb-1.5 text-xs font-display text-muted-foreground tracking-wider">
             <span>PROGRESSION MONDIALE — {TOTAL_COUNTRIES_IN_WORLD} PAYS</span>
-            <span>{globalProgressOn195}% — {puzzleData.filter(d => d.unlockedPieces > 0).length}/{TOTAL_COUNTRIES_IN_WORLD} ACTIFS</span>
+            <span>{globalProgressOn195}% — {countriesWithFragment}/{TOTAL_COUNTRIES_IN_WORLD} ACTIFS</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
             <motion.div

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,9 +163,11 @@ const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [completedCountries, setCompletedCountries] = useState<string[]>([]);
+  const [collectedCountryCodes, setCollectedCountryCodes] = useState<string[]>([]);
   const [userBadges, setUserBadges] = useState<BadgeKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -196,48 +198,59 @@ const Dashboard = () => {
     setShowIntro(true);
   };
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) {
-      const fetchCountries = async () => {
-        const { data } = await supabase.from("countries").select("*").order("release_order");
-        if (data) setCountries(data as CountryRow[]);
-        setLoading(false);
-      };
-      fetchCountries();
+      const { data } = await supabase.from("countries").select("*").order("release_order");
+      if (data) setCountries(data as CountryRow[]);
+      setLoading(false);
       return;
     }
 
-    const fetchData = async () => {
-      const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes] = await Promise.all([
-        supabase.from("countries").select("*").order("release_order"),
-        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-        supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
-        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
-        supabase.from("user_badges").select("badge_key").eq("user_id", user.id),
-        (supabase as any).from("player_country_progress")
-          .select("country_code, best_score")
-          .eq("user_id", user.id)
-          .in("country_code", SIGNAL_INITIAL_SEQUENCE),
-      ]);
+    const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes] = await Promise.all([
+      supabase.from("countries").select("*").order("release_order"),
+      supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+      supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
+      supabase.from("user_badges").select("badge_key").eq("user_id", user.id),
+      (supabase as any).from("player_country_progress")
+        .select("country_code, best_score")
+        .eq("user_id", user.id)
+        .in("country_code", SIGNAL_INITIAL_SEQUENCE),
+      (supabase as any).from("user_fragments")
+        .select("*, countries(code)")
+        .eq("user_id", user.id),
+    ]);
 
-      if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
-      if (profileRes.data) setProfile(profileRes.data as any);
-      if (missionsRes.data) setCompletedCountries(missionsRes.data.map((m: any) => m.country_id));
-      if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
-      if (badgesRes.data) setUserBadges(badgesRes.data.map((b: any) => b.badge_key));
-      // Build map: country_code → best_score
-      if (signalProgressRes.data) {
-        const map: Record<string, number> = {};
-        for (const row of signalProgressRes.data as any[]) {
-          map[row.country_code] = row.best_score ?? 0;
-        }
-        setSignalProgress(map);
+    if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
+    if (profileRes.data) setProfile(profileRes.data as any);
+    if (missionsRes.data) setCompletedCountries(missionsRes.data.map((m: any) => m.country_id));
+    if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
+    if (badgesRes.data) setUserBadges(badgesRes.data.map((b: any) => b.badge_key));
+    if (signalProgressRes.data) {
+      const map: Record<string, number> = {};
+      for (const row of signalProgressRes.data as any[]) {
+        map[row.country_code] = row.best_score ?? 0;
       }
-      setLoading(false);
-    };
-
-    fetchData();
+      setSignalProgress(map);
+    }
+    if (fragmentsRes.data) {
+      const codes = (fragmentsRes.data as any[]).map((f: any) => f.countries?.code).filter(Boolean);
+      setCollectedCountryCodes([...new Set(codes)] as string[]);
+    }
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Refresh on return from mission (?refresh=1 param)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("refresh") === "1") {
+      fetchData();
+    }
+  }, [location.search, fetchData]);
 
   const handleSignOut = async () => {
     await signOut();
