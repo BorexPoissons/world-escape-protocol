@@ -823,7 +823,7 @@ const Dashboard = () => {
                   <div
                     className={
                       isSignalInitialGroup
-                        ? "flex flex-row gap-4 overflow-x-auto pb-3 mb-6"
+                        ? "flex flex-row gap-4 overflow-x-auto pb-4 mb-6 scroll-gold"
                         : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"
                     }
                   >
