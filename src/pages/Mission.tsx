@@ -511,8 +511,18 @@ const Mission = () => {
       completed_at: new Date().toISOString(),
     });
 
-    // Create puzzle piece + update user_progress
-    await Promise.all([
+    // Check if fragment already unlocked (avoid duplicates on replay)
+    const { data: existingProgress } = await supabase
+      .from("user_progress")
+      .select("fragment_unlocked")
+      .eq("user_id", user.id)
+      .eq("country_id", countryId)
+      .maybeSingle();
+
+    const fragmentAlreadyUnlocked = existingProgress?.fragment_unlocked === true;
+
+    // Create puzzle piece + persist fragment in user_fragments + update user_progress
+    const inserts: Promise<any>[] = [
       supabase.from("puzzle_pieces").insert({
         user_id: user.id,
         country_id: countryId,
@@ -528,7 +538,22 @@ const Mission = () => {
         fragment_unlocked: true,
         last_attempt_at: new Date().toISOString(),
       }, { onConflict: "user_id,country_id", ignoreDuplicates: false }),
-    ]);
+    ];
+
+    // Only insert fragment once (first success)
+    if (!fragmentAlreadyUnlocked) {
+      inserts.push(
+        (supabase as any).from("user_fragments").insert({
+          user_id: user.id,
+          country_id: countryId,
+          fragment_index: 0,
+          is_placed: false,
+          obtained_at: new Date().toISOString(),
+        })
+      );
+    }
+
+    await Promise.all(inserts);
 
     // Update XP + streak
     const { data: profileRaw } = await supabase
