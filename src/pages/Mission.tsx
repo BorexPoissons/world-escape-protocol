@@ -751,9 +751,18 @@ const Mission = () => {
               </div>
             )}
             {phase === "enigme" && mission && (
-              <span className="text-sm text-muted-foreground font-display">
-                {currentEnigme + 1}/{TOTAL_QUESTIONS}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground font-display">
+                  {currentEnigme + 1}/{TOTAL_QUESTIONS}
+                </span>
+                <span className={`text-sm font-display font-bold tracking-wider transition-colors ${
+                  score >= SCORE_THRESHOLD
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}>
+                  ✓ {score}/{SCORE_THRESHOLD}
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -927,6 +936,19 @@ const Mission = () => {
                 ))}
               </div>
 
+              {/* Objective banner */}
+              <motion.div
+                className="flex items-center justify-center gap-2 py-1"
+                animate={score >= SCORE_THRESHOLD ? { scale: [1, 1.04, 1] } : {}}
+                transition={{ duration: 0.4 }}
+              >
+                <span className={`text-xs font-display tracking-widest transition-colors ${
+                  score >= SCORE_THRESHOLD ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  {score >= SCORE_THRESHOLD ? "✅" : "🎯"} OBJECTIF : {score} / {SCORE_THRESHOLD} BONNES RÉPONSES
+                </span>
+              </motion.div>
+
               <h2 className="text-xl font-display font-bold text-foreground">{mission.enigmes[currentEnigme].question}</h2>
 
               <div className="space-y-3">
@@ -960,15 +982,23 @@ const Mission = () => {
               </div>
 
               {/* Attempts indicator */}
-              {/* Lives display inline during question */}
+              {/* Lives + score display inline during question */}
               {!answerRevealed && (
-                <div className="flex items-center justify-center gap-1.5">
-                  {Array.from({ length: MAX_LIVES }).map((_, i) => (
-                    <Heart key={i} className={`h-4 w-4 ${i < lives ? "text-destructive fill-destructive" : "text-border"}`} />
-                  ))}
-                  <span className="text-xs text-muted-foreground font-display ml-1">
-                    {lives} VIE{lives > 1 ? "S" : ""} RESTANTE{lives > 1 ? "S" : ""}
-                  </span>
+                <div className="flex items-center justify-between gap-3 px-1">
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: MAX_LIVES }).map((_, i) => (
+                      <Heart key={i} className={`h-4 w-4 ${i < lives ? "text-destructive fill-destructive" : "text-border"}`} />
+                    ))}
+                    <span className="text-xs text-muted-foreground font-display ml-1">
+                      {lives} VIE{lives > 1 ? "S" : ""}
+                    </span>
+                  </div>
+                  <div className={`flex items-center gap-1 text-xs font-display font-bold tracking-wider transition-colors ${
+                    score >= SCORE_THRESHOLD ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    <span>{score} bonne{score > 1 ? "s" : ""} — Objectif : {SCORE_THRESHOLD}/{TOTAL_QUESTIONS}</span>
+                  </div>
                 </div>
               )}
 
@@ -1130,8 +1160,9 @@ const Mission = () => {
                         {score}/{TOTAL_QUESTIONS}
                       </h2>
                       <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(0 0% 95%)" }}>
-                        Il faut <strong>{SCORE_THRESHOLD}/{TOTAL_QUESTIONS} minimum</strong> pour obtenir la pièce et débloquer le pays suivant.<br />
-                        Vous pouvez rejouer autant de fois que nécessaire.
+                        Il faut <strong>{SCORE_THRESHOLD}/{TOTAL_QUESTIONS} minimum</strong> pour obtenir la pièce.<br />
+                        Vous aviez encore des vies restantes, mais elles ne compensent pas le score final.<br />
+                        <span className="opacity-70 text-xs">Les vies protègent contre l'élimination en cours de mission — l'objectif reste de répondre correctement à au moins {SCORE_THRESHOLD} questions.</span>
                       </p>
                     </>
                   ) : (
