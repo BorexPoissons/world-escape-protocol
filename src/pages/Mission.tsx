@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle, XCircle, AlertTriangle, BookOpen, Home,
-  Heart, Clock, Zap, Shield, Trophy, RotateCcw
+  Heart, Clock, Zap, Shield, Trophy, RotateCcw, Puzzle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
@@ -43,9 +43,21 @@ type Phase = "loading" | "intro" | "enigme" | "moral" | "finale" | "failed";
 
 const DEMO_USER_ID = "demo-user-local";
 const PUZZLE_TIMER_SECONDS = 120;
+// 1 mistake allowed: first wrong = warning, second wrong = fail
+const MAX_MISTAKES_TOTAL = 2;
 const MAX_ATTEMPTS_PER_PUZZLE = 2;
 
 const LIVES_HEART_COLORS = ["text-destructive", "text-destructive", "text-destructive"];
+
+/** Fisher-Yates shuffle */
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function getDemoStoryState() {
   try {
@@ -70,9 +82,11 @@ const Mission = () => {
   const [phase, setPhase] = useState<Phase>("loading");
   const [currentEnigme, setCurrentEnigme] = useState(0);
   const [score, setScore] = useState(0);
+  const [totalMistakes, setTotalMistakes] = useState(0); // across the whole mission
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [attemptsOnCurrent, setAttemptsOnCurrent] = useState(0);
+  const [firstMistakeWarning, setFirstMistakeWarning] = useState(false); // show "1 erreur" warning
 
   // Lives system
   const [storyState, setStoryState] = useState({ trust_level: 50, suspicion_level: 0, secrets_unlocked: 0 });
@@ -127,14 +141,57 @@ const Mission = () => {
     setStoryState(story);
 
     // Compute lives based on suspicion
-    const lives = story.suspicion_level > 70 ? 2 : 3;
-    setMaxLives(lives);
-    setLives(lives);
+    const initialLives = story.suspicion_level > 70 ? 2 : 3;
+    setMaxLives(initialLives);
+    setLives(initialLives);
 
     const profileData = user
       ? (await supabase.from("profiles").select("level").eq("user_id", user.id).single()).data
       : null;
 
+    // ── 1. Try to load questions from DB ─────────────────────────────────────
+    const { data: dbQuestions } = await supabase
+      .from("questions")
+      .select("*")
+      .eq("country_id", countryId!);
+
+    if (dbQuestions && dbQuestions.length >= 4) {
+      // Shuffle all questions, pick 6 (or fewer if < 6 available)
+      const shuffled = shuffle(dbQuestions);
+      const picked = shuffled.slice(0, Math.min(6, shuffled.length));
+
+      // Convert DB format to Enigme format
+      const enigmes: Enigme[] = picked.map((q: any) => ({
+        question: q.question_text,
+        type: q.category || "culture",
+        choices: shuffle(Array.isArray(q.answer_options) ? q.answer_options : JSON.parse(q.answer_options || "[]")),
+        answer: q.correct_answer,
+        explanation: q.explanation ?? undefined,
+      }));
+
+      // Build a minimal MissionData (no AI generation needed)
+      const missionData: MissionData = {
+        mission_title: `Mission : ${countryData.name}`,
+        intro: countryData.description || `Bienvenue à ${countryData.name}. Résolvez les énigmes pour débloquer le fragment.`,
+        enigmes,
+        false_hint: "Certains indices peuvent être trompeurs. Faites confiance à votre analyse.",
+        moral_choice: {
+          description: "Votre choix va influencer le cours de l'enquête.",
+          option_a: "Partager les informations avec votre réseau de confiance",
+          option_b: "Agir seul pour éviter toute fuite",
+          impact_a: { trust: 5, suspicion: -2 },
+          impact_b: { trust: -3, suspicion: 5 },
+        },
+        final_fragment: `Fragment de ${countryData.name} obtenu. Le réseau se révèle un peu plus.`,
+        historical_fact: countryData.historical_events?.[0] ?? `Le pays de ${countryData.name} recèle de nombreux secrets.`,
+      };
+
+      setMission(missionData);
+      setPhase("intro");
+      return;
+    }
+
+    // ── 2. Fallback: AI generation ────────────────────────────────────────────
     try {
       const { data, error } = await supabase.functions.invoke("generate-mission", {
         body: {
@@ -147,7 +204,15 @@ const Mission = () => {
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setMission(data as MissionData);
+
+      // Shuffle enigme choices to avoid patterns
+      const aiMission = data as MissionData;
+      aiMission.enigmes = aiMission.enigmes.map(e => ({
+        ...e,
+        choices: shuffle(e.choices),
+      }));
+
+      setMission(aiMission);
       setPhase("intro");
     } catch (err: any) {
       toast({
@@ -183,21 +248,24 @@ const Mission = () => {
 
   const handleTimeOut = useCallback(() => {
     if (!mission) return;
-    const newLives = lives - 1;
-    setLives(newLives);
+    // Timeout counts as a mistake
+    const newMistakes = totalMistakes + 1;
+    setTotalMistakes(newMistakes);
     setAnswerRevealed(true);
     setSelectedAnswer("__timeout__");
+    if (timerRef.current) clearInterval(timerRef.current);
 
-    if (newLives <= 0) {
-      setTimeout(() => setPhase("failed"), 1200);
+    if (newMistakes >= MAX_MISTAKES_TOTAL) {
+      setTimeout(() => setPhase("failed"), 1400);
     } else {
+      setFirstMistakeWarning(true);
       toast({
         title: "⏱ Temps écoulé !",
-        description: `Vous perdez une vie. Il vous reste ${newLives} vie${newLives > 1 ? "s" : ""}.`,
+        description: "⚠ AVERTISSEMENT — 1 seule erreur restante avant l'échec de mission.",
         variant: "destructive",
       });
     }
-  }, [lives, mission]);
+  }, [totalMistakes, mission]);
 
   const handleAnswer = (choice: string) => {
     if (answerRevealed || !mission) return;
@@ -209,32 +277,38 @@ const Mission = () => {
     if (correct) {
       setScore(s => s + 1);
       setAnswerRevealed(true);
+      setFirstMistakeWarning(false);
       if (timerRef.current) clearInterval(timerRef.current);
       // Accumulate bonus seconds from remaining timer
       setBonusSeconds(prev => prev + timeLeft);
     } else {
       const newAttempts = attemptsOnCurrent + 1;
-      const newLives = lives - 1;
-      setLives(newLives);
-
-      if (newLives <= 0) {
-        setAnswerRevealed(true);
-        if (timerRef.current) clearInterval(timerRef.current);
-        setTimeout(() => setPhase("failed"), 1200);
-        return;
-      }
 
       if (newAttempts >= MAX_ATTEMPTS_PER_PUZZLE) {
-        // Max attempts reached → force reveal
+        // Second attempt on this question = count as a mistake
+        const newMistakes = totalMistakes + 1;
+        setTotalMistakes(newMistakes);
         setAnswerRevealed(true);
         if (timerRef.current) clearInterval(timerRef.current);
-        toast({ title: "❌ Tentatives épuisées", description: "La bonne réponse est révélée.", variant: "destructive" });
+
+        if (newMistakes >= MAX_MISTAKES_TOTAL) {
+          // 2nd global mistake → FAIL
+          setTimeout(() => setPhase("failed"), 1400);
+        } else {
+          // 1st global mistake → reveal answer + warning
+          setFirstMistakeWarning(true);
+          toast({
+            title: "❌ Tentatives épuisées",
+            description: "⚠ AVERTISSEMENT — La prochaine erreur termine la mission.",
+            variant: "destructive",
+          });
+        }
       } else {
-        // Allow retry
+        // First attempt wrong → allow retry on this question
         setSelectedAnswer(null);
         toast({
           title: "❌ Mauvaise réponse",
-          description: `Tentative ${newAttempts}/${MAX_ATTEMPTS_PER_PUZZLE} · ${newLives} vie${newLives > 1 ? "s" : ""} restante${newLives > 1 ? "s" : ""}`,
+          description: `Tentative 1/2 — Réessayez. ${totalMistakes === 1 ? "⚠ Dernière chance !" : "1 erreur globale autorisée."}`,
           variant: "destructive",
         });
       }
@@ -417,6 +491,8 @@ const Mission = () => {
   const retryMission = () => {
     setPhase("loading");
     setScore(0);
+    setTotalMistakes(0);
+    setFirstMistakeWarning(false);
     setCurrentEnigme(0);
     setSelectedAnswer(null);
     setAnswerRevealed(false);
@@ -425,9 +501,9 @@ const Mission = () => {
     setUsedHint(false);
     setBonusSeconds(0);
     setLifeTradeUsed(false);
-    const lives = storyState.suspicion_level > 70 ? 2 : 3;
-    setLives(lives);
-    setMaxLives(lives);
+    const newLives = storyState.suspicion_level > 70 ? 2 : 3;
+    setLives(newLives);
+    setMaxLives(newLives);
     loadMission();
   };
 
@@ -469,17 +545,24 @@ const Mission = () => {
             {country?.name?.toUpperCase()}
           </div>
 
-          {/* Lives + enigme counter */}
+          {/* Mistake indicator + enigme counter */}
           <div className="flex items-center gap-3">
-            {/* Lives */}
+            {/* Mistake indicators: 2 slots — red if used */}
             {(phase === "enigme" || phase === "moral" || phase === "finale") && (
-              <div className="flex items-center gap-0.5">
-                {Array.from({ length: maxLives }).map((_, i) => (
-                  <Heart
+              <div className="flex items-center gap-1" title="Erreurs commises">
+                {Array.from({ length: MAX_MISTAKES_TOTAL }).map((_, i) => (
+                  <motion.div
                     key={i}
-                    className={`h-4 w-4 transition-all ${i < lives ? "text-destructive fill-destructive" : "text-border"}`}
+                    animate={i < totalMistakes ? { scale: [1, 1.3, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                    className={`w-3 h-3 rounded-full border-2 transition-all ${
+                      i < totalMistakes
+                        ? "bg-destructive border-destructive"
+                        : "bg-transparent border-border"
+                    }`}
                   />
                 ))}
+                <span className="text-xs font-display text-muted-foreground ml-1 hidden sm:inline">ERREURS</span>
               </div>
             )}
             {phase === "enigme" && mission && (
@@ -489,6 +572,23 @@ const Mission = () => {
             )}
           </div>
         </div>
+
+        {/* First-mistake warning banner */}
+        <AnimatePresence>
+          {firstMistakeWarning && phase === "enigme" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-destructive/15 border-t border-destructive/40 px-4 py-2 flex items-center gap-2"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
+              <p className="text-xs text-destructive font-display tracking-wider">
+                ⚠ AVERTISSEMENT — La prochaine erreur entraîne l'échec de la mission
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Bonus bar — visible during enigme phase */}
         {(phase === "enigme" || phase === "moral" || phase === "finale") && bonusSeconds > 0 && (
@@ -513,7 +613,7 @@ const Mission = () => {
             <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
             <p className="text-xs text-destructive font-display tracking-wider">
               {storyState.suspicion_level > 70
-                ? "⚠ SUSPICION CRITIQUE — 2 vies · Chrono réduit"
+                ? "⚠ SUSPICION CRITIQUE — Chrono réduit"
                 : "⚠ SUSPICION ÉLEVÉE — Chrono réduit de 15%"}
             </p>
           </div>
@@ -737,29 +837,50 @@ const Mission = () => {
             </motion.div>
           )}
 
-          {/* ── FAILED ────────────────────────────── */}
+          {/* ── FAILED — cinematic tension screen ── */}
           {phase === "failed" && mission && (
-            <motion.div key="failed" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 text-center">
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-                <XCircle className="h-20 w-20 text-destructive mx-auto" />
-              </motion.div>
-              <div>
-                <h2 className="text-3xl font-display font-bold text-destructive tracking-wider mb-2">MISSION ÉCHOUÉE</h2>
-                <p className="text-muted-foreground">Vous avez perdu toutes vos vies. La mission a été compromise.</p>
-              </div>
-              <div className="bg-card border border-border rounded-lg p-6">
-                <p className="text-4xl font-display font-bold text-foreground mb-1">{score}/{mission.enigmes.length}</p>
-                <p className="text-sm text-muted-foreground font-display tracking-wider">ÉNIGMES RÉSOLUES AVANT L'ÉCHEC</p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={retryMission} className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-5">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  RÉESSAYER
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/dashboard")} className="flex-1 font-display tracking-wider py-5">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  RETOUR AU QG
-                </Button>
+            <motion.div
+              key="failed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className="relative min-h-[70vh] flex flex-col items-center justify-center overflow-hidden rounded-xl"
+              style={{ background: "linear-gradient(180deg, hsl(0 30% 5%) 0%, hsl(220 20% 4%) 60%, hsl(220 20% 4%) 100%)" }}
+            >
+              <div className="absolute inset-0 scanline pointer-events-none opacity-40" />
+              <motion.div
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                style={{ background: "radial-gradient(ellipse at center, transparent 40%, hsl(0 70% 15% / 0.6) 100%)" }}
+              />
+              <div className="relative z-10 space-y-6 px-6 text-center w-full">
+                <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", delay: 0.3, stiffness: 150 }}>
+                  <XCircle className="h-24 w-24 mx-auto" style={{ color: "hsl(0 70% 50%)" }} />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                  <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 70% 50% / 0.6)" }}>MISSION COMPROMISE</p>
+                  <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>ÉCHEC</h2>
+                  <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    Le Cercle a détecté votre présence.<br />Vous devrez recommencer depuis le début.
+                  </p>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="rounded-lg border px-6 py-4 inline-block" style={{ borderColor: "hsl(0 70% 30% / 0.4)", background: "hsl(0 20% 8% / 0.8)" }}>
+                  <p className="text-3xl font-display font-bold mb-1" style={{ color: "hsl(0 60% 60%)" }}>{score} / {mission.enigmes.length}</p>
+                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>ÉNIGMES RÉSOLUES</p>
+                </motion.div>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(var(--muted-foreground) / 0.5)" }}>
+                  "Le Cercle ne pardonne pas les erreurs. Mais chaque échec est un enseignement."<br />
+                  <span className="not-italic font-display tracking-widest text-[10px]">— J. Velcourt</span>
+                </motion.p>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
+                  <Button onClick={retryMission} className="flex-1 font-display tracking-wider py-5 border-0" style={{ background: "hsl(0 70% 35%)", color: "white" }}>
+                    <RotateCcw className="h-4 w-4 mr-2" />RÉESSAYER
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/dashboard")} className="flex-1 font-display tracking-wider py-5">
+                    <ArrowLeft className="h-4 w-4 mr-2" />RETOUR AU QG
+                  </Button>
+                </motion.div>
               </div>
             </motion.div>
           )}
@@ -782,18 +903,75 @@ const Mission = () => {
             </motion.div>
           )}
 
-          {/* ── FINALE ────────────────────────────── */}
+          {/* ── FINALE — cinematic fragment unlock ── */}
           {phase === "finale" && mission && (
-            <motion.div key="finale" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-              <h2 className="text-2xl font-display font-bold text-primary text-glow tracking-wider">FRAGMENT DÉBLOQUÉ</h2>
-              <div className="bg-card border border-primary/30 rounded-lg p-6 border-glow">
-                <p className="text-foreground leading-relaxed italic">{mission.final_fragment}</p>
-              </div>
+            <motion.div key="finale" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} className="space-y-6 text-center">
 
-              {/* XP Preview */}
-              <div className="bg-card border border-border rounded-lg p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-4xl font-display font-bold text-primary">{score}/{mission.enigmes.length}</p>
+              {/* Fragment unlock animation */}
+              <motion.div
+                className="relative mx-auto w-32 h-32 flex items-center justify-center"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", delay: 0.3, stiffness: 120 }}
+              >
+                {/* Outer glow ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "radial-gradient(circle, hsl(var(--gold-glow) / 0.3) 0%, transparent 70%)" }}
+                />
+                {/* Puzzle piece icon */}
+                <div
+                  className="w-20 h-20 rounded-xl flex items-center justify-center"
+                  style={{ background: "hsl(var(--primary) / 0.15)", border: "2px solid hsl(var(--primary) / 0.5)", boxShadow: "0 0 30px hsl(var(--gold-glow) / 0.3)" }}
+                >
+                  <Puzzle className="h-10 w-10" style={{ color: "hsl(var(--primary))" }} />
+                </div>
+                {/* Sparkle particles */}
+                {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1.5 h-1.5 rounded-full"
+                    style={{ background: "hsl(var(--primary))", top: "50%", left: "50%" }}
+                    animate={{
+                      x: [0, Math.cos((deg * Math.PI) / 180) * 50],
+                      y: [0, Math.sin((deg * Math.PI) / 180) * 50],
+                      opacity: [1, 0],
+                      scale: [1, 0.3],
+                    }}
+                    transition={{ duration: 1.2, delay: 0.5 + i * 0.05, repeat: Infinity, repeatDelay: 1.5 }}
+                  />
+                ))}
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+                <p className="text-xs font-display tracking-[0.4em] mb-2 text-primary">FRAGMENT OBTENU</p>
+                <h2 className="text-3xl font-display font-bold text-primary text-glow tracking-wider mb-1">
+                  {country?.name?.toUpperCase()} — DÉVERROUILLÉ
+                </h2>
+                <p className="text-sm text-muted-foreground">Une nouvelle pièce du puzzle mondial a été ajoutée à votre collection.</p>
+              </motion.div>
+
+              {/* Narrative fragment */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="bg-card border border-primary/30 rounded-lg p-5 border-glow relative overflow-hidden text-left"
+              >
+                <div className="scanline absolute inset-0 pointer-events-none opacity-30" />
+                <p className="text-xs font-display tracking-widest mb-2 text-primary">TRANSMISSION DÉCHIFFRÉE</p>
+                <p className="text-foreground leading-relaxed italic text-sm relative z-10">"{mission.final_fragment}"</p>
+              </motion.div>
+
+              {/* Score + XP */}
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="bg-card border border-border rounded-lg p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-display font-bold text-primary">{score}/{mission.enigmes.length}</p>
+                    <p className="text-xs text-muted-foreground font-display tracking-wider">ÉNIGMES RÉSOLUES</p>
+                  </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground font-display tracking-wider mb-0.5">XP ESTIMÉ</p>
                     <p className="text-lg font-display font-bold text-primary">
@@ -801,18 +979,19 @@ const Mission = () => {
                     </p>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-sm">Énigmes résolues</p>
                 {score === mission.enigmes.length && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-primary font-display tracking-wider">
+                  <div className="mt-3 flex items-center gap-2 text-xs text-primary font-display tracking-wider border-t border-border pt-3">
                     <Trophy className="h-4 w-4" />
                     MISSION PARFAITE +50 XP BONUS
                   </div>
                 )}
-              </div>
+              </motion.div>
 
-              <Button onClick={completeMission} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg">
-                COMPLÉTER LA MISSION
-              </Button>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }}>
+                <Button onClick={completeMission} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg">
+                  COMPLÉTER LA MISSION
+                </Button>
+              </motion.div>
             </motion.div>
           )}
 
