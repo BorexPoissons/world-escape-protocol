@@ -258,20 +258,25 @@ const Puzzle = () => {
 
   // Count countries with at least 1 fragment (1 per country max)
   const countriesWithFragment = puzzleData.filter(d => d.unlockedPieces > 0).length;
-  // ⚠️ TEST MODE — force à 100 pour voir la séquence finale
-  const globalProgressOn195 = 100;
-  // const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
+  const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
 
   // Trigger final reveal sequence when 100% reached for the first time
   useEffect(() => {
     if (
       globalProgressOn195 >= 100 &&
+      !hasCompletedPuzzle &&
       !showFinalReveal &&
+      user &&
       !loading
     ) {
       setShowFinalReveal(true);
+      supabase
+        .from("profiles")
+        .update({ has_completed_puzzle: true } as any)
+        .eq("user_id", user.id)
+        .then(() => setHasCompletedPuzzle(true));
     }
-  }, [globalProgressOn195, showFinalReveal, loading]);
+  }, [globalProgressOn195, hasCompletedPuzzle, showFinalReveal, user, loading]);
 
   // ─── Derived data ─────────────────────────────────────────────────────────
 
