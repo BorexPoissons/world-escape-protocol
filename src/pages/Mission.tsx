@@ -31,6 +31,13 @@ interface MoralChoice {
   impact_b: { trust: number; suspicion: number };
 }
 
+interface MissionConfig {
+  total_questions: number;   // nombre total de questions dans la session
+  min_correct_to_win: number; // seuil de réussite
+  lives: number;              // vies / erreurs max
+  time_per_question_sec: number; // timer par question
+}
+
 interface MissionData {
   mission_title: string;
   intro: string;
@@ -51,13 +58,14 @@ interface FragmentReward {
 type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed";
 
 const DEMO_USER_ID = "demo-user-local";
-const PUZZLE_TIMER_SECONDS = 120;
-// 1 mistake allowed: first wrong = warning, second wrong = fail
-const MAX_MISTAKES_TOTAL = 2;
-const MAX_ATTEMPTS_PER_PUZZLE = 2;
-// Mission scoring constants
-const TOTAL_QUESTIONS = 10;
-const SCORE_THRESHOLD = 8;
+
+// Default config — overridden by quiz_rules from the country JSON
+const DEFAULT_MISSION_CONFIG: MissionConfig = {
+  total_questions: 10,
+  min_correct_to_win: 8,
+  lives: 3,
+  time_per_question_sec: 120,
+};
 
 const LIVES_HEART_COLORS = ["text-destructive", "text-destructive", "text-destructive"];
 
@@ -100,13 +108,22 @@ const Mission = () => {
   const [attemptsOnCurrent, setAttemptsOnCurrent] = useState(0);
   const [firstMistakeWarning, setFirstMistakeWarning] = useState(false); // show "1 erreur" warning
 
+  // ── Mission config (source of truth, read from JSON quiz_rules) ─────────
+  const [missionConfig, setMissionConfig] = useState<MissionConfig>(DEFAULT_MISSION_CONFIG);
+
+  // Derived shorthand (live values from config)
+  const TOTAL_QUESTIONS = missionConfig.total_questions;
+  const SCORE_THRESHOLD = missionConfig.min_correct_to_win;
+  const MAX_MISTAKES_TOTAL = missionConfig.lives; // lives = max errors allowed
+  const PUZZLE_TIMER_SECONDS = missionConfig.time_per_question_sec;
+
   // Lives system
   const [storyState, setStoryState] = useState({ trust_level: 50, suspicion_level: 0, secrets_unlocked: 0 });
-  const [maxLives, setMaxLives] = useState(3);
-  const [lives, setLives] = useState(3);
+  const [maxLives, setMaxLives] = useState(DEFAULT_MISSION_CONFIG.lives);
+  const [lives, setLives] = useState(DEFAULT_MISSION_CONFIG.lives);
 
   // Timer (per puzzle)
-  const [timeLeft, setTimeLeft] = useState(PUZZLE_TIMER_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_MISSION_CONFIG.time_per_question_sec);
   const [missionStartTime] = useState(() => Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -177,13 +194,27 @@ const Mission = () => {
             id: string; type: "A" | "B" | "C"; question: string;
             choices: string[]; answer_index: number; narrative_unlock?: string;
           }>;
-          const dist = staticData.quiz_rules?.distribution ?? { A: 4, B: 1, C: 1 };
+          const qr = staticData.quiz_rules ?? {};
+          const dist = qr.distribution ?? { A: 4, B: 1, C: 1 };
 
           // Draw: 4xA + 1xB + 1xC (Type C mandatory)
           const typeA = shuffle(bank.filter(q => q.type === "A")).slice(0, dist.A ?? 4);
           const typeB = shuffle(bank.filter(q => q.type === "B")).slice(0, dist.B ?? 1);
           const typeC = shuffle(bank.filter(q => q.type === "C")).slice(0, dist.C ?? 1);
           const picked = shuffle([...typeA, ...typeB, ...typeC]);
+
+          // ── Build missionConfig from quiz_rules (source of truth) ──────────
+          const totalQ = picked.length; // actual questions drawn this session
+          const cfg: MissionConfig = {
+            total_questions: totalQ,
+            min_correct_to_win: qr.min_correct_to_win ?? Math.ceil(totalQ * 0.8),
+            lives: qr.max_mistakes != null ? qr.max_mistakes + 1 : 3,
+            time_per_question_sec: qr.time_per_question_sec ?? 120,
+          };
+          setMissionConfig(cfg);
+          setMaxLives(cfg.lives);
+          setLives(cfg.lives);
+          setTimeLeft(cfg.time_per_question_sec);
 
           // Convert to Enigme — shuffle choices but preserve correct answer as text
           const enigmes: Enigme[] = picked.map(q => {
@@ -222,6 +253,7 @@ const Mission = () => {
     } catch {
       // Static file not found or parse error — fall through to DB/AI
     }
+
 
     // ── 1. Try to load questions from DB ─────────────────────────────────────
     const { data: dbQuestions } = await supabase
@@ -365,9 +397,8 @@ const Mission = () => {
       if (isTypeC && currentQ.narrative_unlock) {
         setNarrativeUnlockText(currentQ.narrative_unlock);
       }
-      // ── Immediate win check: 8+ correct answers ──────────────────────────
+      // ── Immediate win check ──────────────────────────────────────────────
       if (newScore >= SCORE_THRESHOLD) {
-        // Small delay to show the correct answer highlight before transitioning
         setTimeout(() => setPhase("finale"), 900);
         return;
       }
@@ -379,28 +410,23 @@ const Mission = () => {
         setTimeout(() => setPhase("failed"), 1400);
         return;
       }
-      const newAttempts = attemptsOnCurrent + 1;
-      if (newAttempts >= MAX_ATTEMPTS_PER_PUZZLE) {
-        const newMistakes = totalMistakes + 1;
-        setTotalMistakes(newMistakes);
-        setAnswerRevealed(true);
-        if (timerRef.current) clearInterval(timerRef.current);
-        // ── Immediate fail check: 2 mistakes ────────────────────────────────
-        if (newMistakes >= MAX_MISTAKES_TOTAL) {
-          setTimeout(() => setPhase("failed"), 1400);
-        } else {
-          setFirstMistakeWarning(true);
-          toast({
-            title: "❌ Tentatives épuisées",
-            description: "⚠ AVERTISSEMENT — La prochaine erreur termine la mission.",
-            variant: "destructive",
-          });
-        }
+      // Each wrong answer costs 1 life immediately
+      const newMistakes = totalMistakes + 1;
+      setTotalMistakes(newMistakes);
+      setLives(prev => prev - 1);
+      setAnswerRevealed(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      // ── Immediate fail check: no lives left ─────────────────────────────
+      if (newMistakes >= MAX_MISTAKES_TOTAL) {
+        setTimeout(() => setPhase("failed"), 1400);
       } else {
-        setSelectedAnswer(null);
+        const livesLeft = MAX_MISTAKES_TOTAL - newMistakes;
+        setFirstMistakeWarning(livesLeft === 1);
         toast({
           title: "❌ Mauvaise réponse",
-          description: `Tentative 1/2 — Réessayez. ${totalMistakes === 1 ? "⚠ Dernière chance !" : "1 erreur globale autorisée."}`,
+          description: livesLeft === 1
+            ? "⚠ AVERTISSEMENT — La prochaine erreur termine la mission."
+            : `Il vous reste ${livesLeft} vie${livesLeft > 1 ? "s" : ""}.`,
           variant: "destructive",
         });
       }
@@ -678,29 +704,27 @@ const Mission = () => {
             {country?.name?.toUpperCase()}
           </div>
 
-          {/* Mistake indicator + enigme counter */}
+          {/* Lives + question counter in top bar */}
           <div className="flex items-center gap-3">
-            {/* Mistake indicators: 2 slots — red if used */}
+            {/* Lives: heart icons — filled = alive, empty = lost */}
             {(phase === "enigme" || phase === "moral" || phase === "finale") && (
-              <div className="flex items-center gap-1" title="Erreurs commises">
+              <div className="flex items-center gap-1" title="Vies restantes">
                 {Array.from({ length: MAX_MISTAKES_TOTAL }).map((_, i) => (
                   <motion.div
                     key={i}
-                    animate={i < totalMistakes ? { scale: [1, 1.3, 1] } : {}}
+                    animate={i === MAX_MISTAKES_TOTAL - totalMistakes - 1 && totalMistakes > 0 ? { scale: [1.4, 1] } : {}}
                     transition={{ duration: 0.3 }}
-                    className={`w-3 h-3 rounded-full border-2 transition-all ${
-                      i < totalMistakes
-                        ? "bg-destructive border-destructive"
-                        : "bg-transparent border-border"
-                    }`}
-                  />
+                  >
+                    <Heart className={`h-4 w-4 transition-all ${
+                      i < lives ? "text-destructive fill-destructive" : "text-border"
+                    }`} />
+                  </motion.div>
                 ))}
-                <span className="text-xs font-display text-muted-foreground ml-1 hidden sm:inline">ERREURS</span>
               </div>
             )}
             {phase === "enigme" && mission && (
               <span className="text-sm text-muted-foreground font-display">
-                {currentEnigme + 1}/{mission.enigmes.length}
+                {currentEnigme + 1}/{TOTAL_QUESTIONS}
               </span>
             )}
           </div>
@@ -813,8 +837,8 @@ const Mission = () => {
                   <p className="text-xs text-muted-foreground font-display tracking-wider">{effectiveTimer}S / ÉNIGME</p>
                 </div>
                 <div>
-                  <Shield className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground font-display tracking-wider">2 TENTATIVES MAX</p>
+                  <Trophy className="h-5 w-5 text-primary mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground font-display tracking-wider">{SCORE_THRESHOLD}/{TOTAL_QUESTIONS} REQUIS</p>
                 </div>
               </div>
 
@@ -908,10 +932,16 @@ const Mission = () => {
               </div>
 
               {/* Attempts indicator */}
-              {!answerRevealed && attemptsOnCurrent > 0 && (
-                <p className="text-xs text-destructive font-display tracking-wider text-center">
-                  Tentative {attemptsOnCurrent}/{MAX_ATTEMPTS_PER_PUZZLE}
-                </p>
+              {/* Lives display inline during question */}
+              {!answerRevealed && (
+                <div className="flex items-center justify-center gap-1.5">
+                  {Array.from({ length: MAX_MISTAKES_TOTAL }).map((_, i) => (
+                    <Heart key={i} className={`h-4 w-4 ${i < lives ? "text-destructive fill-destructive" : "text-border"}`} />
+                  ))}
+                  <span className="text-xs text-muted-foreground font-display ml-1">
+                    {lives} VIE{lives > 1 ? "S" : ""} RESTANTE{lives > 1 ? "S" : ""}
+                  </span>
+                </div>
               )}
 
               {answerRevealed && (
@@ -1012,19 +1042,19 @@ const Mission = () => {
                     <>
                       <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>SCORE INSUFFISANT</p>
                       <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 65% 42%)", textShadow: "0 0 30px hsl(0 70% 30% / 0.5)" }}>
-                        {score}/10
+                        {score}/{TOTAL_QUESTIONS}
                       </h2>
                       <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(0 0% 95%)" }}>
-                        Il faut <strong>8/10 minimum</strong> pour obtenir la pièce et débloquer le pays suivant.<br />
+                        Il faut <strong>{SCORE_THRESHOLD}/{TOTAL_QUESTIONS} minimum</strong> pour obtenir la pièce et débloquer le pays suivant.<br />
                         Vous pouvez rejouer autant de fois que nécessaire.
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>MISSION COMPROMISE</p>
+                      <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>VIES ÉPUISÉES</p>
                       <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 65% 42%)", textShadow: "0 0 30px hsl(0 70% 30% / 0.5)" }}>ÉCHEC</h2>
                       <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(0 0% 95%)" }}>
-                        Le Cercle a détecté votre présence.<br />Vous devrez recommencer depuis le début.
+                        Le Cercle a détecté votre présence.<br />Vous pouvez recommencer depuis le début.
                       </p>
                     </>
                   )}
@@ -1198,17 +1228,17 @@ const Mission = () => {
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="bg-card border border-border rounded-lg p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-3xl font-display font-bold text-primary">{score}/{mission.enigmes.length}</p>
+                    <p className="text-3xl font-display font-bold text-primary">{score}/{TOTAL_QUESTIONS}</p>
                     <p className="text-xs text-muted-foreground font-display tracking-wider">ÉNIGMES RÉSOLUES</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground font-display tracking-wider mb-0.5">XP ESTIMÉ</p>
                     <p className="text-lg font-display font-bold text-primary">
-                      +{50 + score * 25 + Math.max(0, 30 - Math.floor((Date.now() - missionStartTime) / 10000)) * 2 + (score === mission.enigmes.length ? 50 : 0)}
+                      +{50 + score * 25 + Math.max(0, 30 - Math.floor((Date.now() - missionStartTime) / 10000)) * 2 + (score === TOTAL_QUESTIONS ? 50 : 0)}
                     </p>
                   </div>
                 </div>
-                {score === mission.enigmes.length && (
+                {score === TOTAL_QUESTIONS && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-primary font-display tracking-wider border-t border-border pt-3">
                     <Trophy className="h-4 w-4" />
                     MISSION PARFAITE +50 XP BONUS
