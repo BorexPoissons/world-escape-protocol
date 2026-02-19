@@ -1,7 +1,12 @@
 {
   "country": {
     "code": "CH",
-    "name_fr": "Suisse"
+    "name": "Suisse",
+    "name_fr": "Suisse",
+    "description": "Pays des Alpes, des banques secrètes et des horloges mystérieuses.",
+    "monuments": ["Jet d'Eau", "Chapelle du Pont", "Château de Chillon"],
+    "historical_events": ["Fondation de la Confédération 1291", "Convention de Genève 1864", "CERN fondé 1954"],
+    "symbols": ["Croix blanche", "Edelweiss", "Cor des Alpes"]
   },
   "mission": {
     "mission_id": "CH-S1-001",

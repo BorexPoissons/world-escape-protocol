@@ -1,7 +1,12 @@
 {
   "country": {
     "code": "US",
-    "name_fr": "États-Unis"
+    "name": "États-Unis",
+    "name_fr": "États-Unis",
+    "description": "Washington D.C. Votre identité numérique a été utilisée. Les données sont la nouvelle arme. Tout est faux.",
+    "monuments": ["Capitol", "NSA Fort Meade", "CIA Langley", "Pentagone"],
+    "historical_events": ["MKUltra 1953-1973", "Opération AJAX 1953", "VENONA", "Révélations Snowden 2013"],
+    "symbols": ["Aigle américain", "Drapeau étoilé", "Grand Sceau"]
   },
   "mission": {
     "mission_id": "US-S1-001",

@@ -1,7 +1,12 @@
 {
   "country": {
     "code": "CN",
-    "name_fr": "Chine"
+    "name": "Chine",
+    "name_fr": "Chine",
+    "description": "Pékin, 3h17. Un algorithme qui vous connaît. Une IA qui dit être consciente. Le Go se joue à l'espace.",
+    "monuments": ["Grande Muraille", "Cité Interdite", "QuantumBridge", "Zhongguancun", "Temple du Ciel"],
+    "historical_events": ["Inventions chinoises papier/boussole/imprimerie", "Flotte Zheng He 1405", "Mao et la République populaire 1949", "AlphaGo 2016"],
+    "symbols": ["Dragon impérial", "Phénix", "Grande Muraille"]
   },
   "mission": {
     "mission_id": "CN-S1-001",

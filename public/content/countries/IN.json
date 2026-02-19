@@ -1,7 +1,12 @@
 {
   "country": {
     "code": "IN",
-    "name_fr": "Inde"
+    "name": "Inde",
+    "name_fr": "Inde",
+    "description": "Varanasi. Un mandala qui cache un fragment. Un maître yogi qui voit tout. Maya — l'illusion du réel.",
+    "monuments": ["Taj Mahal", "Ghâts de Varanasi", "Temple de Sarnath", "Cité interdite de Delhi"],
+    "historical_events": ["Marche de Dandi 1930", "Indépendance 1947", "Invention du zéro VIIe siècle", "Upanishads 800 av J.-C."],
+    "symbols": ["Roue du Dharma", "Lotus sacré", "Cobra"]
   },
   "mission": {
     "mission_id": "IN-S1-001",
