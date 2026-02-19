@@ -6,10 +6,10 @@
   "mission": {
     "mission_id": "BR-S1-004",
     "mission_title": "OPÉRATION CARNAVAL NOIR",
-    "phase": "RESSOURCES_BRUTES",
+    "phase": "RESSOURCE_INSTABILITE",
     "is_free": true,
     "detective": "Jasper Valcourt",
-    "intro": "Rio de Janeiro.\n2h17 du matin.\n\nLa ville ne dort pas.\nElle explose.\n\nLumières, percussions, foules compactes.\nImpossible de distinguer la célébration du chaos.\n\nAprès la Suisse, les États-Unis et la Chine,\nJasper Valcourt comprend que le pouvoir mondial ne se résume pas aux banques ou aux infrastructures.\n\nIl y a une autre variable.\n\nL'énergie brute.\n\nL'Amazonie — poumon stratégique.\nLes ressources minières — convoitées.\nUn pays capable de basculer l'équilibre d'un continent.\n\nQuand les institutions vacillent,\nd'autres forces émergent.\n\nInfluence.\nInstabilité.\nRessources.\n\nLe monde regarde Washington.\nLe monde observe Pékin.\nMais quand l'Amérique du Sud tremble…\nles marchés suivent.\n\nVotre mission :\nIdentifier comment l'instabilité et les ressources naturelles deviennent des leviers géopolitiques majeurs.\n\nDans le bruit du carnaval,\ncertaines transactions se font sans musique."
+    "intro": "Rio de Janeiro. 2h17 du matin.\n\nLa ville ne dort pas.\nElle explose.\n\nAprès la Suisse, les États-Unis et la Chine,\nJasper comprend qu'un autre levier existe.\n\nPas monétaire.\nPas infrastructurel.\n\nÉnergétique.\nNaturel.\nHumain.\n\nL'Amazonie.\nLes minerais stratégiques.\nUn continent sensible aux variations politiques.\n\nQuand les institutions vacillent,\nles marchés réagissent.\n\nVotre mission :\nComprendre comment ressources et instabilité deviennent des leviers d'influence mondiale."
   },
   "quiz_rules": {
     "total_questions": 10,
@@ -25,108 +25,100 @@
     {
       "id": "BR_Q1",
       "type": "A",
-      "question": "Quelle est la capitale fédérale du Brésil ?",
+      "question": "Quelle est la capitale du Brésil ?",
       "choices": ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"],
       "answer_index": 2
     },
     {
       "id": "BR_Q2",
       "type": "A",
-      "question": "Quel fleuve traverse la plus grande forêt tropicale du monde en Amazonie brésilienne ?",
-      "choices": ["Rio de la Plata", "Amazone", "Paraná", "São Francisco"],
-      "answer_index": 1,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/24701-nature-natural-beauty.jpg/640px-24701-nature-natural-beauty.jpg",
-        "caption": "Le fleuve Amazone et la forêt tropicale — premier réservoir de biodiversité et ressource stratégique mondiale"
-      }
+      "question": "Quelle est la principale forêt tropicale située au Brésil ?",
+      "choices": ["Forêt du Congo", "Forêt amazonienne", "Forêt boréale", "Forêt andine"],
+      "answer_index": 1
     },
     {
       "id": "BR_Q3",
       "type": "A",
-      "question": "Le Brésil est le premier producteur mondial de quelle ressource agricole ?",
-      "choices": ["Blé", "Riz", "Café", "Maïs"],
-      "answer_index": 2
+      "question": "Quel est le nom de la monnaie brésilienne ?",
+      "choices": ["Peso", "Real", "Bolivar", "Escudo"],
+      "answer_index": 1
     },
     {
       "id": "BR_Q4",
       "type": "A",
-      "question": "En quelle année le Brésil a-t-il intégré le groupe des BRIC (avant l'Afrique du Sud) ?",
-      "choices": ["2001", "2006", "2009", "2011"],
-      "answer_index": 0,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/BRICS_2023_Johannesburg.jpg/640px-BRICS_2023_Johannesburg.jpg",
-        "caption": "Sommet des BRICS — coalition des grandes économies émergentes dont le Brésil est membre fondateur"
-      }
+      "question": "Le Brésil est le plus grand pays de quel continent ?",
+      "choices": ["Amérique du Nord", "Amérique du Sud", "Afrique", "Europe"],
+      "answer_index": 1
     },
     {
       "id": "BR_Q5",
       "type": "A",
-      "question": "Quelle entreprise publique brésilienne est l'un des plus grands producteurs de pétrole d'Amérique latine ?",
-      "choices": ["Vale", "Petrobras", "Embraer", "Eletrobras"],
-      "answer_index": 1
+      "question": "Quelle ville est connue pour son célèbre carnaval international ?",
+      "choices": ["Brasília", "Manaus", "Rio de Janeiro", "Recife"],
+      "answer_index": 2
     },
     {
       "id": "BR_Q6",
       "type": "A",
-      "question": "Quelle est la principale langue officielle du Brésil ?",
-      "choices": ["Espagnol", "Français", "Portugais", "Guaraní"],
-      "answer_index": 2
+      "question": "Le Brésil est un acteur majeur dans l'exportation de quelle ressource agricole ?",
+      "choices": ["Blé", "Café", "Riz", "Thé"],
+      "answer_index": 1
     },
     {
       "id": "BR_Q7",
       "type": "B",
-      "question": "Pourquoi la déforestation de l'Amazonie est-elle considérée comme une question géopolitique mondiale ?",
+      "question": "Pourquoi l'Amazonie a-t-elle une importance géopolitique mondiale ?",
       "choices": [
-        "Elle concerne uniquement le tourisme local",
-        "Elle affecte le climat, la biodiversité et les négociations diplomatiques à l'échelle mondiale",
-        "Elle n'a d'impact que sur l'agriculture brésilienne",
-        "Elle est uniquement liée à des conflits frontaliers"
+        "Elle attire uniquement les touristes",
+        "Elle influence le climat et les ressources naturelles",
+        "Elle est totalement inhabitable",
+        "Elle est sans impact économique"
       ],
       "answer_index": 1
     },
     {
       "id": "BR_Q8",
       "type": "B",
-      "question": "Quel rôle jouent les ressources naturelles d'un pays dans les relations géopolitiques ?",
+      "question": "Pourquoi l'instabilité politique peut-elle influencer les marchés internationaux ?",
       "choices": [
-        "Elles sont sans influence sur la diplomatie",
-        "Elles créent des dépendances et des leviers de négociation entre États",
-        "Elles servent uniquement à l'économie intérieure",
-        "Elles provoquent automatiquement des conflits militaires"
+        "Elle ne change rien",
+        "Elle modifie la confiance des investisseurs",
+        "Elle ferme automatiquement les frontières",
+        "Elle supprime les ressources naturelles"
       ],
       "answer_index": 1
     },
     {
       "id": "BR_Q9",
       "type": "C",
-      "question": "Dans la logique du système mondial, que représentent les ressources brutes du Brésil ?",
+      "question": "Dans la logique mondiale du pouvoir, que représentent les ressources naturelles brésiliennes ?",
       "choices": [
-        "Un atout purement économique",
-        "Un facteur d'instabilité sans influence externe",
-        "Un levier d'influence géopolitique convoité par les grandes puissances",
-        "Une ressource exclusivement régionale"
+        "Un simple atout local",
+        "Un levier stratégique global",
+        "Un facteur culturel uniquement",
+        "Un élément secondaire"
       ],
-      "answer_index": 2,
-      "narrative_unlock": "Celui qui contrôle les ressources contrôle les dépendances."
+      "answer_index": 1,
+      "narrative_unlock": "La nature peut peser plus lourd que l'or."
     },
     {
       "id": "BR_Q10",
       "type": "C",
-      "question": "Quel lien relie l'Amazonie, le pétrole brésilien et l'appartenance aux BRICS ?",
+      "question": "Quel lien relie ressources, instabilité et influence internationale ?",
       "choices": [
-        "L'isolement économique",
-        "La capacité à peser dans les équilibres mondiaux par les ressources",
-        "Une domination militaire régionale",
-        "Un simple hasard géographique"
+        "Un hasard géographique",
+        "La capacité d'affecter les chaînes d'approvisionnement mondiales",
+        "Une isolation continentale",
+        "Un simple phénomène saisonnier"
       ],
       "answer_index": 1,
-      "narrative_unlock": "L'énergie brute précède la puissance structurée."
+      "narrative_unlock": "Quand une région tremble, le monde ajuste sa trajectoire."
     }
   ],
   "fragment_reward": {
     "id": "FRAG-BR-004",
     "name": "Fragment Carnaval Noir",
-    "concept": "NŒUD_RESSOURCES",
-    "unlocked_message": "L'énergie brute précède la puissance structurée."
+    "concept": "NŒUD_RESSOURCE",
+    "unlocked_message": "La nature peut peser plus lourd que l'or."
   }
 }
