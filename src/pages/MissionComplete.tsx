@@ -14,7 +14,7 @@ import missionCompleteCN from "@/assets/mission-complete-cn.png";
 import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
-const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
 
 function getNextSignalInitialCode(currentCode: string): string | null {
   const idx = SIGNAL_INITIAL_SEQUENCE.indexOf(currentCode);
@@ -366,17 +366,26 @@ const MissionComplete = () => {
                   </motion.div>
                 )}
 
-                {/* Last free country complete */}
+                {/* Last free country complete → Dilemme Central */}
                 {isLastFreeCountry && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
-                    className="bg-card border border-primary/20 rounded-lg p-5 text-center"
+                    className="bg-card border border-primary/30 rounded-lg p-6 text-center border-glow space-y-3"
+                    style={{ boxShadow: "0 0 30px hsl(40 80% 55% / 0.1)" }}
                   >
-                    <p className="text-primary font-display tracking-wider text-sm mb-2">🔐 OPÉRATION 0 COMPLÈTE</p>
-                    <p className="text-muted-foreground text-xs">
-                      Tous les pays gratuits ont été explorés. Passez à l'Opération I pour continuer l'enquête.
+                    <motion.div
+                      animate={{ scale: [1, 1.08, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.5 }}
+                      className="text-4xl text-primary"
+                    >
+                      ◈
+                    </motion.div>
+                    <p className="text-primary font-display tracking-wider text-sm">SIGNAL INITIAL TERMINÉ</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      Tu as identifié cinq leviers. Mais tout système a une origine.<br />
+                      Il est temps de trouver le point central.
                     </p>
                   </motion.div>
                 )}
@@ -396,6 +405,13 @@ const MissionComplete = () => {
                     >
                       <MapPin className="h-4 w-4" />
                       CONTINUER — {nextCountry.name.toUpperCase()}
+                    </Button>
+                  ) : isLastFreeCountry ? (
+                    <Button
+                      onClick={() => navigate("/dilemme-central")}
+                      className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6 gap-2"
+                    >
+                      ◈ ACCÉDER AU DILEMME CENTRAL
                     </Button>
                   ) : (
                     <Button

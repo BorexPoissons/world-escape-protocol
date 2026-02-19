@@ -11,6 +11,7 @@ import Mission from "./pages/Mission";
 import MissionComplete from "./pages/MissionComplete";
 import Puzzle from "./pages/Puzzle";
 import Admin from "./pages/Admin";
+import CentralDilemma from "./pages/CentralDilemma";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/mission/:countryId/complete" element={<MissionComplete />} />
             <Route path="/puzzle" element={<Puzzle />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/dilemme-central" element={<CentralDilemma />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
