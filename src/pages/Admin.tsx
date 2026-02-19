@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft,
   Home, BarChart3, Search, Eye, EyeOff, Star, FileJson, CheckCircle, XCircle,
-  TrendingUp, Flame, Lock,
+  TrendingUp, Flame, Lock, CreditCard, Upload, Filter, AlertCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -19,9 +19,11 @@ const FLAG_EMOJI: Record<string, string> = {
   IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷", US: "🇺🇸",
   CA: "🇨🇦", AU: "🇦🇺", CN: "🇨🇳", IN: "🇮🇳", MX: "🇲🇽",
   MA: "🇲🇦", TR: "🇹🇷", AR: "🇦🇷", KR: "🇰🇷", GR: "🇬🇷",
+  RU: "🇷🇺",
 };
 
-const STATIC_CONTENT_CODES = ["CH", "JP", "EG"];
+const STATIC_CONTENT_CODES = ["CH", "JP", "EG", "US", "BR", "CN", "IN", "MA", "ES", "IT", "FR", "GR", "RU"];
+const FREE_THRESHOLD = 5; // pays 1–5 sont FREE (CH, BR, CN, US, IN)
 
 type CountryRow = Tables<"countries"> & {
   release_order?: number;
@@ -31,10 +33,27 @@ type CountryRow = Tables<"countries"> & {
 };
 
 function getTierLabel(order: number): { label: string; color: string } {
-  if (order <= 3) return { label: "FREE", color: "hsl(40 80% 55%)" };
+  if (order <= FREE_THRESHOLD) return { label: "FREE", color: "hsl(40 80% 55%)" };
   if (order <= 50) return { label: "AGENT", color: "hsl(220 80% 65%)" };
   return { label: "DIRECTOR", color: "hsl(280 60% 65%)" };
 }
+
+function getSubscriptionBadge(type: string) {
+  if (type === "director") return { label: "DIRECTOR", color: "hsl(280 60% 65%)" };
+  if (type === "agent" || type === "season1") return { label: "AGENT", color: "hsl(220 80% 65%)" };
+  return { label: "FREE", color: "hsl(40 80% 55%)" };
+}
+
+type JsonImportPreview = {
+  code: string;
+  name?: string;
+  description?: string;
+  monuments?: string[];
+  historical_events?: string[];
+  symbols?: string[];
+  questionCount?: number;
+  missionTitle?: string;
+} | null;
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -42,16 +61,27 @@ const Admin = () => {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions" | "purchases">("overview");
 
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<"profiles">[]>([]);
   const [missions, setMissions] = useState<Tables<"missions">[]>([]);
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
 
+  // Missions tab state
   const [missionFilter, setMissionFilter] = useState<"all" | "completed" | "incomplete">("all");
   const [missionSearch, setMissionSearch] = useState("");
+  const [missionDedup, setMissionDedup] = useState(false);
+
+  // Countries tab state
   const [countrySearch, setCountrySearch] = useState("");
+  const [jsonImportPreview, setJsonImportPreview] = useState<JsonImportPreview>(null);
+  const [jsonImporting, setJsonImporting] = useState(false);
+  const jsonInputRef = useRef<HTMLInputElement>(null);
+
+  // Purchases tab state
+  const [confirmChange, setConfirmChange] = useState<{ userId: string; name: string; newType: string } | null>(null);
+  const [subscriptionLogs, setSubscriptionLogs] = useState<{ userId: string; name: string; oldType: string; newType: string; at: string }[]>([]);
 
   const [countryForm, setCountryForm] = useState({
     name: "", code: "", description: "", difficulty_base: 1,
@@ -79,7 +109,7 @@ const Admin = () => {
     const [c, p, m, roles] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("profiles").select("*").order("xp", { ascending: false }),
-      supabase.from("missions").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("missions").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_roles").select("*"),
     ]);
     if (c.data) setCountries(c.data as CountryRow[]);
@@ -162,6 +192,76 @@ const Admin = () => {
     fetchAllData();
   };
 
+  // ── JSON Import ────────────────────────────────────────────
+  const handleJsonFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target?.result as string);
+        // Support multiple JSON formats
+        const code = (json.country?.code || json.code || file.name.replace(".json", "")).toUpperCase();
+        const name = json.country?.name || json.name;
+        const description = json.country?.description || json.mission?.description || json.description;
+        const monuments = json.country?.monuments || json.monuments || [];
+        const historical_events = json.country?.historical_events || json.historical_events || [];
+        const symbols = json.country?.symbols || json.symbols || [];
+        const questionCount = (json.question_bank || json.questions || []).length;
+        const missionTitle = json.mission?.mission_title || json.mission_title;
+
+        setJsonImportPreview({ code, name, description, monuments, historical_events, symbols, questionCount, missionTitle });
+      } catch {
+        toast({ title: "Erreur JSON", description: "Fichier JSON invalide", variant: "destructive" });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleJsonImport = async () => {
+    if (!jsonImportPreview) return;
+    setJsonImporting(true);
+    const { code, name, description, monuments, historical_events, symbols } = jsonImportPreview;
+
+    const payload: any = {};
+    if (name) payload.name = name;
+    if (description) payload.description = description;
+    if (monuments?.length) payload.monuments = monuments;
+    if (historical_events?.length) payload.historical_events = historical_events;
+    if (symbols?.length) payload.symbols = symbols;
+
+    const { error } = await supabase.from("countries").update(payload).eq("code", code);
+
+    if (error) {
+      toast({ title: "Erreur import", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `✓ Pays ${code} mis à jour`, description: `${Object.keys(payload).length} champ(s) importé(s)` });
+      setJsonImportPreview(null);
+      if (jsonInputRef.current) jsonInputRef.current.value = "";
+      fetchAllData();
+    }
+    setJsonImporting(false);
+  };
+
+  // ── Subscription management ────────────────────────────────
+  const handleSubscriptionChange = async (userId: string, name: string, newType: string) => {
+    const profile = profiles.find(p => p.user_id === userId);
+    const oldType = (profile as any)?.subscription_type || "free";
+
+    const { error } = await supabase.from("profiles").update({ subscription_type: newType }).eq("user_id", userId);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `✓ Accès mis à jour`, description: `${name} → ${newType.toUpperCase()}` });
+      setSubscriptionLogs(prev => [{
+        userId, name, oldType, newType,
+        at: new Date().toLocaleTimeString("fr-FR"),
+      }, ...prev.slice(0, 9)]);
+      setConfirmChange(null);
+      fetchAllData();
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -198,26 +298,50 @@ const Admin = () => {
     : "0";
   const completionRate = missions.length > 0 ? Math.round((completedMissions.length / missions.length) * 100) : 0;
 
-  const freeCountries = countries.filter(c => (c.release_order ?? 999) <= 3);
-  const agentCountries = countries.filter(c => { const o = c.release_order ?? 999; return o > 3 && o <= 50; });
+  // Unique missions par country_id (meilleur score)
+  const uniqueMissionsByCountry: Record<string, Tables<"missions"> & { attempts: number }> = {};
+  missions.forEach(m => {
+    const existing = uniqueMissionsByCountry[m.country_id];
+    if (!existing || (m.score || 0) > (existing.score || 0)) {
+      uniqueMissionsByCountry[m.country_id] = { ...m, attempts: 0 };
+    }
+  });
+  // Compter les tentatives par pays
+  const attemptsByCountry: Record<string, number> = {};
+  missions.forEach(m => { attemptsByCountry[m.country_id] = (attemptsByCountry[m.country_id] || 0) + 1; });
+  const uniqueMissions = Object.values(uniqueMissionsByCountry).map(m => ({
+    ...m, attempts: attemptsByCountry[m.country_id] || 1,
+  }));
+
+  const freeCountries = countries.filter(c => (c.release_order ?? 999) <= FREE_THRESHOLD);
+  const agentCountries = countries.filter(c => { const o = c.release_order ?? 999; return o > FREE_THRESHOLD && o <= 50; });
   const directorCountries = countries.filter(c => (c.release_order ?? 999) > 50);
 
-  const filteredMissions = missions.filter(m => {
-    if (missionFilter === "completed" && !m.completed) return false;
-    if (missionFilter === "incomplete" && m.completed) return false;
-    if (missionSearch && !m.mission_title.toLowerCase().includes(missionSearch.toLowerCase())) return false;
-    return true;
-  });
+  const filteredMissions = (() => {
+    const source = missionDedup ? uniqueMissions : missions;
+    return source.filter(m => {
+      if (missionFilter === "completed" && !m.completed) return false;
+      if (missionFilter === "incomplete" && m.completed) return false;
+      if (missionSearch && !m.mission_title.toLowerCase().includes(missionSearch.toLowerCase())) return false;
+      return true;
+    });
+  })();
 
   const filteredCountries = countries.filter(c =>
     !countrySearch || c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.toLowerCase().includes(countrySearch.toLowerCase())
   );
+
+  // Purchases analytics
+  const freeUsers = profiles.filter(p => !((p as any).subscription_type) || (p as any).subscription_type === "free");
+  const agentUsers = profiles.filter(p => ["agent", "season1"].includes((p as any).subscription_type || ""));
+  const directorUsers = profiles.filter(p => (p as any).subscription_type === "director");
 
   const tabs = [
     { key: "overview" as const, label: "APERÇU", icon: BarChart3 },
     { key: "countries" as const, label: "PAYS", icon: Globe, count: countries.length },
     { key: "users" as const, label: "AGENTS", icon: Users, count: profiles.length },
     { key: "missions" as const, label: "MISSIONS", icon: Target, count: missions.length },
+    { key: "purchases" as const, label: "ACHATS", icon: CreditCard },
   ];
 
   return (
@@ -254,7 +378,7 @@ const Admin = () => {
               }`}
             >
               <t.icon className="h-3.5 w-3.5" />
-              {t.label}{"count" in t ? ` (${t.count})` : ""}
+              {t.label}{"count" in t && t.count !== undefined ? ` (${t.count})` : ""}
             </button>
           ))}
         </div>
@@ -265,10 +389,10 @@ const Admin = () => {
             {/* KPI grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "MISSIONS JOUÉES", value: missions.length, icon: Target, sub: `${completedMissions.length} complétées` },
+                { label: "TENTATIVES TOTALES", value: missions.length, icon: Target, sub: `dont ${uniqueMissions.length} pays distincts` },
                 { label: "TAUX COMPLÉTION", value: `${completionRate}%`, icon: TrendingUp, sub: `${completedMissions.length}/${missions.length}` },
-                { label: "SCORE MOYEN", value: `${avgScore}/4`, icon: Star, sub: "sur toutes les missions" },
-                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: "comptes enregistrés" },
+                { label: "SCORE MOYEN", value: `${avgScore}/6`, icon: Star, sub: "sur toutes les tentatives" },
+                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${agentUsers.length} Agent · ${directorUsers.length} Director` },
               ].map((card, i) => (
                 <motion.div
                   key={card.label}
@@ -290,8 +414,8 @@ const Admin = () => {
             {/* Tier breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { label: "TIER FREE", count: freeCountries.length, color: "hsl(40 80% 55%)", icon: "🔓", desc: "Pays 1–3 · Accès gratuit" },
-                { label: "TIER AGENT", count: agentCountries.length, color: "hsl(220 80% 65%)", icon: "🕵️", desc: "Pays 4–50 · 19.90 CHF" },
+                { label: "TIER FREE", count: freeCountries.length, color: "hsl(40 80% 55%)", icon: "🔓", desc: `Pays 1–${FREE_THRESHOLD} · Accès gratuit` },
+                { label: "TIER AGENT", count: agentCountries.length, color: "hsl(220 80% 65%)", icon: "🕵️", desc: `Pays ${FREE_THRESHOLD + 1}–50 · 19.90 CHF` },
                 { label: "TIER DIRECTOR", count: directorCountries.length, color: "hsl(280 60% 65%)", icon: "👁", desc: "Pays 51+ · 119 CHF" },
               ].map((tier) => (
                 <div key={tier.label} className="bg-card border border-border rounded-xl p-5">
@@ -340,6 +464,7 @@ const Admin = () => {
               <div className="bg-card border border-border rounded-xl p-5">
                 <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />MISSIONS RÉCENTES
+                  <span className="ml-auto text-xs text-muted-foreground font-normal normal-case">({missions.length} tentatives · {uniqueMissions.length} pays)</span>
                 </h3>
                 <div className="space-y-2">
                   {missions.slice(0, 6).map(m => (
@@ -350,7 +475,7 @@ const Admin = () => {
                           : <XCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
                         <span className="text-sm text-foreground truncate max-w-[160px]">{m.mission_title}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground font-display flex-shrink-0">{m.score ?? 0}/4</span>
+                      <span className="text-xs text-muted-foreground font-display flex-shrink-0">{m.score ?? 0}/6</span>
                     </div>
                   ))}
                   {missions.length === 0 && <p className="text-muted-foreground text-sm text-center py-4">Aucune mission</p>}
@@ -408,6 +533,82 @@ const Admin = () => {
               </div>
             </div>
 
+            {/* JSON Import */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="font-display text-foreground tracking-wider mb-4 flex items-center gap-2">
+                <Upload className="h-4 w-4 text-primary" />IMPORTER UN JSON PAYS
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4 font-display">
+                Importez un fichier JSON mission (BR.json, IN.json...) pour mettre à jour les métadonnées du pays en base.
+              </p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="cursor-pointer">
+                  <input
+                    ref={jsonInputRef}
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleJsonFileChange}
+                  />
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors text-xs font-display text-primary tracking-wider">
+                    <FileJson className="h-4 w-4" />
+                    CHOISIR UN FICHIER JSON
+                  </div>
+                </label>
+                {jsonImportPreview && (
+                  <Button onClick={handleJsonImport} disabled={jsonImporting} size="sm" className="font-display tracking-wider text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 mr-2" />
+                    {jsonImporting ? "IMPORT EN COURS..." : `IMPORTER ${jsonImportPreview.code}`}
+                  </Button>
+                )}
+              </div>
+
+              {/* Preview */}
+              {jsonImportPreview && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-secondary/40 border border-border rounded-lg"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">{FLAG_EMOJI[jsonImportPreview.code] || "🌍"}</span>
+                    <span className="font-display font-bold text-foreground tracking-wider">{jsonImportPreview.code}</span>
+                    {jsonImportPreview.name && <span className="text-sm text-muted-foreground">— {jsonImportPreview.name}</span>}
+                    {jsonImportPreview.missionTitle && (
+                      <span className="ml-auto text-xs font-display text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+                        {jsonImportPreview.missionTitle}
+                      </span>
+                    )}
+                  </div>
+                  {jsonImportPreview.description && (
+                    <p className="text-xs text-muted-foreground italic mb-3">"{jsonImportPreview.description}"</p>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-display">
+                    <div>
+                      <span className="text-muted-foreground tracking-wider">MONUMENTS</span>
+                      <p className="text-foreground mt-0.5">{jsonImportPreview.monuments?.length || 0} élément(s)</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground tracking-wider">ÉVÉNEMENTS</span>
+                      <p className="text-foreground mt-0.5">{jsonImportPreview.historical_events?.length || 0} élément(s)</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground tracking-wider">SYMBOLES</span>
+                      <p className="text-foreground mt-0.5">{jsonImportPreview.symbols?.length || 0} élément(s)</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground tracking-wider">QUESTIONS</span>
+                      <p className="text-foreground mt-0.5">{jsonImportPreview.questionCount || 0} dans le pool</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-amber-500/80 mt-3 flex items-center gap-1.5">
+                    <AlertCircle className="h-3 w-3" />
+                    Seules les métadonnées (nom, description, monuments, événements, symboles) seront mises à jour en base.
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
             {/* Search + list */}
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
@@ -428,7 +629,7 @@ const Admin = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2 px-1">
                     <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-display tracking-widest px-2" style={{ color: "hsl(40 80% 55%)" }}>— TIER FREE (1–3) —</span>
+                    <span className="text-xs font-display tracking-widest px-2" style={{ color: "hsl(40 80% 55%)" }}>— TIER FREE (1–{FREE_THRESHOLD}) —</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
                   {freeCountries.filter(c => !countrySearch || c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch.toUpperCase())).map(c => (
@@ -438,14 +639,14 @@ const Admin = () => {
               )}
 
               {/* Other countries */}
-              {filteredCountries.filter(c => (c.release_order ?? 999) > 3).length > 0 && (
+              {filteredCountries.filter(c => (c.release_order ?? 999) > FREE_THRESHOLD).length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 my-2 px-1">
                     <div className="h-px flex-1 bg-border" />
                     <span className="text-xs font-display tracking-widest px-2 text-muted-foreground">— AGENT / DIRECTOR —</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  {filteredCountries.filter(c => (c.release_order ?? 999) > 3).map(c => (
+                  {filteredCountries.filter(c => (c.release_order ?? 999) > FREE_THRESHOLD).map(c => (
                     <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
                   ))}
                 </div>
@@ -510,7 +711,7 @@ const Admin = () => {
                   className="pl-9 font-display text-sm"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {(["all", "completed", "incomplete"] as const).map(f => (
                   <button
                     key={f}
@@ -522,11 +723,28 @@ const Admin = () => {
                     {f === "all" ? "TOUTES" : f === "completed" ? "✓ COMPLÉTÉES" : "EN COURS"}
                   </button>
                 ))}
+                <button
+                  onClick={() => setMissionDedup(!missionDedup)}
+                  className={`px-3 py-2 rounded-lg font-display text-xs tracking-wider transition-all border flex items-center gap-1.5 ${
+                    missionDedup ? "bg-amber-500/20 text-amber-400 border-amber-500/40" : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Filter className="h-3 w-3" />
+                  {missionDedup ? "UNIQUE PAR PAYS ✓" : "UNIQUE PAR PAYS"}
+                </button>
               </div>
             </div>
 
+            {/* Info banner si doublons */}
+            {!missionDedup && missions.length > uniqueMissions.length && (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs font-display text-amber-400">
+                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                {missions.length} tentatives au total dont des replays — activez "UNIQUE PAR PAYS" pour voir les {uniqueMissions.length} pays joués
+              </div>
+            )}
+
             <div className="space-y-2">
-              {filteredMissions.map((m) => (
+              {(filteredMissions as any[]).map((m) => (
                 <div key={m.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {m.completed
@@ -534,7 +752,13 @@ const Admin = () => {
                       : <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />}
                     <div className="min-w-0">
                       <span className="font-display text-foreground tracking-wider truncate block text-sm">{m.mission_title}</span>
-                      <span className="text-xs text-muted-foreground">{m.score ?? 0}/4 · {new Date(m.created_at).toLocaleDateString("fr-FR")}</span>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                        <span>{m.score ?? 0}/6</span>
+                        <span>{new Date(m.created_at).toLocaleDateString("fr-FR")}</span>
+                        {missionDedup && m.attempts > 1 && (
+                          <span className="text-amber-400/80">{m.attempts} tentatives</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <span className={`text-xs font-display px-2 py-0.5 rounded flex-shrink-0 ${m.completed ? "text-primary bg-primary/10" : "text-muted-foreground bg-secondary"}`}>
@@ -549,6 +773,134 @@ const Admin = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ══ ACHATS ═════════════════════════════════════════════════════ */}
+        {activeTab === "purchases" && (
+          <div className="space-y-6">
+            {/* KPIs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { label: "FREE", count: freeUsers.length, color: "hsl(40 80% 55%)", icon: "🔓", desc: "Accès gratuit (5 pays)" },
+                { label: "AGENT", count: agentUsers.length, color: "hsl(220 80% 65%)", icon: "🕵️", desc: "Season 1 · 19.90 CHF" },
+                { label: "DIRECTOR", count: directorUsers.length, color: "hsl(280 60% 65%)", icon: "👁", desc: "Accès total · 119 CHF" },
+              ].map((tier) => (
+                <div key={tier.label} className="bg-card border border-border rounded-xl p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-2xl">{tier.icon}</span>
+                    <span className="text-xs font-display tracking-wider px-2 py-0.5 rounded"
+                      style={{ color: tier.color, border: `1px solid ${tier.color}40`, background: `${tier.color}10` }}>
+                      {tier.label}
+                    </span>
+                  </div>
+                  <p className="text-3xl font-display font-bold text-foreground">{tier.count}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{tier.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Log des changements récents */}
+            {subscriptionLogs.length > 0 && (
+              <div className="bg-card border border-border rounded-xl p-5">
+                <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />MODIFICATIONS RÉCENTES
+                </h3>
+                <div className="space-y-1.5">
+                  {subscriptionLogs.map((log, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs font-display py-1 border-b border-border/30 last:border-0">
+                      <span className="text-foreground">{log.name}</span>
+                      <span className="text-muted-foreground">{log.oldType.toUpperCase()} → {log.newType.toUpperCase()}</span>
+                      <span className="text-muted-foreground/60">{log.at}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Liste des utilisateurs avec gestion subscription */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-primary" />GESTION DES ACCÈS
+              </h3>
+              <div className="space-y-3">
+                {profiles.map((p) => {
+                  const subType = (p as any).subscription_type || "free";
+                  const badge = getSubscriptionBadge(subType);
+                  return (
+                    <div key={p.id} className="flex items-center justify-between gap-4 py-3 border-b border-border/50 last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-display text-foreground text-sm">{p.display_name || "Agent sans nom"}</span>
+                          <span className="text-xs font-display px-1.5 py-0.5 rounded"
+                            style={{ color: badge.color, border: `1px solid ${badge.color}30`, background: `${badge.color}10` }}>
+                            {badge.label}
+                          </span>
+                          {userRoles[p.user_id] === "admin" && (
+                            <span className="text-xs font-display text-primary px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10">ADMIN</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-display">
+                          Niv.{p.level} · {p.xp} XP · Créé {new Date(p.created_at).toLocaleDateString("fr-FR")}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        {["free", "agent", "director"].map((tier) => (
+                          <button
+                            key={tier}
+                            disabled={subType === tier}
+                            onClick={() => setConfirmChange({ userId: p.user_id, name: p.display_name || "Agent", newType: tier })}
+                            className={`px-2.5 py-1 rounded text-xs font-display tracking-wider transition-all border ${
+                              subType === tier
+                                ? "opacity-40 cursor-not-allowed border-border bg-secondary text-muted-foreground"
+                                : "border-border hover:border-primary/50 bg-card text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {tier === "free" ? "FREE" : tier === "agent" ? "AGENT" : "DIRECTOR"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {profiles.length === 0 && (
+                  <p className="text-center text-muted-foreground py-6 font-display tracking-wider">AUCUN UTILISATEUR</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Confirmation dialog ── */}
+        {confirmChange && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-border rounded-xl p-6 max-w-sm w-full shadow-xl"
+            >
+              <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-display text-foreground tracking-wider text-center mb-2">CONFIRMER LE CHANGEMENT</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Passer <strong className="text-foreground">{confirmChange.name}</strong> en accès{" "}
+                <strong className="text-foreground">{confirmChange.newType.toUpperCase()}</strong> ?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 font-display tracking-wider text-xs"
+                  onClick={() => setConfirmChange(null)}
+                >
+                  ANNULER
+                </Button>
+                <Button
+                  className="flex-1 font-display tracking-wider text-xs"
+                  onClick={() => handleSubscriptionChange(confirmChange.userId, confirmChange.name, confirmChange.newType)}
+                >
+                  CONFIRMER
+                </Button>
+              </div>
+            </motion.div>
           </div>
         )}
       </main>
@@ -661,7 +1013,7 @@ const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: Coun
           </div>
           {country.latitude && country.longitude && (
             <p className="text-xs text-muted-foreground mt-3 font-display">
-              📍 {country.latitude}°N, {country.longitude}°E
+              📍 {country.latitude.toFixed(4)}, {country.longitude.toFixed(4)}
             </p>
           )}
         </motion.div>
