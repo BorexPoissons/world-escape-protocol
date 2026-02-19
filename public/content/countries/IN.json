@@ -1,68 +1,51 @@
 {
-  "country": {
-    "code": "IN",
-    "name": "Inde",
-    "name_fr": "Inde",
-    "description": "Varanasi. Un mandala qui cache un fragment. Un maître yogi qui voit tout. Maya — l'illusion du réel.",
-    "monuments": ["Taj Mahal", "Ghâts de Varanasi", "Temple de Sarnath", "Cité interdite de Delhi"],
-    "historical_events": ["Marche de Dandi 1930", "Indépendance 1947", "Invention du zéro VIIe siècle", "Upanishads 800 av J.-C."],
-    "symbols": ["Roue du Dharma", "Lotus sacré", "Cobra"]
-  },
+  "country": { "code": "IN", "name_fr": "Inde" },
   "mission": {
-    "mission_id": "IN-S1-001",
+    "mission_id": "IN-S1-FREE-005",
     "format": "IMMERSIVE_FREE",
-    "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
-    "phase": "SIGNAL_INITIAL",
     "is_free": true,
+    "order_index": 5,
+    "total_free": 5,
+    "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
     "detective": "Jasper Valcourt",
-    "intro": "New Delhi. Chaleur sèche.\n\nUn système peut être riche.\nUn système peut être structuré.\n\nMais sans masse,\nil reste limité.\n\nJe suis Jasper Valcourt.\nEt je regarde toujours la variable que les autres sous-estiment.\n\nUne population immense.\nUne jeunesse dominante.\nUn secteur technologique en expansion.\n\nLa démographie n'est pas un chiffre.\nC'est un potentiel.\n\nQuand la masse se connecte,\nelle devient puissance.\n\nSi les flux ont un passage,\nun rythme,\net des routes…\n\nAlors la prochaine étape\nsera la connexion.\n\n— J. Valcourt"
+    "intro_text": "New Delhi. Chaleur sèche.\n\nUn système peut être riche.\nUn système peut être structuré.\n\nMais sans masse… il reste limité.\n\nJe suis Jasper Valcourt.\nEt je regarde toujours la variable que les autres sous-estiment.\n\nQuand la masse se connecte, elle devient puissance.\n— Jasper Valcourt"
   },
   "scene": {
-    "setup": "New Delhi. La chaleur sèche d'une nuit sans vent. Une salle de situation dans un ministère diplomatique. Trois dossiers sur la table, chacun marqué d'un symbole différent.",
+    "prompt": "Dans un café surchauffé, trois pistes :",
     "choices": [
-      "Examiner le rapport sur la Silicon Valley indienne",
-      "Ouvrir le dossier marqué 'Rang mondial — Population'",
-      "Lire l'analyse des corridors économiques ASEAN"
+      "Suivre un étudiant qui code sur son téléphone",
+      "Ouvrir un dossier « UPI »",
+      "Observer une affiche touristique"
     ],
     "correct_choice_index": 1,
-    "wrong_feedback": "Ces informations sont exactes… mais elles ne mènent pas directement à la clé du système.",
-    "correct_feedback": "Le dossier confirme ce que Jasper suspectait. En 2023, l'Inde devient la première puissance démographique mondiale. Le rang : 1. La clé se dessine."
+    "success_text": "Le dossier « UPI » décrit un réseau de paiements instantanés. En bas : une date et une phrase."
   },
   "clue": {
-    "title": "RAPPORT DÉMOGRAPHIQUE CLASSIFIÉ",
-    "text": "1\nRang. Nation. Connexion.\n\n« La masse n'est pas un poids.\nC'est une force qui attend d'être dirigée. »",
-    "instruction": "En 2023, l'Inde est devenue la nation la plus peuplée du monde.\nRang numéro 1.\n\nIdentifie la 1re lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+    "title": "Note UPI",
+    "text": "2016\n\n« La masse devient puissance lorsqu’elle se connecte. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
-    "type": "direct_alphabet",
-    "question": "En 2023, l'Inde est devenue\nla 1re nation la plus peuplée du monde.\n\nQuelle est la 1re lettre de l'alphabet ?",
-    "letter_choices": ["A", "B", "C", "D"],
-    "solution_number": 1,
-    "solution_letter": "A",
-    "explanation": "Rang mondial n°1 → 1re lettre de l'alphabet = A"
+    "type": "alphabet_sum",
+    "instruction": "Additionne les chiffres du nombre (A=1, B=2, …).",
+    "input": "2016",
+    "solution_number": 9,
+    "solution_letter": "I",
+    "explain_if_failed": "2 + 0 + 1 + 6 = 9 → 9e lettre = I"
   },
   "final_question": {
-    "question": "Si l'Inde connecte 1,4 milliard de personnes au réseau économique mondial, quel devient son rôle stratégique ?",
+    "question": "Pourquoi une population jeune peut-elle devenir un avantage stratégique ?",
     "choices": [
-      "Un réservoir de main-d'œuvre bon marché sans influence réelle",
-      "Un catalyseur de puissance connectant masse humaine et économie mondiale",
-      "Un acteur régional sans portée globale"
+      "Elle soutient la croissance économique et l’innovation",
+      "Elle isole le pays",
+      "Elle supprime les institutions"
     ],
-    "answer_index": 1,
-    "narrative_unlock": "Quand la masse se connecte, elle devient puissance."
+    "answer_index": 0
   },
   "reward": {
-    "letter_obtained": "A",
-    "fragment_name": "Fragment du Subcontinent",
-    "fragment_concept": "PUISSANCE_DÉMOGRAPHIQUE",
-    "jasper_quote": "Quand la masse se connecte, elle devient puissance.",
-    "next_destination_hint": "Tous les nœuds sont maintenant actifs. Le Signal Initial est complet. Le Protocole Omega commence.",
-    "unlocked_message": "La puissance démographique est le cinquième mécanisme. Le signal est complet."
-  },
-  "fragment_reward": {
-    "id": "FRAG-IN-001",
-    "name": "Fragment du Subcontinent",
-    "concept": "PUISSANCE_DÉMOGRAPHIQUE",
-    "unlocked_message": "La puissance démographique est le cinquième mécanisme. Le signal est complet."
+    "letter_obtained": "I",
+    "fragment": { "id": "FRAG-IN-FREE-005", "concept": "NOEUD_DEMOGRAPHIQUE", "name": "Fragment Subcontinent Silencieux" },
+    "jasper_quote": "La masse devient puissance lorsqu’elle se connecte.",
+    "next_country_code": null,
+    "next_destination_hint": "Vous avez 5 lettres. Assemblez-les. Le système commence à apparaître."
   }
 }

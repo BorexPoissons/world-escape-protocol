@@ -1,68 +1,51 @@
 {
-  "country": {
-    "code": "CN",
-    "name": "Chine",
-    "name_fr": "Chine",
-    "description": "Pékin, 3h17. Un algorithme qui vous connaît. Une IA qui dit être consciente. Le Go se joue à l'espace.",
-    "monuments": ["Grande Muraille", "Cité Interdite", "QuantumBridge", "Zhongguancun", "Temple du Ciel"],
-    "historical_events": ["Inventions chinoises papier/boussole/imprimerie", "Flotte Zheng He 1405", "Mao et la République populaire 1949", "AlphaGo 2016"],
-    "symbols": ["Dragon impérial", "Phénix", "Grande Muraille"]
-  },
+  "country": { "code": "CN", "name_fr": "Chine" },
   "mission": {
-    "mission_id": "CN-S1-001",
+    "mission_id": "CN-S1-FREE-003",
     "format": "IMMERSIVE_FREE",
-    "mission_title": "OPÉRATION DRAGON SILENCIEUX",
-    "phase": "SIGNAL_INITIAL",
     "is_free": true,
+    "order_index": 3,
+    "total_free": 5,
+    "mission_title": "OPÉRATION DRAGON SILENCIEUX",
     "detective": "Jasper Valcourt",
-    "intro": "Pékin. Ciel gris. Silence dense.\n\nUn système ne tient pas uniquement par la finance.\nIl a besoin de routes.\n\nPorts.\nRails.\nCâbles sous-marins.\nCorridors numériques.\n\nJe suis Jasper Valcourt.\nEt je sais reconnaître une stratégie patiente.\n\nPendant que d'autres parlent,\ncertains construisent.\n\nDes infrastructures qui relient des continents.\nDes dépendances qui ne disent pas leur nom.\n\nLa puissance ne crie pas toujours.\nParfois, elle s'installe.\n\nSi les flux ont un rythme,\nils ont aussi des chemins.\n\nEt celui qui construit les chemins\nchoisit les directions.\n\n— J. Valcourt"
+    "intro_text": "Pékin. Ciel gris. Silence dense.\n\nJe suis Jasper Valcourt.\nEt je sais reconnaître une stratégie patiente.\n\nPendant que d’autres parlent, certains construisent.\nPorts. Rails. Câbles.\n\nLa puissance ne crie pas toujours.\nParfois, elle s’installe.\n\nSi les flux ont un rythme… ils ont aussi des chemins.\n— Jasper Valcourt"
   },
   "scene": {
-    "setup": "Pékin. Un bureau du Ministère des Affaires Étrangères. Trois dossiers posés sur la table. La lumière est froide, le thé encore chaud. Chaque dossier porte un sceau différent.",
+    "prompt": "Dans un centre logistique, trois accès :",
     "choices": [
-      "Examiner la carte des corridors ferroviaires",
-      "Lire le mémo sur les ports en eaux profondes",
-      "Ouvrir le dossier marqué '一带一路' — Une Ceinture, Une Route"
+      "Consulter le plan des corridors maritimes",
+      "Ouvrir le fichier « 2013 »",
+      "Interroger un contremaître"
     ],
-    "correct_choice_index": 2,
-    "wrong_feedback": "Ces informations sont réelles… mais ce n'est pas l'angle direct pour comprendre le système.",
-    "correct_feedback": "Le dossier s'ouvre sur un réseau de corridors terrestres et maritimes. Une note manuscrite dans la marge : 5. La clé se dessine."
+    "correct_choice_index": 1,
+    "success_text": "Le fichier « 2013 » affiche une carte de lignes reliant continents et ports. Une phrase clignote : « le réseau précède le pouvoir »."
   },
   "clue": {
-    "title": "TRANSMISSION INTERCEPTÉE — PÉKIN",
-    "text": "5\nCouloirs. Corridors. Connexions.\n\n« Celui qui construit les routes\nne demande pas la permission. »",
-    "instruction": "La Nouvelle Route de la Soie relie l'Asie, l'Afrique et l'Europe\nvia 5 corridors terrestres majeurs.\n\nIdentifie la 5e lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+    "title": "Fichier 2013",
+    "text": "2013\n\n« Celui qui construit les routes décide où passent les flux. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
-    "type": "direct_alphabet",
-    "question": "La Nouvelle Route de la Soie (Belt & Road)\nrelie les continents via 5 corridors terrestres.\n\nQuelle est la 5e lettre de l'alphabet ?",
-    "letter_choices": ["D", "E", "F", "C"],
-    "solution_number": 5,
-    "solution_letter": "E",
-    "explanation": "5 corridors terrestres → 5e lettre de l'alphabet = E"
+    "type": "alphabet_sum",
+    "instruction": "Additionne les chiffres du nombre (A=1, B=2, …).",
+    "input": "2013",
+    "solution_number": 6,
+    "solution_letter": "F",
+    "explain_if_failed": "2 + 0 + 1 + 3 = 6 → 6e lettre = F"
   },
   "final_question": {
-    "question": "Si un pays finance des infrastructures dans des dizaines d'autres nations, quel est le véritable enjeu stratégique ?",
+    "question": "Pourquoi les infrastructures (ports, rails, câbles) sont-elles stratégiques ?",
     "choices": [
-      "Développer l'économie locale des pays partenaires",
-      "Créer des dépendances et contrôler les routes",
-      "Promouvoir la démocratie mondiale"
+      "Elles influencent les flux commerciaux et politiques",
+      "Elles servent uniquement au tourisme",
+      "Elles remplacent les gouvernements"
     ],
-    "answer_index": 1,
-    "narrative_unlock": "Une route n'est jamais neutre. Elle va quelque part. Et quelqu'un l'a décidé."
+    "answer_index": 0
   },
   "reward": {
-    "letter_obtained": "E",
-    "fragment_name": "Fragment de la Route de Soie",
-    "fragment_concept": "RÉSEAU_INFRASTRUCTUREL",
-    "jasper_quote": "Une route n'est jamais neutre. Elle va quelque part. Et quelqu'un l'a décidé.",
-    "next_destination_hint": "La nature peut peser plus lourd que l'or. Le prochain nœud est dans l'hémisphère sud.",
-    "unlocked_message": "Le réseau infrastructurel est le troisième mécanisme."
-  },
-  "fragment_reward": {
-    "id": "FRAG-CN-001",
-    "name": "Fragment de la Route de Soie",
-    "concept": "RÉSEAU_INFRASTRUCTUREL",
-    "unlocked_message": "Le réseau infrastructurel est le troisième mécanisme."
+    "letter_obtained": "F",
+    "fragment": { "id": "FRAG-CN-FREE-003", "concept": "NOEUD_INFRASTRUCTURE", "name": "Fragment Dragon Silencieux" },
+    "jasper_quote": "Le réseau précède le pouvoir.",
+    "next_country_code": "BR",
+    "next_destination_hint": "Les routes mènent toujours à quelque chose… ou à quelqu’un."
   }
 }

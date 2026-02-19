@@ -1,68 +1,47 @@
 {
-  "country": {
-    "code": "US",
-    "name": "États-Unis",
-    "name_fr": "États-Unis",
-    "description": "Washington D.C. Votre identité numérique a été utilisée. Les données sont la nouvelle arme. Tout est faux.",
-    "monuments": ["Capitol", "NSA Fort Meade", "CIA Langley", "Pentagone"],
-    "historical_events": ["MKUltra 1953-1973", "Opération AJAX 1953", "VENONA", "Révélations Snowden 2013"],
-    "symbols": ["Aigle américain", "Drapeau étoilé", "Grand Sceau"]
-  },
+  "country": { "code": "US", "name_fr": "États-Unis" },
   "mission": {
-    "mission_id": "US-S1-001",
+    "mission_id": "US-S1-FREE-002",
     "format": "IMMERSIVE_FREE",
-    "mission_title": "OPÉRATION FEDERAL SHADOW",
-    "phase": "SIGNAL_INITIAL",
     "is_free": true,
+    "order_index": 2,
+    "total_free": 5,
+    "mission_title": "OPÉRATION FEDERAL SHADOW",
     "detective": "Jasper Valcourt",
-    "intro": "Washington D.C. Nuit lourde.\n\nSi la Suisse canalise les flux…\nquelqu'un doit en fixer le rythme.\n\nJe m'appelle Jasper Valcourt.\nEt je n'aime pas les endroits où l'on parle de stabilité\ncomme d'un dogme.\n\nUne banque centrale moderne.\n\nUn nouvel ordre monétaire.\n\nUn monde qui vacille… puis redémarre.\n\nLa puissance ne réside pas toujours dans la force.\nParfois, elle réside dans la confiance.\n\nIci, on ne fait pas passer l'argent.\nOn décide à quelle vitesse il circule.\n\nRegardez bien.\nLe rythme est un levier.\n\n— J. Valcourt"
+    "intro_text": "Washington D.C. Nuit lourde.\n\nSi la Suisse canalise les flux… quelqu’un doit en fixer le rythme.\n\nJe m’appelle Jasper Valcourt.\nEt je n’aime pas les endroits où l’on appelle « stabilité » ce qui ressemble à un bouton de contrôle.\n\nIci, on ne fait pas passer l’argent.\nOn décide à quelle vitesse il circule.\n\nRegardez bien.\nLe rythme est un levier.\n— Jasper Valcourt"
   },
   "scene": {
-    "setup": "Une salle sécurisée aux sous-sols du Trésor américain. Trois dossiers reposent sur la table, chacun portant un sceau présidentiel. Le silence a une texture particulière ici.",
+    "prompt": "Vous entrez dans une archive sécurisée. Trois éléments :",
     "choices": [
-      "Étudier le rapport Nixon — 1971",
-      "Ouvrir le dossier marqué '13 colonies'",
-      "Lire le mémo confidentiel de la Fed"
+      "Ouvrir le dossier « 1913 »",
+      "Consulter la liste des lobbys",
+      "Explorer une carte des bases militaires"
     ],
-    "correct_choice_index": 1,
-    "wrong_feedback": "Ce dossier contient des informations utiles… mais l'angle n'est pas le bon pour l'instant.",
-    "correct_feedback": "Le dossier s'ouvre. Une carte des 13 colonies originelles. Un chiffre gravé à l'encre rouge : 13. Une clé se dessine."
+    "correct_choice_index": 0,
+    "success_text": "Le dossier « 1913 » contient un formulaire ancien et une annotation au crayon : « le rythme commence ici »."
   },
   "clue": {
-    "title": "DOCUMENT DÉCLASSIFIÉ",
-    "text": "13\nColonies. Bandes. Fondateurs.\n\n« La confiance n'est pas gratuite.\nElle a un prix : la crédibilité. »",
-    "instruction": "13 colonies d'origine.\n13 bandes sur le drapeau.\n\nIdentifie la 13e lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+    "title": "Dossier 1913",
+    "text": "1913\n\nAnnotation : « Le flux a besoin d’un rythme. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
-    "type": "direct_alphabet",
-    "question": "13 colonies originelles.\n13 bandes sur le drapeau américain.\n\nQuelle est la 13e lettre de l'alphabet ?",
-    "letter_choices": ["L", "M", "N", "K"],
-    "solution_number": 13,
-    "solution_letter": "M",
-    "explanation": "13 colonies → 13e lettre de l'alphabet = M"
+    "type": "alphabet_sum",
+    "instruction": "Additionne les chiffres du nombre (A=1, B=2, …).",
+    "input": "1913",
+    "solution_number": 14,
+    "solution_letter": "N",
+    "explain_if_failed": "1 + 9 + 1 + 3 = 14 → 14e lettre = N"
   },
   "final_question": {
-    "question": "Si le dollar est la monnaie de réserve mondiale, quel est son véritable levier de pouvoir ?",
-    "choices": [
-      "La force militaire américaine",
-      "La confiance des marchés mondiaux",
-      "Le stock d'or de Fort Knox"
-    ],
-    "answer_index": 1,
-    "narrative_unlock": "La confiance est une monnaie. Et comme toute monnaie, elle peut s'imprimer… ou s'effondrer."
+    "question": "Quel est le levier principal d’une banque centrale en période de crise ?",
+    "choices": ["La propagande", "La confiance et le crédit", "Le contrôle des frontières"],
+    "answer_index": 1
   },
   "reward": {
-    "letter_obtained": "M",
-    "fragment_name": "Fragment du Dollar Fédéral",
-    "fragment_concept": "RYTHME_MONÉTAIRE",
-    "jasper_quote": "La confiance est une monnaie. Et comme toute monnaie, elle peut s'imprimer… ou s'effondrer.",
-    "next_destination_hint": "Celui qui construit les routes décide où passent les flux. Cap à l'Est.",
-    "unlocked_message": "Le rythme monétaire est le deuxième mécanisme."
-  },
-  "fragment_reward": {
-    "id": "FRAG-US-001",
-    "name": "Fragment du Dollar Fédéral",
-    "concept": "RYTHME_MONÉTAIRE",
-    "unlocked_message": "Le rythme monétaire est le deuxième mécanisme."
+    "letter_obtained": "N",
+    "fragment": { "id": "FRAG-US-FREE-002", "concept": "NOEUD_MONETAIRE", "name": "Fragment Federal Shadow" },
+    "jasper_quote": "Un système ne commande pas toujours. Il ajuste.",
+    "next_country_code": "CN",
+    "next_destination_hint": "Un rythme ne suffit pas. Il faut des routes."
   }
 }
