@@ -1,85 +1,124 @@
 {
-  "mission_title": "OPÉRATION ALPES BLANCHES",
-  "intro": "Agent, bienvenue en Suisse.\n\nDernier message reçu de l'Opérateur Zéro, il y a 72 heures : *« Le coffre de Genève contient la clé du Protocole Omega. Personne ne doit y accéder avant vous. »*\n\nVous êtes à Berne, capitale fédérale. Il fait -3°C. Les rues pavées brillent sous la neige fine. Votre couverture : délégué culturel auprès de la Confédération helvétique.\n\nLa Suisse n'est pas le pays paisible qu'elle prétend être. Neutre depuis 1815, elle abrite des coffres parmi les plus secrets du monde, des traités parmi les plus discrets de l'histoire moderne, et une organisation que nous appelons en interne le **Cercle de Davos** — ni banque, ni gouvernement, ni armée. Quelque chose d'autre.\n\nVotre mission : récupérer le **Fragment de la Croix Alpine** dissimulé dans les archives de la Bibliothèque nationale suisse. Pour y accéder, vous devez prouver que vous maîtrisez l'histoire et les symboles de ce pays — les gardiens du coffre sont formés pour détecter les imposteurs.\n\nChaque bonne réponse déverrouille une section des archives. Chaque erreur éveille les soupçons.\n\nLe Cercle vous observe. Faites attention à chaque mot.",
-  "enigmes": [
+  "country": {
+    "code": "CH",
+    "name_fr": "Suisse"
+  },
+  "mission": {
+    "mission_id": "CH-S1-001",
+    "mission_title": "OPÉRATION ALPES BLANCHES",
+    "phase": "SIGNAL_INITIAL",
+    "is_free": true,
+    "detective": "Jasper Velcourt",
+    "intro": "Berne. Aube froide.\n\nJasper suit une trace discrète. Trop d'événements internationaux semblent converger ici.\n\nNeutralité. Institutions. Finance.\n\nS'il existe un modèle mondial, il laissera forcément une empreinte dans un pays où tout transite."
+  },
+  "quiz_rules": {
+    "total_questions": 10,
+    "draw_per_run": 6,
+    "distribution": {
+      "A": 4,
+      "B": 1,
+      "C": 1
+    },
+    "max_mistakes": 1
+  },
+  "question_bank": [
     {
-      "question": "L'organisation humanitaire fondée à Genève en 1863 par Henry Dunant, qui a inspiré les Conventions de Genève, est :",
-      "type": "culture",
-      "choices": [
-        "Le Comité international de la Croix-Rouge (CICR)",
-        "Médecins Sans Frontières",
-        "Amnesty International",
-        "L'Organisation Mondiale de la Santé"
-      ],
-      "answer": "Le Comité international de la Croix-Rouge (CICR)",
-      "explanation": "Le CICR est fondé à Genève en 1863 à l'initiative d'Henry Dunant, après la bataille de Solférino (1859). Il joue un rôle central dans l'élaboration et l'application du droit international humanitaire, notamment à travers les Conventions de Genève."
+      "id": "CH_Q1",
+      "type": "A",
+      "question": "En quelle année la neutralité suisse a-t-elle été reconnue au Congrès de Vienne ?",
+      "choices": ["1648", "1815", "1914", "1945"],
+      "answer_index": 1
     },
     {
-      "question": "La Suisse est une confédération de 26 cantons. Combien de langues nationales reconnaît-elle ?",
-      "type": "culture",
-      "choices": [
-        "2 langues (français, allemand)",
-        "3 langues (français, allemand, italien)",
-        "4 langues (français, allemand, italien, romanche)",
-        "5 langues (+ anglais officiel)"
-      ],
-      "answer": "4 langues (français, allemand, italien, romanche)",
-      "explanation": "La Suisse reconnaît quatre langues nationales : allemand, français, italien et romanche. Le romanche est principalement parlé dans le canton des Grisons et possède un statut officiel limité au niveau fédéral."
+      "id": "CH_Q2",
+      "type": "A",
+      "question": "Combien de langues nationales la Suisse reconnaît-elle ?",
+      "choices": ["2", "3", "4", "5"],
+      "answer_index": 2
     },
     {
-      "question": "La Garde Suisse Pontificale, seule armée de l'État du Vatican, recrute exclusivement des hommes de quelle nationalité depuis 1506 ?",
-      "type": "logique",
-      "choices": [
-        "Citoyens suisses catholiques (avec critères stricts)",
-        "Citoyens de tous les pays alpins",
-        "Soldats de n'importe quelle nationalité catholique",
-        "Uniquement des citoyens des cantons romands"
-      ],
-      "answer": "Citoyens suisses catholiques (avec critères stricts)",
-      "explanation": "Fondée en 1506 sous le pape Jules II, la Garde Suisse pontificale recrute exclusivement des citoyens suisses catholiques pratiquants. Des critères stricts s'appliquent : formation militaire préalable en Suisse, âge, taille minimale, casier vierge, etc."
+      "id": "CH_Q3",
+      "type": "A",
+      "question": "Dans quelle ville siège la Banque des Règlements Internationaux (BIS) ?",
+      "choices": ["Genève", "Zurich", "Bâle", "Lausanne"],
+      "answer_index": 2
     },
     {
-      "question": "En 1992, la Suisse a refusé par référendum populaire de rejoindre une structure européenne. Laquelle ?",
-      "type": "observation",
+      "id": "CH_Q4",
+      "type": "A",
+      "question": "Quelle ville accueille de nombreuses organisations internationales comme l'ONU et l'OMC ?",
+      "choices": ["Berne", "Genève", "Lucerne", "Lugano"],
+      "answer_index": 1
+    },
+    {
+      "id": "CH_Q5",
+      "type": "A",
+      "question": "Quel système politique caractérise la Suisse ?",
+      "choices": ["Monarchie", "République présidentielle", "État fédéral avec démocratie directe", "Régime militaire"],
+      "answer_index": 2
+    },
+    {
+      "id": "CH_Q6",
+      "type": "A",
+      "question": "Combien de cantons composent la Suisse ?",
+      "choices": ["20", "23", "26", "28"],
+      "answer_index": 2
+    },
+    {
+      "id": "CH_Q7",
+      "type": "B",
+      "question": "Pourquoi la neutralité suisse attire-t-elle négociations et institutions internationales ?",
       "choices": [
-        "L'Espace économique européen (EEE)",
-        "L'Organisation des Nations Unies (ONU)",
-        "L'OTAN (Alliance atlantique)",
-        "L'Organisation Mondiale du Commerce (OMC)"
+        "Parce qu'elle est militairement dominante",
+        "Parce qu'elle offre stabilité et absence d'alignement militaire",
+        "Parce qu'elle impose ses lois aux autres pays",
+        "Parce qu'elle contrôle l'ONU"
       ],
-      "answer": "L'Espace économique européen (EEE)",
-      "explanation": "Le 6 décembre 1992, la Suisse a rejeté l'adhésion à l'EEE par référendum (50,3% de non). Depuis, elle privilégie une voie fondée sur des accords bilatéraux avec l'Union européenne tout en conservant son autonomie institutionnelle."
+      "answer_index": 1
+    },
+    {
+      "id": "CH_Q8",
+      "type": "B",
+      "question": "Quel rôle joue une place financière stable dans un système international ?",
+      "choices": [
+        "Limiter les échanges",
+        "Centraliser et sécuriser les flux économiques",
+        "Remplacer les gouvernements",
+        "Supprimer les monnaies"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "CH_Q9",
+      "type": "C",
+      "question": "Quel élément relie neutralité, finance et diplomatie internationale en Suisse ?",
+      "choices": [
+        "La puissance militaire",
+        "Les flux internationaux",
+        "L'isolement géographique",
+        "Le tourisme alpin"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "Ce pays ne dirige pas. Il canalise."
+    },
+    {
+      "id": "CH_Q10",
+      "type": "C",
+      "question": "Dans la logique de l'enquête, que représente la Suisse dans le modèle mondial ?",
+      "choices": [
+        "Un centre de commandement secret",
+        "Un nœud de transit stratégique",
+        "Une base militaire",
+        "Un pays isolé sans influence"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "Un modèle n'a pas besoin d'un chef. Il a besoin de passages."
     }
   ],
-  "false_hint": "Les archives les plus importantes sont gardées dans le sous-sol du Palais fédéral, accessible uniquement le mardi entre 14h et 15h30.",
-  "moral_choice": {
-    "description": "Vous avez trouvé le Fragment. Mais en fouillant les archives, vous découvrez un dossier classifié — la liste de 12 agents du Cercle de Davos infiltrés dans des gouvernements européens. L'Opérateur Zéro attend votre rapport. Que faites-vous ?",
-    "option_a": "Photographiez le dossier et le transmettez à votre supérieur — mission et information complètes.",
-    "option_b": "Prenez uniquement le Fragment et détruisez le dossier — trop dangereux entre de mauvaises mains.",
-    "impact_a": {
-      "trust": 8,
-      "suspicion": 5
-    },
-    "impact_b": {
-      "trust": -3,
-      "suspicion": -8
-    }
-  },
-  "final_fragment": "Fragment de la Croix Alpine — Niveau 1 obtenu.\n\nEn sécurisant ce fragment, vous avez décrypté les premières lignes du Protocole Omega : *« La neutralité n'est pas l'absence de choix — c'est le plus grand choix de tous. Le prochain fragment est gardé là où le soleil se lève sur l'Empire qui n'existe plus. »*\n\nVotre prochain objectif vous emmène en Orient.",
-  "historical_fact": "La neutralité suisse est officiellement reconnue lors du Congrès de Vienne en 1815. Depuis le XVIe siècle, la Confédération n'a plus mené de guerre offensive en tant qu'État souverain, bien que des mercenaires suisses aient longtemps servi à l'étranger. Aujourd'hui, la Suisse demeure un acteur diplomatique majeur : Genève accueille de nombreuses organisations internationales et sert régulièrement de terrain de négociation discret entre puissances rivales.",
-  "next_hint": "Le soleil se lève à l'Est. Un empire disparu. Des cerisiers en fleur cachent des samouraïs de l'ombre. Cherchez le temple qui tient debout depuis environ 1400 ans, là où le bois défie le temps.",
-  "lore": {
-    "titre": "LA SUISSE ET LE CERCLE DE DAVOS",
-    "texte": "Chaque année à Davos, des milliers de dirigeants se réunissent officiellement pour 'améliorer l'état du monde'. Mais dans les sous-sols d'un hôtel ancien, une réunion parallèle se tiendrait depuis les années 1970. Ses participants ne portent aucun badge. Leurs décisions ne sont jamais publiées. Le Protocole Omega serait né lors de l'une de ces réunions.",
-    "personnages": [
-      {
-        "nom": "L'Opérateur Zéro",
-        "role": "Votre contact mystérieux. Identité inconnue. Toujours en avance d'une information."
-      },
-      {
-        "nom": "Le Gardien de Berne",
-        "role": "Archiviste de la Bibliothèque nationale. Il sait ce que vous cherchez. Mais pour qui travaille-t-il ?"
-      }
-    ]
+  "fragment_reward": {
+    "id": "FRAG-CH-001",
+    "name": "Fragment de la Croix Alpine",
+    "concept": "NŒUD_FINANCIER",
+    "unlocked_message": "Les flux sont le premier mécanisme."
   }
 }
