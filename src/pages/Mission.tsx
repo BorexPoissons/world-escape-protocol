@@ -989,7 +989,7 @@ const Mission = () => {
                       <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>
                         {score}/10
                       </h2>
-                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground) / 0.55)" }}>
                         Il faut <strong>8/10 minimum</strong> pour obtenir la pièce et débloquer le pays suivant.<br />
                         Vous pouvez rejouer autant de fois que nécessaire.
                       </p>
@@ -998,7 +998,7 @@ const Mission = () => {
                     <>
                       <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 70% 50% / 0.6)" }}>MISSION COMPROMISE</p>
                       <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>ÉCHEC</h2>
-                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground) / 0.55)" }}>
                         Le Cercle a détecté votre présence.<br />Vous devrez recommencer depuis le début.
                       </p>
                     </>
@@ -1006,9 +1006,9 @@ const Mission = () => {
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="rounded-lg border px-6 py-4 inline-block" style={{ borderColor: "hsl(0 70% 30% / 0.4)", background: "hsl(0 20% 8% / 0.8)" }}>
                   <p className="text-3xl font-display font-bold mb-1" style={{ color: "hsl(0 60% 60%)" }}>{score} / {mission.enigmes.length}</p>
-                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>ÉNIGMES RÉSOLUES · MINIMUM REQUIS : 8</p>
+                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(var(--muted-foreground) / 0.55)" }}>ÉNIGMES RÉSOLUES · MINIMUM REQUIS : 8</p>
                 </motion.div>
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(var(--muted-foreground) / 0.5)" }}>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(var(--muted-foreground) / 0.35)" }}>
                   "Le Cercle ne pardonne pas les erreurs. Mais chaque échec est un enseignement."<br />
                   <span className="not-italic font-display tracking-widest text-[10px]">— J. Velcourt</span>
                 </motion.p>
