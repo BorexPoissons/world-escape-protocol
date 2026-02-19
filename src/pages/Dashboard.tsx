@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -791,69 +791,140 @@ const Dashboard = () => {
               )}
             </div>
 
-              {/* Playable countries grid */}
-              {group.playable.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
-                  {group.playable.map((country, i) => {
-                    const levelOk = isCountryUnlocked(country, playerLevel);
-                    const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
+              {/* Playable countries */}
+              {group.playable.length > 0 && (() => {
+                // For Signal Initial (season 0): sort by sequence and display horizontally
+                const isSignalInitialGroup = seasonNum === 0;
 
-                    // ── SIGNAL_INITIAL sequential lock ──────────────────────
-                    // country N+1 locked until country N has best_score ≥ 5 (5/6 pour gagner)
-                    const seqIdx = SIGNAL_INITIAL_SEQUENCE.indexOf(country.code);
-                    const isSignalInitial = seasonNum === 0 && seqIdx !== -1;
-                    const prevCode = seqIdx > 0 ? SIGNAL_INITIAL_SEQUENCE[seqIdx - 1] : null;
-                    const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 5; // first country always unlocked
-                    const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
+                // Sort season 0 countries in SIGNAL_INITIAL_SEQUENCE order
+                const sortedPlayable = isSignalInitialGroup
+                  ? [...group.playable].sort((a, b) => {
+                      const ia = SIGNAL_INITIAL_SEQUENCE.indexOf(a.code);
+                      const ib = SIGNAL_INITIAL_SEQUENCE.indexOf(b.code);
+                      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+                    })
+                  : group.playable;
 
-                    if (seqLocked) {
-                      return (
-                        <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                          <div className="relative bg-card border border-border rounded-xl p-5 select-none overflow-hidden">
-                            {/* Blur overlay */}
-                            <div className="absolute inset-0 backdrop-blur-[4px] bg-background/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2 px-4 text-center">
-                              <Lock className="h-6 w-6 text-muted-foreground mb-1" />
-                              <p className="text-xs font-display text-muted-foreground tracking-wider">
-                                RÉUSSIS {prevCode} AVEC 5/6
-                              </p>
-                              <p className="text-[11px] text-muted-foreground/60 mt-1">
-                                Score actuel : {signalProgress[prevCode!] ?? 0}/6
-                              </p>
-                            </div>
-                            {/* Blurred content underneath */}
-                            <div className="opacity-30">
-                              <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
-                              <p className="text-xs text-muted-foreground">{"★".repeat(country.difficulty_base)}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
+                // Compute nextUnlockedCode for pulsing highlight
+                const nextUnlockedCode = isSignalInitialGroup
+                  ? SIGNAL_INITIAL_SEQUENCE.find((code) => {
+                      const c = group.playable.find((p) => p.code === code);
+                      if (!c) return false;
+                      const idx = SIGNAL_INITIAL_SEQUENCE.indexOf(code);
+                      const prev = idx > 0 ? SIGNAL_INITIAL_SEQUENCE[idx - 1] : null;
+                      const prevScore = prev ? (signalProgress[prev] ?? 0) : 5;
+                      const locked = idx > 0 && prevScore < 5;
+                      const done = completedCountries.includes(c.id);
+                      return !locked && !done;
+                    })
+                  : null;
+
+                return (
+                  <div
+                    className={
+                      isSignalInitialGroup
+                        ? "flex flex-row gap-4 overflow-x-auto pb-3 mb-6"
+                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"
                     }
+                  >
+                    {sortedPlayable.map((country, i) => {
+                      const levelOk = isCountryUnlocked(country, playerLevel);
+                      const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
 
-                    if (!levelOk && !isSignalInitial) {
-                      return (
-                        <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                          <div className="relative bg-card border border-border rounded-xl p-5 opacity-60 select-none">
-                            <div className="absolute inset-0 bg-background/40 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                              <div className="text-center">
-                                <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                                <p className="text-xs font-display text-muted-foreground tracking-wider">NIVEAU {requiredLevel} REQUIS</p>
+                      // ── SIGNAL_INITIAL sequential lock ──────────────────────
+                      const seqIdx = SIGNAL_INITIAL_SEQUENCE.indexOf(country.code);
+                      const isSignalInitial = seasonNum === 0 && seqIdx !== -1;
+                      const prevCode = seqIdx > 0 ? SIGNAL_INITIAL_SEQUENCE[seqIdx - 1] : null;
+                      const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 5;
+                      const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
+
+                      const isNext = isSignalInitialGroup && country.code === nextUnlockedCode;
+
+                      const cardWrapper = (children: React.ReactNode) =>
+                        isSignalInitialGroup ? (
+                          <div className="min-w-[280px] w-[280px] flex-shrink-0">{children}</div>
+                        ) : (
+                          <>{children}</>
+                        );
+
+                      if (seqLocked) {
+                        return (
+                          <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                            {cardWrapper(
+                              <div className="relative bg-card border border-border rounded-xl p-5 select-none overflow-hidden h-full">
+                                {/* Blur overlay */}
+                                <div className="absolute inset-0 backdrop-blur-[4px] bg-background/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2 px-4 text-center">
+                                  <Lock className="h-6 w-6 text-muted-foreground mb-1" />
+                                  <p className="text-xs font-display text-muted-foreground tracking-wider">
+                                    RÉUSSIS {prevCode} AVEC 5/6
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground/60 mt-1">
+                                    Score actuel : {signalProgress[prevCode!] ?? 0}/6
+                                  </p>
+                                </div>
+                                <div className="opacity-30">
+                                  <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
+                                  <p className="text-xs text-muted-foreground">{"★".repeat(Math.max(0, Math.min(5, country.difficulty_base)))}</p>
+                                </div>
                               </div>
-                            </div>
-                            <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
-                            <p className="text-xs text-muted-foreground">{"★".repeat(country.difficulty_base)}</p>
-                          </div>
+                            )}
+                          </motion.div>
+                        );
+                      }
+
+                      if (!levelOk && !isSignalInitial) {
+                        return (
+                          <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                            {cardWrapper(
+                              <div className="relative bg-card border border-border rounded-xl p-5 opacity-60 select-none">
+                                <div className="absolute inset-0 bg-background/40 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                  <div className="text-center">
+                                    <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                                    <p className="text-xs font-display text-muted-foreground tracking-wider">NIVEAU {requiredLevel} REQUIS</p>
+                                  </div>
+                                </div>
+                                <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
+                                <p className="text-xs text-muted-foreground">{"★".repeat(Math.max(0, Math.min(5, country.difficulty_base)))}</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      }
+
+                      return (
+                        <motion.div
+                          key={country.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={
+                            isNext
+                              ? {
+                                  opacity: 1,
+                                  y: 0,
+                                  boxShadow: [
+                                    "0 0 0px hsl(40 80% 55% / 0)",
+                                    "0 0 22px hsl(40 80% 55% / 0.65)",
+                                    "0 0 0px hsl(40 80% 55% / 0)",
+                                  ],
+                                }
+                              : { opacity: 1, y: 0 }
+                          }
+                          transition={
+                            isNext
+                              ? { delay: 0.05 * i, boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" } }
+                              : { delay: 0.05 * i }
+                          }
+                          className={isSignalInitialGroup ? "min-w-[280px] w-[280px] flex-shrink-0 rounded-xl" : ""}
+                        >
+                          <CountryCard
+                            country={country}
+                            completed={completedCountries.includes(country.id)}
+                          />
                         </motion.div>
                       );
-                    }
-                    return (
-                      <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                        <CountryCard country={country} completed={completedCountries.includes(country.id)} />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* Locked upgrade countries */}
               {group.locked.length > 0 && (
