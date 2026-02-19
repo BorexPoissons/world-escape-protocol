@@ -44,6 +44,15 @@ function getSubscriptionBadge(type: string) {
   return { label: "FREE", color: "hsl(40 80% 55%)" };
 }
 
+type ParsedQuestion = {
+  id: string;
+  type: string;
+  question: string;
+  choices: string[];
+  answer_index: number;
+  narrative_unlock?: string;
+};
+
 type JsonImportPreview = {
   code: string;
   name?: string;
@@ -53,6 +62,7 @@ type JsonImportPreview = {
   symbols?: string[];
   questionCount?: number;
   missionTitle?: string;
+  parsedQuestions?: ParsedQuestion[];
 } | null;
 
 const Admin = () => {
@@ -207,25 +217,14 @@ const Admin = () => {
         const monuments = json.country?.monuments || json.monuments || [];
         const historical_events = json.country?.historical_events || json.historical_events || [];
         const symbols = json.country?.symbols || json.symbols || [];
-        const questionCount = (json.question_bank || json.questions || []).length;
         const missionTitle = json.mission?.mission_title || json.mission_title;
+        const rawQuestions: ParsedQuestion[] = (json.question_bank || json.questions || []);
+        const questionCount = rawQuestions.length;
 
-        // Warnings si champs métadonnées absents
-        const missingFields: string[] = [];
-        if (!name) missingFields.push("name");
-        if (!description) missingFields.push("description");
-        if (!monuments.length) missingFields.push("monuments");
-        if (!historical_events.length) missingFields.push("historical_events");
-        if (!symbols.length) missingFields.push("symbols");
-        if (missingFields.length > 0) {
-          toast({
-            title: `⚠️ Champs manquants dans le JSON`,
-            description: `${missingFields.join(", ")} — ces champs ne seront pas importés.`,
-            variant: "destructive",
-          });
-        }
-
-        setJsonImportPreview({ code, name, description, monuments, historical_events, symbols, questionCount, missionTitle });
+        setJsonImportPreview({
+          code, name, description, monuments, historical_events, symbols,
+          questionCount, missionTitle, parsedQuestions: rawQuestions,
+        });
       } catch {
         toast({ title: "Erreur JSON", description: "Fichier JSON invalide", variant: "destructive" });
       }
@@ -236,8 +235,9 @@ const Admin = () => {
   const handleJsonImport = async () => {
     if (!jsonImportPreview) return;
     setJsonImporting(true);
-    const { code, name, description, monuments, historical_events, symbols } = jsonImportPreview;
+    const { code, name, description, monuments, historical_events, symbols, parsedQuestions } = jsonImportPreview;
 
+    // 1. Mettre à jour les métadonnées du pays
     const payload: any = {};
     if (name) payload.name = name;
     if (description) payload.description = description;
@@ -245,16 +245,56 @@ const Admin = () => {
     if (historical_events?.length) payload.historical_events = historical_events;
     if (symbols?.length) payload.symbols = symbols;
 
-    const { error } = await supabase.from("countries").update(payload).eq("code", code);
-
-    if (error) {
-      toast({ title: "Erreur import", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: `✓ Pays ${code} mis à jour`, description: `${Object.keys(payload).length} champ(s) importé(s)` });
-      setJsonImportPreview(null);
-      if (jsonInputRef.current) jsonInputRef.current.value = "";
-      fetchAllData();
+    if (Object.keys(payload).length > 0) {
+      const { error } = await supabase.from("countries").update(payload).eq("code", code);
+      if (error) {
+        toast({ title: "Erreur metadata", description: error.message, variant: "destructive" });
+        setJsonImporting(false);
+        return;
+      }
     }
+
+    // 2. Importer les questions si présentes
+    let questionsImported = 0;
+    if (parsedQuestions && parsedQuestions.length > 0) {
+      const { data: countryData } = await supabase
+        .from("countries").select("id").eq("code", code).maybeSingle();
+
+      if (countryData?.id) {
+        // Remplacer toutes les questions existantes
+        await supabase.from("questions").delete().eq("country_id", countryData.id);
+
+        const difficultyMap: Record<string, number> = { A: 1, B: 2, C: 3 };
+        const questionsToInsert = parsedQuestions.map((q: ParsedQuestion) => ({
+          country_id: countryData.id,
+          question_text: q.question,
+          answer_options: q.choices as any,
+          correct_answer: q.choices[q.answer_index] ?? q.choices[0],
+          category: q.type || "A",
+          difficulty_level: difficultyMap[q.type] ?? 1,
+        }));
+
+        const { error: qError } = await supabase.from("questions").insert(questionsToInsert);
+        if (qError) {
+          toast({ title: "Erreur questions", description: qError.message, variant: "destructive" });
+          setJsonImporting(false);
+          return;
+        }
+        questionsImported = questionsToInsert.length;
+      }
+    }
+
+    const parts: string[] = [];
+    if (Object.keys(payload).length > 0) parts.push(`${Object.keys(payload).length} champ(s) métadonnées`);
+    if (questionsImported > 0) parts.push(`${questionsImported} question(s) importée(s)`);
+
+    toast({
+      title: `✓ ${code} importé`,
+      description: parts.length > 0 ? parts.join(" · ") : "Aucune donnée nouvelle dans ce JSON",
+    });
+    setJsonImportPreview(null);
+    if (jsonInputRef.current) jsonInputRef.current.value = "";
+    fetchAllData();
     setJsonImporting(false);
   };
 
@@ -601,25 +641,46 @@ const Admin = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-display">
                     <div>
                       <span className="text-muted-foreground tracking-wider">MONUMENTS</span>
-                      <p className="text-foreground mt-0.5">{jsonImportPreview.monuments?.length || 0} élément(s)</p>
+                      <p className={`mt-0.5 ${jsonImportPreview.monuments?.length ? "text-foreground" : "text-muted-foreground/50"}`}>
+                        {jsonImportPreview.monuments?.length || 0} élément(s)
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground tracking-wider">ÉVÉNEMENTS</span>
-                      <p className="text-foreground mt-0.5">{jsonImportPreview.historical_events?.length || 0} élément(s)</p>
+                      <p className={`mt-0.5 ${jsonImportPreview.historical_events?.length ? "text-foreground" : "text-muted-foreground/50"}`}>
+                        {jsonImportPreview.historical_events?.length || 0} élément(s)
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground tracking-wider">SYMBOLES</span>
-                      <p className="text-foreground mt-0.5">{jsonImportPreview.symbols?.length || 0} élément(s)</p>
+                      <p className={`mt-0.5 ${jsonImportPreview.symbols?.length ? "text-foreground" : "text-muted-foreground/50"}`}>
+                        {jsonImportPreview.symbols?.length || 0} élément(s)
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground tracking-wider">QUESTIONS</span>
-                      <p className="text-foreground mt-0.5">{jsonImportPreview.questionCount || 0} dans le pool</p>
+                      <p className={`mt-0.5 font-bold ${jsonImportPreview.questionCount ? "text-primary" : "text-muted-foreground/50"}`}>
+                        {jsonImportPreview.questionCount || 0} dans le pool
+                      </p>
                     </div>
                   </div>
-                  <p className="text-xs text-amber-500/80 mt-3 flex items-center gap-1.5">
-                    <AlertCircle className="h-3 w-3" />
-                    Seules les métadonnées (nom, description, monuments, événements, symboles) seront mises à jour en base.
-                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-display">
+                    {(jsonImportPreview.questionCount || 0) > 0 && (
+                      <span className="flex items-center gap-1 text-primary/80">
+                        <CheckCircle className="h-3 w-3" />
+                        {jsonImportPreview.questionCount} question(s) seront importées en base (remplacement complet)
+                      </span>
+                    )}
+                    {(jsonImportPreview.monuments?.length || 0) === 0 &&
+                     (jsonImportPreview.historical_events?.length || 0) === 0 &&
+                     (jsonImportPreview.symbols?.length || 0) === 0 &&
+                     (jsonImportPreview.questionCount || 0) === 0 && (
+                      <span className="flex items-center gap-1 text-amber-500/80">
+                        <AlertCircle className="h-3 w-3" />
+                        Aucune donnée importable détectée dans ce JSON.
+                      </span>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </div>
