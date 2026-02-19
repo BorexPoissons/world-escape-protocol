@@ -4,121 +4,60 @@
     "name_fr": "Chine"
   },
   "mission": {
-    "mission_id": "CN-S1-003",
+    "mission_id": "CN-S1-001",
+    "format": "IMMERSIVE_FREE",
     "mission_title": "OPÉRATION DRAGON SILENCIEUX",
-    "phase": "INFRASTRUCTURE_NODE",
+    "phase": "SIGNAL_INITIAL",
     "is_free": true,
     "detective": "Jasper Valcourt",
-    "intro": "Pékin. Ciel gris. Silence dense.\n\nAprès la Suisse et les États-Unis,\nJasper comprend une chose :\n\nLes flux doivent circuler.\nLe rythme doit être régulé.\n\nMais qui construit les routes ?\n\n2013.\nLancement d'un projet reliant l'Asie, l'Europe et l'Afrique.\n\nDes ports.\nDes chemins de fer.\nDes câbles.\n\nUne nouvelle monnaie numérique.\n\nLa puissance ne se montre pas toujours.\nElle s'installe.\n\nSi Washington règle la cadence,\nPékin construit le réseau.\n\nVotre mission :\nComprendre comment l'infrastructure devient une arme géostratégique."
+    "intro": "Pékin. Ciel gris. Silence dense.\n\nUn système ne tient pas uniquement par la finance.\nIl a besoin de routes.\n\nPorts.\nRails.\nCâbles sous-marins.\nCorridors numériques.\n\nJe suis Jasper Valcourt.\nEt je sais reconnaître une stratégie patiente.\n\nPendant que d'autres parlent,\ncertains construisent.\n\nDes infrastructures qui relient des continents.\nDes dépendances qui ne disent pas leur nom.\n\nLa puissance ne crie pas toujours.\nParfois, elle s'installe.\n\nSi les flux ont un rythme,\nils ont aussi des chemins.\n\nEt celui qui construit les chemins\nchoisit les directions.\n\n— J. Valcourt"
   },
-  "quiz_rules": {
-    "total_questions": 10,
-    "draw_per_run": 6,
-    "distribution": {
-      "A": 4,
-      "B": 1,
-      "C": 1
-    },
-    "max_mistakes": 1
+  "scene": {
+    "setup": "Pékin. Un bureau du Ministère des Affaires Étrangères. Trois dossiers posés sur la table. La lumière est froide, le thé encore chaud. Chaque dossier porte un sceau différent.",
+    "choices": [
+      "Examiner la carte des corridors ferroviaires",
+      "Lire le mémo sur les ports en eaux profondes",
+      "Ouvrir le dossier marqué '一带一路' — Une Ceinture, Une Route"
+    ],
+    "correct_choice_index": 2,
+    "wrong_feedback": "Ces informations sont réelles… mais ce n'est pas l'angle direct pour comprendre le système.",
+    "correct_feedback": "Le dossier s'ouvre sur un réseau de corridors terrestres et maritimes. Une note manuscrite dans la marge : 5. La clé se dessine."
   },
-  "question_bank": [
-    {
-      "id": "CN_Q1",
-      "type": "A",
-      "question": "Quelle est la capitale de la Chine ?",
-      "choices": ["Shanghai", "Hong Kong", "Pékin", "Shenzhen"],
-      "answer_index": 2
-    },
-    {
-      "id": "CN_Q2",
-      "type": "A",
-      "question": "En quelle année a été lancée l'initiative des Nouvelles Routes de la Soie (Belt and Road Initiative) ?",
-      "choices": ["2008", "2010", "2013", "2016"],
-      "answer_index": 2
-    },
-    {
-      "id": "CN_Q3",
-      "type": "A",
-      "question": "Quelle ville chinoise est l'un des plus grands hubs financiers du pays ?",
-      "choices": ["Xi'an", "Shanghai", "Chengdu", "Harbin"],
-      "answer_index": 1
-    },
-    {
-      "id": "CN_Q4",
-      "type": "A",
-      "question": "Quel océan borde la côte est de la Chine ?",
-      "choices": ["Océan Indien", "Océan Pacifique", "Océan Atlantique", "Océan Arctique"],
-      "answer_index": 1
-    },
-    {
-      "id": "CN_Q5",
-      "type": "A",
-      "question": "Quelle monnaie officielle est utilisée en Chine ?",
-      "choices": ["Yen", "Won", "Renminbi (Yuan)", "Baht"],
-      "answer_index": 2
-    },
-    {
-      "id": "CN_Q6",
-      "type": "A",
-      "question": "Quel est le nom de la monnaie numérique développée par la Banque populaire de Chine ?",
-      "choices": ["CryptoYuan", "e-CNY (yuan numérique)", "DragonCoin", "Digital Silk"],
-      "answer_index": 1
-    },
-    {
-      "id": "CN_Q7",
-      "type": "B",
-      "question": "Pourquoi les infrastructures (ports, chemins de fer, câbles) sont-elles stratégiques ?",
-      "choices": [
-        "Elles attirent uniquement le tourisme",
-        "Elles permettent d'influencer les flux commerciaux et politiques",
-        "Elles remplacent les gouvernements",
-        "Elles servent uniquement au transport militaire"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "CN_Q8",
-      "type": "B",
-      "question": "Quel est l'objectif géopolitique majeur de la Belt and Road Initiative ?",
-      "choices": [
-        "Isoler la Chine",
-        "Créer un réseau mondial d'interdépendance économique",
-        "Supprimer les frontières",
-        "Fermer les marchés asiatiques"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "CN_Q9",
-      "type": "C",
-      "question": "Dans la logique du système mondial, que représente le réseau d'infrastructures chinois ?",
-      "choices": [
-        "Un simple projet de construction",
-        "Un outil culturel",
-        "Un levier d'influence à long terme",
-        "Un mécanisme temporaire"
-      ],
-      "answer_index": 2,
-      "narrative_unlock": "Celui qui construit les routes décide où passent les flux."
-    },
-    {
-      "id": "CN_Q10",
-      "type": "C",
-      "question": "Quel lien relie les Routes de la Soie, les ports internationaux et le yuan numérique ?",
-      "choices": [
-        "La volonté d'isolement",
-        "Le contrôle discret des échanges",
-        "Une domination militaire directe",
-        "Un hasard économique"
-      ],
-      "answer_index": 1,
-      "narrative_unlock": "Le réseau précède le pouvoir."
-    }
-  ],
+  "clue": {
+    "title": "TRANSMISSION INTERCEPTÉE — PÉKIN",
+    "text": "5\nCouloirs. Corridors. Connexions.\n\n« Celui qui construit les routes\nne demande pas la permission. »",
+    "instruction": "La Nouvelle Route de la Soie relie l'Asie, l'Afrique et l'Europe\nvia 5 corridors terrestres majeurs.\n\nIdentifie la 5e lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+  },
+  "puzzle": {
+    "type": "direct_alphabet",
+    "question": "La Nouvelle Route de la Soie (Belt & Road)\nrelie les continents via 5 corridors terrestres.\n\nQuelle est la 5e lettre de l'alphabet ?",
+    "letter_choices": ["D", "E", "F", "C"],
+    "solution_number": 5,
+    "solution_letter": "E",
+    "explanation": "5 corridors terrestres → 5e lettre de l'alphabet = E"
+  },
+  "final_question": {
+    "question": "Si un pays finance des infrastructures dans des dizaines d'autres nations, quel est le véritable enjeu stratégique ?",
+    "choices": [
+      "Développer l'économie locale des pays partenaires",
+      "Créer des dépendances et contrôler les routes",
+      "Promouvoir la démocratie mondiale"
+    ],
+    "answer_index": 1,
+    "narrative_unlock": "Une route n'est jamais neutre. Elle va quelque part. Et quelqu'un l'a décidé."
+  },
+  "reward": {
+    "letter_obtained": "E",
+    "fragment_name": "Fragment de la Route de Soie",
+    "fragment_concept": "RÉSEAU_INFRASTRUCTUREL",
+    "jasper_quote": "Une route n'est jamais neutre. Elle va quelque part. Et quelqu'un l'a décidé.",
+    "next_destination_hint": "La nature peut peser plus lourd que l'or. Le prochain nœud est dans l'hémisphère sud.",
+    "unlocked_message": "Le réseau infrastructurel est le troisième mécanisme."
+  },
   "fragment_reward": {
-    "id": "FRAG-CN-003",
-    "name": "Fragment Dragon Silencieux",
-    "concept": "NŒUD_INFRASTRUCTURE",
-    "unlocked_message": "Celui qui construit les routes décide où passent les flux."
+    "id": "FRAG-CN-001",
+    "name": "Fragment de la Route de Soie",
+    "concept": "RÉSEAU_INFRASTRUCTUREL",
+    "unlocked_message": "Le réseau infrastructurel est le troisième mécanisme."
   }
 }
