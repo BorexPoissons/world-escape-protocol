@@ -296,7 +296,14 @@ const Dashboard = () => {
   const progress = allPlayable.length > 0 ? Math.round((completedPlayable.length / allPlayable.length) * 100) : 0;
   const streak = (profile as any)?.streak ?? 0;
 
-  const nextRecommended = allPlayable.find(c => isCountryUnlocked(c, playerLevel) && !completedCountries.includes(c.id));
+  // Next recommended respects SIGNAL INITIAL sequence (CH→US→CN→BR→EG) for free users
+  const nextRecommendedCode = SIGNAL_INITIAL_SEQUENCE.find(code => {
+    const country = allPlayable.find(c => c.code === code);
+    return country && !completedCountries.includes(country.id);
+  });
+  const nextRecommended = nextRecommendedCode
+    ? allPlayable.find(c => c.code === nextRecommendedCode)
+    : allPlayable.find(c => isCountryUnlocked(c, playerLevel) && !completedCountries.includes(c.id));
   const tierLabel = tier === "director" ? "DIRECTEUR" : tier === "season1" ? "OP-01" : tier === "season2" ? "OP-02" : tier === "season3" ? "OP-03" : "EXPLORATEUR";
 
   // Global progression (out of 195 total countries)
