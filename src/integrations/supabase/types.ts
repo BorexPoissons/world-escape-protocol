@@ -56,6 +56,7 @@ export type Database = {
           name: string
           phase: number
           release_order: number
+          season_number: number
           symbols: string[] | null
           visibility_level: number
         }
@@ -73,6 +74,7 @@ export type Database = {
           name: string
           phase?: number
           release_order?: number
+          season_number?: number
           symbols?: string[] | null
           visibility_level?: number
         }
@@ -90,6 +92,7 @@ export type Database = {
           name?: string
           phase?: number
           release_order?: number
+          season_number?: number
           symbols?: string[] | null
           visibility_level?: number
         }
@@ -219,6 +222,47 @@ export type Database = {
           },
         ]
       }
+      questions: {
+        Row: {
+          answer_options: Json
+          category: string
+          correct_answer: string
+          country_id: string
+          created_at: string
+          difficulty_level: number
+          id: string
+          question_text: string
+        }
+        Insert: {
+          answer_options?: Json
+          category?: string
+          correct_answer: string
+          country_id: string
+          created_at?: string
+          difficulty_level?: number
+          id?: string
+          question_text: string
+        }
+        Update: {
+          answer_options?: Json
+          category?: string
+          correct_answer?: string
+          country_id?: string
+          created_at?: string
+          difficulty_level?: number
+          id?: string
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           awarded_at: string
@@ -282,6 +326,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_fragments_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_progress: {
+        Row: {
+          attempts: number
+          best_score: number
+          country_id: string
+          created_at: string
+          fragment_unlocked: boolean
+          id: string
+          last_attempt_at: string | null
+          success: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          best_score?: number
+          country_id: string
+          created_at?: string
+          fragment_unlocked?: boolean
+          id?: string
+          last_attempt_at?: string | null
+          success?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          best_score?: number
+          country_id?: string
+          created_at?: string
+          fragment_unlocked?: boolean
+          id?: string
+          last_attempt_at?: string | null
+          success?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_country_id_fkey"
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
