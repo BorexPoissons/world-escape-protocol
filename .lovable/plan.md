@@ -1,136 +1,88 @@
 
-# Rendre le bonus d'échange de vie MANUEL (bouton explicite)
+# Déverrouillage automatique du pays suivant après réussite de mission
 
-## Problème actuel
+## Problème identifié
 
-Quand le joueur tombe à 0 vie avec bonus >= 120s, la vie est **automatiquement** restituée, sans que le joueur ne fasse rien. C'est invisible et frustrant.
+Il y a une incohérence entre deux systèmes :
 
-## Ce qui change
+**Dashboard** (ligne 807) : débloque le pays N+1 si `best_score >= 8`
+**Quiz** : score sur 6 questions, victoire à 5/6 — le `best_score` en base sera donc au maximum **6**
 
-Le rescue devient un **choix conscient du joueur** : un bouton apparaît, le joueur doit cliquer pour activer l'échange.
-
----
-
-## Nouveau comportement
-
-### Quand les vies atteignent 0
-
-Au lieu de déclencher le rescue automatiquement, on passe dans un **état intermédiaire** : `phase = "rescue_offer"`.
-
-Sur cet écran :
-- Affichage de l'état : "0 vie restante"
-- Affichage du bonus actuel : "⚡ Vous avez XXXs de bonus"
-- **Bouton principal** : `DÉPENSER 120s → RÉCUPÉRER 1 VIE`
-- **Bouton secondaire** : `Abandonner la mission`
-
-Si le bouton est cliqué :
-- `bonusPool -= 120`
-- `lives = 1`
-- Retour en `phase = "enigme"` sur la question suivante
-- Toast de confirmation
-
-Si le joueur refuse (abandon) ou si `bonusPool < 120` → `phase = "failed"`.
+Résultat : même après avoir réussi la Suisse, l'USA reste bloqué pour toujours car `signalProgress["CH"] < 8`.
 
 ---
 
-## Détail technique — fichier `src/pages/Mission.tsx`
+## Ce qui doit changer
 
-### 1. Nouveau type de phase
+### 1. Corriger le seuil de déverrouillage dans le Dashboard
 
-```
-type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed" | "rescue_offer";
-```
+**Fichier :** `src/pages/Dashboard.tsx` — ligne 807
 
-### 2. Dans `handleAnswer` et `handleTimeOut` — remplacer le rescue auto
-
-**Avant (auto) :**
+Remplacer :
 ```ts
-if (newLives <= 0) {
-  if (bonusPool >= 120) {
-    setBonusPool(prev => prev - 120);
-    setLives(1);
-    toast({ title: "⚡ Bonus activé !" ... });
-  } else {
-    setTimeout(() => setPhase("failed"), 1400);
-  }
-}
+const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 8;
 ```
-
-**Après (manuel) :**
+Par :
 ```ts
-if (newLives <= 0) {
-  if (bonusPool >= 120) {
-    setTimeout(() => setPhase("rescue_offer"), 1400); // après révélation de la réponse
-  } else {
-    setTimeout(() => setPhase("failed"), 1400);
-  }
-}
+const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
 ```
 
-### 3. Nouveau handler `handleRescue`
+La valeur `5` correspond au `min_correct_to_win` officiel (5/6 pour gagner). Le pays suivant s'ouvre dès qu'un `best_score >= 5` est enregistré.
 
-```ts
-const handleRescue = () => {
-  setBonusPool(prev => prev - 120);
-  setLives(1);
-  setAnswerRevealed(false);
-  setSelectedAnswer(null);
-  setAttemptsOnCurrent(0);
-  // Avancer à la question suivante
-  if (currentEnigme < mission!.enigmes.length - 1) {
-    setCurrentEnigme(c => c + 1);
-  }
-  setPhase("enigme");
-  toast({ title: "⚡ Vie récupérée !", description: "120s de bonus utilisés. Mission continue." });
-};
+Le message d'indication verouillé sera aussi mis à jour :
+```
+RÉUSSIS {prevCode} AVEC 5/6
 ```
 
-### 4. Nouvel écran `rescue_offer` dans le JSX
+### 2. S'assurer que le `complete_country_attempt` RPC enregistre bien le score sur 6
 
-Entre l'écran `enigme` et l'écran `failed`, ajouter :
+La RPC reçoit `p_score` et `p_total` depuis `Mission.tsx` (ligne 572-578). Il faut vérifier que le score passé est bien le score sur 6 (pas transformé). C'est déjà le cas (`score` = nombre de bonnes réponses).
 
-```tsx
-{phase === "rescue_offer" && (
-  <motion.div key="rescue" ... className="space-y-6 text-center">
-    <div className="text-6xl">💔</div>
-    <h2 className="text-2xl font-display text-destructive">MISSION EN DANGER</h2>
-    <p className="text-muted-foreground">Vous n'avez plus de vie.</p>
-    
-    {/* Bonus display */}
-    <div className="bg-card border border-yellow-500/40 rounded-lg p-4">
-      <p className="text-yellow-400 font-display text-lg">⚡ {bonusPool}s de bonus accumulé</p>
-      <p className="text-sm text-muted-foreground mt-1">Dépensez 120s pour continuer</p>
-    </div>
+### 3. MissionComplete — le bouton "POURSUIVRE L'ENQUÊTE" fonctionne déjà
 
-    {/* Exchange button */}
-    <Button 
-      onClick={handleRescue}
-      className="w-full bg-yellow-500 text-black font-display tracking-wider hover:bg-yellow-400"
-    >
-      ⚡ DÉPENSER 120s → +1 VIE
-    </Button>
-    
-    {/* Abandon button */}
-    <Button 
-      variant="ghost" 
-      onClick={() => setPhase("failed")}
-      className="w-full text-muted-foreground"
-    >
-      Abandonner la mission
-    </Button>
-  </motion.div>
-)}
-```
+Le bouton sur `MissionComplete.tsx` navigue directement vers `/mission/${nextCountry.id}`. C'est déjà implémenté correctement. Aucun changement nécessaire ici.
+
+### 4. Comportement pour les clients payants (Saison 1+)
+
+Pour les clients payants, le déverrouillage est géré par `subscription_type` dans le profil. La logique `getCountryState()` et `getMaxPlayableSeason()` fonctionne déjà correctement — si `tier === "season1"`, tous les pays de `season_number <= 1` sont accessibles.
+
+La seule correction nécessaire reste le seuil de séquence pour les pays gratuits (Signal Initial).
 
 ---
 
 ## Résumé des changements
 
-| Avant | Après |
-|---|---|
-| Rescue automatique et invisible | Rescue explicite via bouton |
-| Phase passe directement à enigme | Nouvelle phase intermédiaire `rescue_offer` |
-| Toast discret | Écran dédié avec choix clair |
+| Fichier | Changement | Impact |
+|---|---|---|
+| `src/pages/Dashboard.tsx` | Seuil `< 8` → `< 5` sur `seqLocked` | Pays suivant s'ouvre après réussite |
+| `src/pages/Dashboard.tsx` | Texte du verrou mis à jour : `5/6` | Cohérence UI |
 
-## Fichier modifié
-- `src/pages/Mission.tsx` uniquement (ajout du type de phase, modification de `handleAnswer`/`handleTimeOut`, nouveau handler `handleRescue`, nouveau bloc JSX)
+## Fichier non modifié (déjà correct)
+- `src/pages/MissionComplete.tsx` — Le bouton "POURSUIVRE L'ENQUÊTE" navigue bien vers la prochaine mission
+- `src/pages/Mission.tsx` — Le RPC envoie le bon score
+
+---
+
+## Flux complet après correction
+
+```text
+Joueur réussit CH (5/6 ou 6/6)
+  → complete_country_attempt RPC : best_score = 5 ou 6
+  → MissionComplete s'affiche avec bouton "POURSUIVRE L'ENQUÊTE"
+  → Joueur clique → navigue vers /mission/[id_US]
+  
+  OU
+  
+  Joueur retourne au Dashboard
+  → seqLocked check : signalProgress["CH"] = 5 >= 5 → FALSE (déverrouillé)
+  → USA s'affiche comme jouable
+```
+
+Pour les clients payants :
+```text
+Joueur avec subscription_type = "agent" ou "season1"
+  → getTier() → "season1"
+  → getMaxPlayableSeason() → 1
+  → getCountryState() → "playable" pour tous les pays season_number <= 1
+  → Aucune restriction supplémentaire, accès direct à tous les 43 pays OP-01
+```
