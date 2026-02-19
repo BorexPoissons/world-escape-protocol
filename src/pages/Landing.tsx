@@ -1,24 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Globe, Key, ChevronRight } from "lucide-react";
+import { Shield, Globe, Key, ChevronRight, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/hero-bg.jpg";
 import IntroScreen from "@/components/IntroScreen";
-
-const INTRO_SEEN_KEY = "wep_intro_seen";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [showIntro, setShowIntro] = useState(false);
 
-  useEffect(() => {
-    const seen = localStorage.getItem(INTRO_SEEN_KEY);
-    if (!seen) setShowIntro(true);
-  }, []);
-
   const handleIntroComplete = () => {
-    localStorage.setItem(INTRO_SEEN_KEY, "true");
     setShowIntro(false);
     navigate("/dashboard");
   };
@@ -78,16 +70,34 @@ const Landing = () => {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
+            {/* Intro button — primary CTA for discovery */}
+            <Button
+              size="lg"
+              onClick={() => setShowIntro(true)}
+              className="text-lg px-8 py-6 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 border-glow"
+            >
+              <PlayCircle className="mr-2 h-5 w-5" />
+              VOIR L'INTRODUCTION
+            </Button>
+
+            {/* Skip intro → go directly to mission */}
             <Link to="/dashboard">
-              <Button size="lg" className="text-lg px-8 py-6 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 font-display tracking-wider border-border text-muted-foreground hover:text-foreground hover:border-primary/50">
                 COMMENCER LA MISSION
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/auth">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 font-display tracking-wider border-border text-muted-foreground hover:text-foreground hover:border-primary/50">
-                S'IDENTIFIER
-              </Button>
+          </motion.div>
+
+          {/* S'identifier link — smaller, below */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1 }}
+            className="mt-4"
+          >
+            <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground font-display tracking-wider transition-colors underline-offset-4 hover:underline">
+              Déjà agent ? S'identifier →
             </Link>
           </motion.div>
         </div>
@@ -114,22 +124,10 @@ const Landing = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Replay intro button */}
-      <button
-        onClick={() => setShowIntro(true)}
-        className="fixed bottom-4 right-4 text-xs font-display tracking-widest px-3 py-1.5 rounded border transition-all z-40"
-        style={{
-          borderColor: "hsl(var(--border))",
-          color: "hsl(var(--muted-foreground))",
-          background: "hsl(var(--background) / 0.8)",
-        }}
-      >
-        ▶ REVOIR L'INTRO
-      </button>
     </div>
   );
 };
 
 export default Landing;
+
 
