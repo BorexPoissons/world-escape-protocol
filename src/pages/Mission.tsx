@@ -55,7 +55,7 @@ interface FragmentReward {
   unlocked_message: string;
 }
 
-type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed";
+type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed" | "rescue_offer";
 
 const DEMO_USER_ID = "demo-user-local";
 
@@ -370,15 +370,10 @@ const Mission = () => {
     setAnswerRevealed(true);
     setSelectedAnswer("__timeout__");
     if (timerRef.current) clearInterval(timerRef.current);
-    // ── Bonus rescue: if lives==0 and pool>=120, restore 1 life ─────────────
+    // ── Bonus rescue: if lives==0 and pool>=120, show manual rescue screen ──
     if (newLives <= 0) {
       if (bonusPool >= 120) {
-        setBonusPool(prev => prev - 120);
-        setLives(1);
-        toast({
-          title: "⚡ Bonus activé !",
-          description: "120s de bonus convertis en 1 vie. Mission continue !",
-        });
+        setTimeout(() => setPhase("rescue_offer"), 1400);
       } else {
         setTimeout(() => setPhase("failed"), 1400);
       }
@@ -434,15 +429,10 @@ const Mission = () => {
       setLives(newLives);
       setAnswerRevealed(true);
       if (timerRef.current) clearInterval(timerRef.current);
-      // ── Bonus rescue: if lives==0 and pool>=120, restore 1 life ─────────
+      // ── Bonus rescue: if lives==0 and pool>=120, show manual rescue screen ──
       if (newLives <= 0) {
         if (bonusPool >= 120) {
-          setBonusPool(prev => prev - 120);
-          setLives(1);
-          toast({
-            title: "⚡ Bonus activé !",
-            description: "120s de bonus convertis en 1 vie. Mission continue !",
-          });
+          setTimeout(() => setPhase("rescue_offer"), 1400);
         } else {
           setTimeout(() => setPhase("failed"), 1400);
         }
@@ -457,6 +447,19 @@ const Mission = () => {
         });
       }
     }
+  };
+
+  const handleRescue = () => {
+    setBonusPool(prev => prev - 120);
+    setLives(1);
+    setAnswerRevealed(false);
+    setSelectedAnswer(null);
+    setAttemptsOnCurrent(0);
+    if (currentEnigme < mission!.enigmes.length - 1) {
+      setCurrentEnigme(c => c + 1);
+    }
+    setPhase("enigme");
+    toast({ title: "⚡ Vie récupérée !", description: "120s de bonus utilisés. Mission continue." });
   };
 
   const nextStep = () => {
@@ -1018,8 +1021,8 @@ const Mission = () => {
                     >
                       <Zap className="h-4 w-4" />
                       {bonusPool >= 120
-                        ? `⚡ BONUS PRÊT — ${bonusPool}s accumulés (rescue automatique si vous perdez une vie)`
-                        : `⚡ BONUS : ${bonusPool}s / 120s (sauvegarde automatique à 120s)`}
+                        ? `⚡ BONUS PRÊT — ${bonusPool}s accumulés (échangeable contre 1 vie si vous tombez à 0)`
+                        : `⚡ BONUS : ${bonusPool}s / 120s (dépensez 120s pour récupérer 1 vie)`}
                     </motion.div>
                   )}
 
@@ -1035,7 +1038,70 @@ const Mission = () => {
             </motion.div>
           )}
 
+          {/* ── RESCUE OFFER — manual bonus exchange screen ── */}
+          {phase === "rescue_offer" && (
+            <motion.div
+              key="rescue"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6 text-center py-8"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 150, delay: 0.1 }}
+                className="text-6xl"
+              >
+                💔
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <p className="text-xs font-display tracking-[0.4em] text-destructive mb-2">MISSION EN DANGER</p>
+                <h2 className="text-3xl font-display font-bold text-destructive">PLUS DE VIES</h2>
+                <p className="text-muted-foreground mt-2 text-sm">Vous n'avez plus de vie restante.</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="bg-card border rounded-lg p-5 mx-auto max-w-xs"
+                style={{ borderColor: "hsl(var(--gold-glow) / 0.4)", background: "hsl(var(--gold-glow) / 0.05)" }}
+              >
+                <p className="font-display tracking-wider text-xl mb-1" style={{ color: "hsl(var(--gold-glow))" }}>
+                  ⚡ {bonusPool}s de bonus
+                </p>
+                <p className="text-sm text-muted-foreground">Dépensez 120s pour récupérer 1 vie et continuer</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="space-y-3 max-w-xs mx-auto"
+              >
+                <Button
+                  onClick={handleRescue}
+                  className="w-full font-display tracking-wider text-base py-6"
+                  style={{ background: "hsl(var(--gold-glow))", color: "hsl(0 0% 5%)" }}
+                >
+                  ⚡ DÉPENSER 120s → +1 VIE
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setPhase("failed")}
+                  className="w-full text-muted-foreground font-display tracking-wider"
+                >
+                  Abandonner la mission
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
           {/* ── FAILED — cinematic tension screen ── */}
+
           {phase === "failed" && mission && (
             <motion.div
               key="failed"
