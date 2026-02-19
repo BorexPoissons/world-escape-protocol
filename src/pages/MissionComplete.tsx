@@ -10,6 +10,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 import missionCompleteCH from "@/assets/mission-complete-ch.png";
 import missionCompleteUS from "@/assets/mission-complete-us.png";
+import missionCompleteCN from "@/assets/mission-complete-cn.png";
 import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
@@ -25,6 +26,7 @@ function getNextSignalInitialCode(currentCode: string): string | null {
 const CINEMATIC_IMAGES: Record<string, string> = {
   CH: missionCompleteCH,
   US: missionCompleteUS,
+  CN: missionCompleteCN,
 };
 
 const MissionComplete = () => {
