@@ -8,7 +8,7 @@
     "total_free": 5,
     "mission_title": "OPÉRATION CARNAVAL NOIR",
     "detective": "Jasper Valcourt",
-    "intro_text": "Rio de Janeiro. 02h17.\n\nTout semble festif.\nMais le monde ne danse jamais sans raison.\n\nJe suis Jasper Valcourt.\nEt j’ai appris que les ressources parlent plus fort que les discours.\n\nIci, la puissance n’est pas monétaire.\nElle est naturelle.\n\nQuand une région tremble, le monde ajuste sa trajectoire.\n— Jasper Valcourt"
+    "intro_text": "Rio de Janeiro. 2h17 du matin.\n\nTout semble festif.\nMais le monde ne danse jamais sans raison.\n\nJe suis Jasper Valcourt.\nEt j'ai appris que les ressources parlent plus fort que les discours.\n\nL'Amazonie.\nLes minerais.\nLes exportations agricoles.\n\nQuand une région vacille,\nles marchés réagissent.\n\nLa stabilité est fragile.\nLes matières premières ne le sont pas.\n\nIci, la puissance n'est pas monétaire.\nElle est naturelle.\n\nEt quand la nature bouge,\nle monde ajuste sa trajectoire.\n\n— J. Valcourt"
   },
   "scene": {
     "prompt": "Dans une loge abandonnée, trois objets :",
@@ -18,11 +18,11 @@
       "Une carte postale touristique"
     ],
     "correct_choice_index": 1,
-    "success_text": "L’échantillon de minerai est lourd. Trop. Sur l’étiquette : un code et une date."
+    "success_text": "L'échantillon de minerai est lourd. Trop. Sur l'étiquette : un code et une date."
   },
   "clue": {
-    "title": "Étiquette sur l’échantillon",
-    "text": "2008\n\n« La nature peut peser plus lourd que l’or. »\n\nIndice : additionne les chiffres."
+    "title": "Étiquette sur l'échantillon",
+    "text": "2008\n\n« La nature peut peser plus lourd que l'or. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
     "type": "alphabet_sum",
@@ -33,7 +33,7 @@
     "explain_if_failed": "2 + 0 + 0 + 8 = 10 → 10e lettre = J"
   },
   "final_question": {
-    "question": "Pourquoi l’instabilité politique influence-t-elle les marchés internationaux ?",
+    "question": "Pourquoi l'instabilité politique influence-t-elle les marchés internationaux ?",
     "choices": [
       "Elle modifie la confiance des investisseurs",
       "Elle ne change rien",
