@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Puzzle, MapPin, ArrowRight, Shield, Eye, EyeOff, Home, Trophy, Flame } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
+import missionCompleteCH from "@/assets/mission-complete-ch.png";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
 const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
@@ -17,6 +18,11 @@ function getNextSignalInitialCode(currentCode: string): string | null {
   if (idx === -1 || idx === SIGNAL_INITIAL_SEQUENCE.length - 1) return null;
   return SIGNAL_INITIAL_SEQUENCE[idx + 1];
 }
+
+// Map country code → cinematic image (add more as you create them)
+const CINEMATIC_IMAGES: Record<string, string> = {
+  CH: missionCompleteCH,
+};
 
 const MissionComplete = () => {
   const { countryId } = useParams<{ countryId: string }>();
@@ -43,13 +49,11 @@ const MissionComplete = () => {
     if (!countryId) { navigate("/dashboard"); return; }
 
     const load = async () => {
-      // Load current country
       const { data: countryData } = await supabase
         .from("countries").select("*").eq("id", countryId).single();
       if (!countryData) return;
       setCountry(countryData);
 
-      // Load fragment reward info from static JSON (if available)
       try {
         const res = await fetch(`/content/countries/${countryData.code}.json`);
         if (res.ok) {
@@ -59,16 +63,14 @@ const MissionComplete = () => {
             setFragmentConcept(json.fragment_reward.concept ?? "");
           }
         }
-      } catch { /* no static file — leave fragment info empty */ }
+      } catch { /* no static file */ }
 
-      // ── Determine next country using fixed sequence for SIGNAL_INITIAL ──
       const nextCode = getNextSignalInitialCode(countryData.code);
       if (nextCode) {
         const { data: nextData } = await supabase
           .from("countries").select("*").eq("code", nextCode).single();
         if (nextData) setNextCountry(nextData);
       } else {
-        // Phase complete — find first locked Season 1 country as teaser
         const { data: season1 } = await supabase
           .from("countries").select("*").eq("season_number", 1).order("release_order").limit(1).single();
         if (season1) setNextCountry(season1);
@@ -91,7 +93,6 @@ const MissionComplete = () => {
 
         if (badgesRes.data) setNewBadges(badgesRes.data.map((b: any) => b.badge_key));
       } else {
-        // Demo mode
         try {
           const raw = localStorage.getItem("wep_demo_story");
           if (raw) setStoryState(JSON.parse(raw));
@@ -106,7 +107,7 @@ const MissionComplete = () => {
   const progressPercent = Math.round((puzzleProgress.unlocked / puzzleProgress.total) * 100 * 100) / 100;
   const isPerfect = score === total && total > 0;
   const isLastFreeCountry = country ? SIGNAL_INITIAL_SEQUENCE.indexOf(country.code) === SIGNAL_INITIAL_SEQUENCE.length - 1 : false;
-
+  const cinematicImg = country ? CINEMATIC_IMAGES[country.code] : null;
 
   return (
     <div className="min-h-screen bg-background bg-grid flex flex-col">
@@ -134,7 +135,7 @@ const MissionComplete = () => {
         <div className="max-w-2xl w-full">
           <AnimatePresence mode="wait">
 
-            {/* Phase 1: Result Reveal */}
+            {/* ── Phase 1: Result Reveal ── */}
             {phase === "reveal" && (
               <motion.div
                 key="reveal"
@@ -144,7 +145,6 @@ const MissionComplete = () => {
                 transition={{ duration: 0.6 }}
                 className="space-y-6 text-center"
               >
-                {/* Icon */}
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.3, stiffness: 200 }}>
                   {isPerfect
                     ? <Trophy className="h-20 w-20 text-primary mx-auto" />
@@ -253,7 +253,7 @@ const MissionComplete = () => {
               </motion.div>
             )}
 
-            {/* Phase 2: Fragment + Next Mission */}
+            {/* ── Phase 2: Cinematic + Fragment + Next Mission ── */}
             {phase === "hint" && (
               <motion.div
                 key="hint"
@@ -263,24 +263,49 @@ const MissionComplete = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-8"
               >
-                {/* Fragment unlocked card */}
-                <div className="text-center">
-                  <motion.h2
-                    className="text-2xl font-display font-bold text-primary text-glow tracking-wider"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                {/* Cinematic image (country-specific) */}
+                {cinematicImg && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 1.04 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.9, ease: "easeOut" }}
+                    className="relative rounded-xl overflow-hidden"
+                    style={{ boxShadow: "0 0 60px hsl(40 80% 55% / 0.3)" }}
                   >
-                    FRAGMENT DÉBLOQUÉ
-                  </motion.h2>
-                </div>
+                    <img
+                      src={cinematicImg}
+                      alt={`Jasper Valcourt — Mission ${country?.name} complète`}
+                      className="w-full object-cover"
+                      style={{ maxHeight: "540px", objectPosition: "top" }}
+                    />
+                    {/* Fade bottom into background */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
+                      style={{ background: "linear-gradient(to bottom, transparent, hsl(var(--background)))" }}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Fragment unlocked header (only if no cinematic image) */}
+                {!cinematicImg && (
+                  <div className="text-center">
+                    <motion.h2
+                      className="text-2xl font-display font-bold text-primary text-glow tracking-wider"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      FRAGMENT DÉBLOQUÉ
+                    </motion.h2>
+                  </div>
+                )}
 
                 {/* Animated puzzle piece */}
                 <motion.div
                   className="flex justify-center"
                   initial={{ scale: 0, y: -40, rotate: -15, opacity: 0 }}
                   animate={{ scale: 1, y: 0, rotate: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.3 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: cinematicImg ? 0.1 : 0.3 }}
                 >
                   <div className="relative">
                     <svg width="96" height="96" viewBox="-0.35 -0.35 1.7 1.7" overflow="visible">
@@ -294,7 +319,6 @@ const MissionComplete = () => {
                           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                         </filter>
                       </defs>
-                      {/* Glow */}
                       <path
                         d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
                         fill="hsl(40 80% 55% / 0.2)"
@@ -302,7 +326,6 @@ const MissionComplete = () => {
                         strokeWidth="0.04"
                         filter="url(#piece-glow-complete)"
                       />
-                      {/* Main piece */}
                       <path
                         d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
                         fill="url(#piece-grad-complete)"
@@ -311,7 +334,6 @@ const MissionComplete = () => {
                         opacity="0.95"
                       />
                     </svg>
-                    {/* Pulsing ring */}
                     <motion.div
                       className="absolute inset-[-12px] rounded-full pointer-events-none"
                       style={{ border: "1px solid hsl(40 80% 55% / 0.5)" }}
@@ -321,11 +343,12 @@ const MissionComplete = () => {
                   </div>
                 </motion.div>
 
+                {/* Fragment info */}
                 {fragmentName && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
+                    transition={{ delay: 0.5 }}
                     className="bg-card border border-primary/30 rounded-lg p-6 border-glow relative overflow-hidden text-center"
                   >
                     <div className="scanline absolute inset-0 pointer-events-none opacity-20" />
@@ -340,19 +363,19 @@ const MissionComplete = () => {
                       className="text-xs text-muted-foreground mt-3 relative z-10"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 1 }}
+                      transition={{ delay: 0.9 }}
                     >
                       Fragment ajouté à votre inventaire — consultez le Puzzle Mondial pour le placer.
                     </motion.p>
                   </motion.div>
                 )}
 
-                {/* Next country — deterministic sequence */}
+                {/* Next country */}
                 {nextCountry && !isLastFreeCountry && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.7 }}
                     className="bg-card border border-border rounded-lg p-5"
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -368,12 +391,12 @@ const MissionComplete = () => {
                   </motion.div>
                 )}
 
-                {/* Last free country — tease Season 1 */}
+                {/* Last free country complete */}
                 {isLastFreeCountry && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.7 }}
                     className="bg-card border border-primary/20 rounded-lg p-5 text-center"
                   >
                     <p className="text-primary font-display tracking-wider text-sm mb-2">🔐 OPÉRATION 0 COMPLÈTE</p>
@@ -389,14 +412,15 @@ const MissionComplete = () => {
                   </p>
                 )}
 
+                {/* Action buttons */}
                 <div className="flex gap-3">
                   {nextCountry && !isLastFreeCountry ? (
                     <Button
                       onClick={() => navigate(`/mission/${nextCountry.id}`)}
-                      className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6"
+                      className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-sm gap-2"
                     >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      POURSUIVRE L'ENQUÊTE
+                      <MapPin className="h-4 w-4" />
+                      CONTINUER — {nextCountry.name.toUpperCase()}
                     </Button>
                   ) : (
                     <Button
@@ -406,13 +430,21 @@ const MissionComplete = () => {
                       RETOUR AU QG
                     </Button>
                   )}
-                  <Button variant="outline" onClick={() => navigate("/puzzle")} className="flex-1 font-display tracking-wider border-primary/50 text-primary hover:bg-primary/10 py-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/puzzle")}
+                    className="flex-1 font-display tracking-wider border-primary/50 text-primary hover:bg-primary/10 py-6"
+                  >
                     <Puzzle className="h-4 w-4 mr-2" />
                     PUZZLE MONDIAL
                   </Button>
                 </div>
 
-                <Button variant="ghost" onClick={() => navigate("/dashboard?refresh=1")} className="w-full font-display tracking-wider text-muted-foreground hover:text-foreground">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/dashboard?refresh=1")}
+                  className="w-full font-display tracking-wider text-muted-foreground hover:text-foreground"
+                >
                   RETOUR AU QG
                 </Button>
               </motion.div>
