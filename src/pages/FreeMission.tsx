@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Home, CheckCircle, XCircle, RotateCcw, Puzzle,
-  MapPin, ArrowRight, Zap, Shield
+  MapPin, ArrowRight, Zap, Shield, Heart, Clock, AlertTriangle
 } from "lucide-react";
 import TypewriterText from "@/components/TypewriterText";
 import { checkAndAwardBadges } from "@/lib/badges";
@@ -23,16 +23,12 @@ interface FreeCountryData {
     phase?: string;
     is_free?: boolean;
     detective?: string;
-    // Nouveau format
     intro_text?: string;
-    // Ancien format
     intro?: string;
-    // Champs additionnels nouveau format
     order_index?: number;
     total_free?: number;
     format?: string;
   };
-  // Nouveau format : scène immersive narrative
   scene?: {
     prompt?: string;
     setup?: string;
@@ -42,12 +38,10 @@ interface FreeCountryData {
     correct_feedback?: string;
     wrong_feedback?: string;
   };
-  // Nouveau format : indice
   clue?: {
     title?: string;
     text?: string;
   };
-  // Nouveau format : puzzle logique (lettre)
   puzzle?: {
     type?: string;
     instruction?: string;
@@ -59,14 +53,12 @@ interface FreeCountryData {
     explanation?: string;
     letter_choices?: string[];
   };
-  // Nouveau format : question finale stratégique
   final_question?: {
     question: string;
     choices: string[];
     answer_index: number;
     narrative_unlock?: string;
   };
-  // Nouveau format : récompense
   reward?: {
     letter_obtained: string;
     fragment?: { id: string; concept: string; name: string };
@@ -74,7 +66,6 @@ interface FreeCountryData {
     next_country_code?: string | null;
     next_destination_hint?: string;
   };
-  // Ancien format : banque de questions classique
   question_bank?: Array<{
     id: string;
     type: "A" | "B" | "C";
@@ -84,7 +75,6 @@ interface FreeCountryData {
     narrative_unlock?: string;
     hint_image?: { url: string; caption: string };
   }>;
-  // Ancien format : fragment reward
   fragment_reward?: {
     id: string;
     name: string;
@@ -96,16 +86,15 @@ interface FreeCountryData {
 
 type FreePhase =
   | "loading"
-  | "intro"           // Scène immersive avec texte
-  | "scene_choice"    // 3 choix immersifs (nouveau) ou question Type A (ancien)
-  | "logic_puzzle"    // Énigme logique — résultat = une lettre
-  | "strategic"       // Question stratégique finale
-  | "letter_reveal"   // Révélation de la lettre obtenue
-  | "reward"          // Fragment + citation + hint vers pays suivant
-  | "failed";         // Échec
+  | "intro"
+  | "scene_choice"
+  | "logic_puzzle"
+  | "strategic"
+  | "letter_reveal"
+  | "reward"
+  | "rescue_offer"
+  | "failed";
 
-// Détecte si le JSON utilise le nouveau format (scène + puzzle + final_question)
-// ou l'ancien format (question_bank avec types A/B/C)
 function isNewFormat(data: FreeCountryData): boolean {
   return !!(data.scene || data.puzzle || data.final_question || data.reward);
 }
@@ -120,14 +109,19 @@ const NEXT_COUNTRY_HINTS: Record<string, string> = {
   IN: "Tous les nœuds sont maintenant actifs. Le signal initial est complet.",
 };
 
-// Letters — fallback si reward.letter_obtained absent du JSON
-// (le JSON définit la lettre via reward.letter_obtained, ces valeurs sont des backups)
 const COUNTRY_LETTERS: Record<string, string> = {
-  CH: "O",  // Fragment de la Croix Alpine (ancien format CH.json)
-  US: "N",  // Fragment Federal Shadow (nouveau format: 1+9+1+3=14→N)
-  CN: "F",  // Fragment Dragon Silencieux (nouveau format: 2+0+1+3=6→F)
-  BR: "J",  // Fragment Carnaval Noir (nouveau format: 2+0+0+8=10→J)
-  IN: "I",  // Fragment Subcontinent (nouveau format: 2+0+1+6=9→I)
+  CH: "O",
+  US: "N",
+  CN: "F",
+  BR: "J",
+  IN: "I",
+};
+
+// ── Free mission config ───────────────────────────────────────────────────────
+const FREE_MISSION_CONFIG = {
+  lives: 2,
+  time_per_step: 90,
+  bonus_rescue_threshold: 60,
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -167,7 +161,6 @@ const FreeMission = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [sceneCorrect, setSceneCorrect] = useState(false);
-  // Feedback texte pour la scène immersive (nouveau format)
   const [sceneFeedback, setSceneFeedback] = useState<string>("");
 
   // The letter obtained
@@ -178,6 +171,17 @@ const FreeMission = () => {
 
   // Next country info
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
+
+  // ── Lives, Timer, Bonus ─────────────────────────────────────────────────────
+  const [lives, setLives] = useState(FREE_MISSION_CONFIG.lives);
+  const [firstMistakeWarning, setFirstMistakeWarning] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(FREE_MISSION_CONFIG.time_per_step);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [bonusPool, setBonusPool] = useState(0);
+
+  // Which phases have a timer
+  const timedPhases: FreePhase[] = ["scene_choice", "logic_puzzle", "strategic"];
+  const isTimedPhase = timedPhases.includes(phase);
 
   // ── Load mission ────────────────────────────────────────────────────────────
 
@@ -196,7 +200,6 @@ const FreeMission = () => {
     if (!countryData) { navigate("/dashboard"); return; }
     setCountry(countryData);
 
-    // Charger le prochain pays dans la séquence
     const nextCode = getNextCode(countryData.code);
     if (nextCode) {
       const { data: nextData } = await supabase
@@ -214,7 +217,6 @@ const FreeMission = () => {
       setData(json);
 
       if (isNewFormat(json)) {
-        // ── Nouveau format : scène narrative + puzzle lettre + question finale ──
         const letter = json.reward?.letter_obtained
           ?? COUNTRY_LETTERS[countryData.code]
           ?? "?";
@@ -222,7 +224,6 @@ const FreeMission = () => {
         if (json.scene?.choices) setSceneChoices([...json.scene.choices]);
         if (json.final_question?.choices) setStrategicChoices(shuffle([...json.final_question.choices]));
       } else {
-        // ── Ancien format : question_bank A/B/C ──
         const qbank = json.question_bank ?? [];
         const typeA = shuffle(qbank.filter(q => q.type === "A"));
         const typeB = shuffle(qbank.filter(q => q.type === "B"));
@@ -253,9 +254,108 @@ const FreeMission = () => {
     return SIGNAL_INITIAL_SEQUENCE[idx + 1];
   }
 
+  // ── Timer ───────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isTimedPhase || answerRevealed) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    setTimeLeft(FREE_MISSION_CONFIG.time_per_step);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          handleTimeOut();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [phase, answerRevealed]);
+
+  const handleTimeOut = useCallback(() => {
+    setAnswerRevealed(true);
+    setSelectedAnswer("__timeout__");
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    // scene_choice: no life penalty (narrative step)
+    if (phase === "scene_choice") {
+      setSceneCorrect(false);
+      setSceneFeedback("⏱ Temps écoulé — Jasper note le retard mais continue la mission.");
+      return;
+    }
+
+    // logic_puzzle / strategic: lose 1 life
+    const newLives = lives - 1;
+    setLives(newLives);
+
+    if (newLives <= 0) {
+      if (bonusPool >= FREE_MISSION_CONFIG.bonus_rescue_threshold) {
+        setTimeout(() => setPhase("rescue_offer"), 1400);
+      } else {
+        setTimeout(() => setPhase("failed"), 1400);
+      }
+    } else {
+      setFirstMistakeWarning(newLives === 1);
+      toast({
+        title: "⏱ Temps écoulé !",
+        description: newLives === 1
+          ? "⚠ DERNIÈRE VIE — La prochaine erreur termine la mission."
+          : `Il vous reste ${newLives} vie${newLives > 1 ? "s" : ""}.`,
+        variant: "destructive",
+      });
+    }
+  }, [lives, bonusPool, phase]);
+
+  // ── Rescue handler ──────────────────────────────────────────────────────────
+
+  const handleRescue = () => {
+    setBonusPool(prev => prev - FREE_MISSION_CONFIG.bonus_rescue_threshold);
+    setLives(1);
+    setAnswerRevealed(false);
+    setSelectedAnswer(null);
+    setFirstMistakeWarning(true);
+    // Advance to next step
+    if (phase === "rescue_offer") {
+      // Determine which step we were on based on where the failure occurred
+      // Since rescue is triggered from logic_puzzle or strategic, advance
+      setPhase("strategic"); // will be overridden if we need to go further
+    }
+    toast({ title: "⚡ Vie récupérée !", description: `${FREE_MISSION_CONFIG.bonus_rescue_threshold}s de bonus utilisés. Mission continue.` });
+  };
+
+  // ── Helper: handle wrong answer with lives ──────────────────────────────────
+
+  const handleWrongWithLives = (nextPhaseOnSurvive: FreePhase | null) => {
+    const newLives = lives - 1;
+    setLives(newLives);
+
+    if (newLives <= 0) {
+      if (bonusPool >= FREE_MISSION_CONFIG.bonus_rescue_threshold) {
+        setTimeout(() => setPhase("rescue_offer"), 1400);
+      } else {
+        setTimeout(() => setPhase("failed"), 1400);
+      }
+    } else {
+      setFirstMistakeWarning(newLives === 1);
+      toast({
+        title: "❌ Mauvaise réponse",
+        description: newLives === 1
+          ? "⚠ DERNIÈRE VIE — La prochaine erreur termine la mission."
+          : `Il vous reste ${newLives} vie${newLives > 1 ? "s" : ""}.`,
+        variant: "destructive",
+      });
+      // Don't auto-advance; let the player click "Continuer"
+    }
+  };
+
   // ── Answer handlers ─────────────────────────────────────────────────────────
 
-  // Nouveau format : scène immersive (choices directs dans json.scene)
+  // Nouveau format : scène immersive (no life penalty)
   const handleNewFormatSceneAnswer = (choice: string) => {
     if (answerRevealed || !data?.scene) return;
     const scene = data.scene;
@@ -264,62 +364,87 @@ const FreeMission = () => {
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
     setSceneCorrect(correct);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (correct) {
+      setBonusPool(prev => prev + timeLeft);
+    }
     setSceneFeedback(correct
       ? (scene.success_text ?? scene.correct_feedback ?? "✓ Bonne analyse.")
       : (scene.wrong_feedback ?? "✗ Ce n'est pas le bon angle."));
   };
 
-  // Ancien format : question Type A
+  // Ancien format : question Type A (no life penalty)
   const handleSceneAnswer = (choice: string) => {
     if (answerRevealed || !sceneQuestion) return;
     const correct = choice === sceneQuestion.choices[sceneQuestion.answer_index];
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
     setSceneCorrect(correct);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (correct) {
+      setBonusPool(prev => prev + timeLeft);
+    }
   };
 
-  // Ancien format : question Type B
+  // Ancien format : question Type B (life penalty)
   const handleLogicAnswer = (choice: string) => {
     if (answerRevealed || !logicQuestion) return;
     const correct = choice === logicQuestion.choices[logicQuestion.answer_index];
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
-    if (!correct) setTimeout(() => setPhase("failed"), 1200);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (correct) {
+      setBonusPool(prev => prev + timeLeft);
+    } else {
+      handleWrongWithLives("strategic");
+    }
   };
 
-  // Nouveau format : question finale stratégique (json.final_question)
+  // Nouveau format : question finale stratégique (life penalty)
   const handleNewFormatFinalAnswer = (choice: string) => {
     if (answerRevealed || !data?.final_question) return;
     const fq = data.final_question;
     const correct = choice === fq.choices[fq.answer_index];
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
+    if (timerRef.current) clearInterval(timerRef.current);
     if (correct) {
+      setBonusPool(prev => prev + timeLeft);
       if (fq.narrative_unlock) setNarrativeText(fq.narrative_unlock);
       setTimeout(() => setPhase("letter_reveal"), 1000);
     } else {
-      setTimeout(() => setPhase("failed"), 1200);
+      handleWrongWithLives(null);
     }
   };
 
-  // Ancien format : question Type C
+  // Ancien format : question Type C (life penalty)
   const handleStrategicAnswer = (choice: string) => {
     if (answerRevealed || !strategicQuestion) return;
     const correct = choice === strategicQuestion.choices[strategicQuestion.answer_index];
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
+    if (timerRef.current) clearInterval(timerRef.current);
 
     if (correct && strategicQuestion.narrative_unlock) {
       setNarrativeText(strategicQuestion.narrative_unlock);
     }
 
-    if (!correct) {
-      setTimeout(() => setPhase("failed"), 1200);
-    } else {
+    if (correct) {
+      setBonusPool(prev => prev + timeLeft);
       const letter = country ? (COUNTRY_LETTERS[country.code] ?? "?") : "?";
       setEarnedLetter(letter);
       setTimeout(() => setPhase("letter_reveal"), 1000);
+    } else {
+      handleWrongWithLives(null);
     }
+  };
+
+  // ── Continue after wrong answer (survived) ──────────────────────────────────
+
+  const continueAfterWrong = (nextPhase: FreePhase) => {
+    setSelectedAnswer(null);
+    setAnswerRevealed(false);
+    setPhase(nextPhase);
   };
 
   // ── Complete mission ─────────────────────────────────────────────────────────
@@ -399,12 +524,37 @@ const FreeMission = () => {
     setSceneFeedback("");
     setEarnedLetter("");
     setNarrativeText("");
+    setLives(FREE_MISSION_CONFIG.lives);
+    setFirstMistakeWarning(false);
+    setBonusPool(0);
+    setTimeLeft(FREE_MISSION_CONFIG.time_per_step);
     loadFreeMission();
   };
 
   // ── Progression index (1-5) ──────────────────────────────────────────────────
 
   const missionIndex = country ? SIGNAL_INITIAL_SEQUENCE.indexOf(country.code) + 1 : 0;
+
+  // ── Timer display helpers ───────────────────────────────────────────────────
+
+  const timerPercent = (timeLeft / FREE_MISSION_CONFIG.time_per_step) * 100;
+  const timerColor = timerPercent > 50 ? "bg-primary" : timerPercent > 25 ? "bg-yellow-500" : "bg-destructive";
+
+  // ── Determine if current wrong answer allows continuing ─────────────────────
+  // After a wrong answer on logic_puzzle or strategic, if lives > 0 the player
+  // can click "Continuer" to advance. We track this state.
+  const wrongButAlive = answerRevealed && selectedAnswer !== null && lives > 0 && (
+    // logic_puzzle wrong in old format
+    (phase === "logic_puzzle" && !isNewFormat(data!) && logicQuestion && selectedAnswer !== logicQuestion.choices[logicQuestion.answer_index]) ||
+    // logic_puzzle wrong in new format (letter puzzle)
+    (phase === "logic_puzzle" && isNewFormat(data!) && data?.puzzle && selectedAnswer !== data.puzzle.solution_letter) ||
+    // strategic wrong in old format
+    (phase === "strategic" && !isNewFormat(data!) && strategicQuestion && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index]) ||
+    // strategic wrong in new format
+    (phase === "strategic" && isNewFormat(data!) && data?.final_question && selectedAnswer !== data.final_question.choices[data.final_question.answer_index]) ||
+    // timeout
+    selectedAnswer === "__timeout__"
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -443,19 +593,75 @@ const FreeMission = () => {
             </span>
           </div>
 
-          {/* Progression 1/5 */}
-          <div className="flex items-center gap-1.5">
-            {SIGNAL_INITIAL_SEQUENCE.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 w-5 rounded-full transition-all ${
-                  i < missionIndex ? "bg-primary" : i === missionIndex - 1 ? "bg-primary/60" : "bg-border"
-                }`}
-              />
-            ))}
-            <span className="text-xs text-muted-foreground font-display ml-1 tabular-nums">{missionIndex}/5</span>
+          {/* Lives + Progression */}
+          <div className="flex items-center gap-3">
+            {/* Lives hearts */}
+            {phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && (
+              <div className="flex items-center gap-1" title="Vies restantes">
+                {Array.from({ length: FREE_MISSION_CONFIG.lives }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={i === lives && lives < FREE_MISSION_CONFIG.lives ? { scale: [1.4, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Heart className={`h-4 w-4 transition-all ${
+                      i < lives ? "text-destructive fill-destructive" : "text-border"
+                    }`} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Progression 1/5 */}
+            <div className="flex items-center gap-1.5">
+              {SIGNAL_INITIAL_SEQUENCE.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 w-5 rounded-full transition-all ${
+                    i < missionIndex ? "bg-primary" : i === missionIndex - 1 ? "bg-primary/60" : "bg-border"
+                  }`}
+                />
+              ))}
+              <span className="text-xs text-muted-foreground font-display ml-1 tabular-nums">{missionIndex}/5</span>
+            </div>
           </div>
         </div>
+
+        {/* First-mistake warning banner */}
+        <AnimatePresence>
+          {firstMistakeWarning && isTimedPhase && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-destructive/15 border-t border-destructive/40 px-4 py-2 flex items-center gap-2"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
+              <p className="text-xs text-destructive font-display tracking-wider">
+                ⚠ AVERTISSEMENT — La prochaine erreur entraîne l'échec de la mission
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bonus pool bar */}
+        {phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && phase !== "failed" && (
+          <div className="border-t px-4 py-1.5" style={{ borderColor: "hsl(var(--gold-glow) / 0.25)" }}>
+            <div className="max-w-3xl mx-auto flex items-center gap-3">
+              <span className="text-xs font-display tracking-wider flex-shrink-0" style={{ color: "hsl(var(--gold-glow))" }}>⚡ BONUS</span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ width: `${Math.min(100, (bonusPool / FREE_MISSION_CONFIG.bonus_rescue_threshold) * 100)}%`, backgroundColor: "hsl(var(--gold-glow))" }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
+              <span className="text-xs font-display flex-shrink-0 tabular-nums" style={{ color: bonusPool >= FREE_MISSION_CONFIG.bonus_rescue_threshold ? "hsl(var(--gold-glow))" : "hsl(var(--muted-foreground))" }}>
+                {bonusPool}s{bonusPool >= FREE_MISSION_CONFIG.bonus_rescue_threshold ? " ✓" : `/${FREE_MISSION_CONFIG.bonus_rescue_threshold}s`}
+              </span>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
@@ -481,15 +687,17 @@ const FreeMission = () => {
                 {data.mission.mission_title}
               </h1>
 
-              {/* Format info card */}
+              {/* Mission rules card */}
               <div className="bg-card border border-primary/20 rounded-lg p-4 grid grid-cols-3 gap-4 text-center text-xs font-display">
                 <div>
-                  <div className="text-2xl mb-1">🎭</div>
-                  <p className="text-muted-foreground tracking-wider">SCÈNE<br />IMMERSIVE</p>
+                  <div className="flex justify-center gap-0.5 mb-1">
+                    {Array.from({ length: FREE_MISSION_CONFIG.lives }).map((_, i) => <Heart key={i} className="h-4 w-4 text-destructive fill-destructive" />)}
+                  </div>
+                  <p className="text-muted-foreground tracking-wider">{FREE_MISSION_CONFIG.lives} VIES</p>
                 </div>
                 <div>
-                  <div className="text-2xl mb-1">🔣</div>
-                  <p className="text-muted-foreground tracking-wider">ÉNIGME<br />LOGIQUE</p>
+                  <Clock className="h-5 w-5 text-primary mx-auto mb-1" />
+                  <p className="text-muted-foreground tracking-wider">{FREE_MISSION_CONFIG.time_per_step}S / ÉTAPE</p>
                 </div>
                 <div>
                   <div className="text-2xl mb-1">⚡</div>
@@ -497,7 +705,7 @@ const FreeMission = () => {
                 </div>
               </div>
 
-              {/* Intro narrative — supporte intro_text (nouveau) et intro (ancien) */}
+              {/* Intro narrative */}
               <div className="bg-card border border-border rounded-lg p-6 border-glow relative overflow-hidden">
                 <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
                 <TypewriterText
@@ -516,7 +724,7 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── SCENE CHOICE ── Nouveau format : scène narrative + choix directs */}
+          {/* ── SCENE CHOICE ── Nouveau format */}
           {phase === "scene_choice" && data && isNewFormat(data) && data.scene && (
             <motion.div
               key="scene-new"
@@ -527,7 +735,9 @@ const FreeMission = () => {
             >
               <StepIndicator step={1} label="SCÈNE IMMERSIVE" />
 
-              {/* Prompt narratif de la scène */}
+              {/* Timer bar */}
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
+
               <div className="bg-card border border-primary/15 rounded-lg px-5 py-4 relative overflow-hidden">
                 <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
                 <p className="text-xs font-display tracking-[0.4em] text-primary/60 mb-2 relative z-10">TRANSMISSION EN COURS</p>
@@ -536,7 +746,6 @@ const FreeMission = () => {
                 </p>
               </div>
 
-              {/* Clue / indice si présent */}
               {data.clue && (
                 <div className="rounded-lg p-4 border border-primary/20 bg-primary/4 text-sm">
                   <p className="text-xs font-display tracking-widest text-primary/60 mb-1">{data.clue.title}</p>
@@ -590,7 +799,7 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── SCENE CHOICE ── Ancien format : question Type A */}
+          {/* ── SCENE CHOICE ── Ancien format */}
           {phase === "scene_choice" && data && !isNewFormat(data) && sceneQuestion && (
             <motion.div
               key="scene-old"
@@ -600,6 +809,8 @@ const FreeMission = () => {
               className="space-y-6"
             >
               <StepIndicator step={1} label="SCÈNE IMMERSIVE" />
+
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
 
               <div className="bg-card border border-primary/15 rounded-lg px-5 py-4 flex items-start gap-3">
                 <Zap className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -657,7 +868,7 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── LOGIC PUZZLE ── Nouveau format : puzzle alphabet (lettre directe, pas de question B) */}
+          {/* ── LOGIC PUZZLE ── Nouveau format */}
           {phase === "logic_puzzle" && data && isNewFormat(data) && data.puzzle && (
             <motion.div
               key="logic-new"
@@ -667,6 +878,8 @@ const FreeMission = () => {
               className="space-y-6"
             >
               <StepIndicator step={2} label="ÉNIGME LOGIQUE" />
+
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
 
               <div
                 className="rounded-xl p-5 space-y-3 relative overflow-hidden"
@@ -687,9 +900,8 @@ const FreeMission = () => {
                 </p>
               </div>
 
-              {/* Lettre à trouver — on propose A-Z filtré selon solution_letter */}
               {(() => {
-                const sol = data.puzzle.solution_letter ?? "A";
+                const sol = data.puzzle!.solution_letter ?? "A";
                 const distractors = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                   .split("")
                   .filter(l => l !== sol)]
@@ -715,7 +927,12 @@ const FreeMission = () => {
                             if (answerRevealed) return;
                             setSelectedAnswer(letter);
                             setAnswerRevealed(true);
-                            if (letter !== sol) setTimeout(() => setPhase("failed"), 1200);
+                            if (timerRef.current) clearInterval(timerRef.current);
+                            if (letter === sol) {
+                              setBonusPool(prev => prev + timeLeft);
+                            } else {
+                              handleWrongWithLives(null);
+                            }
                           }}
                           disabled={answerRevealed}
                           className={`p-5 rounded-lg border transition-all bg-card text-center font-display text-2xl font-bold ${cls}`}
@@ -742,10 +959,25 @@ const FreeMission = () => {
                   </Button>
                 </motion.div>
               )}
+
+              {/* Wrong answer but survived — continue button */}
+              {answerRevealed && selectedAnswer !== null && selectedAnswer !== data.puzzle.solution_letter && lives > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
+                    ✗ MAUVAISE LETTRE — {data.puzzle.explain_if_failed ?? "Ce n'est pas la bonne lettre."} Vous continuez avec {lives} vie{lives > 1 ? "s" : ""}.
+                  </div>
+                  <Button
+                    onClick={() => continueAfterWrong("strategic")}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    CONTINUER → DÉCISION FINALE
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
           )}
 
-          {/* ── LOGIC PUZZLE ── Ancien format : question Type B */}
+          {/* ── LOGIC PUZZLE ── Ancien format */}
           {phase === "logic_puzzle" && data && !isNewFormat(data) && logicQuestion && (
             <motion.div
               key="logic-old"
@@ -755,6 +987,8 @@ const FreeMission = () => {
               className="space-y-6"
             >
               <StepIndicator step={2} label="ÉNIGME LOGIQUE" />
+
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
 
               <div
                 className="rounded-xl p-5 space-y-3 relative overflow-hidden"
@@ -801,7 +1035,8 @@ const FreeMission = () => {
                 })}
               </div>
 
-              {answerRevealed && (
+              {/* Correct — continue */}
+              {answerRevealed && selectedAnswer === logicQuestion.choices[logicQuestion.answer_index] && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                   <Button
                     onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("strategic"); }}
@@ -811,10 +1046,25 @@ const FreeMission = () => {
                   </Button>
                 </motion.div>
               )}
+
+              {/* Wrong but alive — continue */}
+              {answerRevealed && selectedAnswer !== null && selectedAnswer !== logicQuestion.choices[logicQuestion.answer_index] && lives > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
+                    ✗ MAUVAISE RÉPONSE — Vous continuez avec {lives} vie{lives > 1 ? "s" : ""}.
+                  </div>
+                  <Button
+                    onClick={() => continueAfterWrong("strategic")}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    CONTINUER → DÉCISION FINALE
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
           )}
 
-          {/* ── STRATEGIC QUESTION ── Nouveau format : final_question */}
+          {/* ── STRATEGIC QUESTION ── Nouveau format */}
           {phase === "strategic" && data && isNewFormat(data) && data.final_question && (
             <motion.div
               key="strategic-new"
@@ -825,6 +1075,8 @@ const FreeMission = () => {
             >
               <StepIndicator step={3} label="DÉCISION STRATÉGIQUE" isCritical />
 
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -834,7 +1086,7 @@ const FreeMission = () => {
               >
                 <p className="font-display tracking-wider text-primary text-xs mb-1">⚡ QUESTION CRITIQUE</p>
                 <p className="text-muted-foreground">
-                  Cette décision détermine si vous obtenez le fragment. Une erreur ici termine la mission.
+                  Cette décision détermine si vous obtenez le fragment. Une erreur coûte une vie.
                 </p>
               </motion.div>
 
@@ -868,10 +1120,25 @@ const FreeMission = () => {
                   );
                 })}
               </div>
+
+              {/* Wrong but alive on strategic — need to retry the mission since it's the last step */}
+              {answerRevealed && selectedAnswer !== null && selectedAnswer !== data.final_question.choices[data.final_question.answer_index] && lives > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
+                    ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau la question.
+                  </div>
+                  <Button
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); }}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    RÉESSAYER LA QUESTION →
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
           )}
 
-          {/* ── STRATEGIC QUESTION ── Ancien format : question Type C */}
+          {/* ── STRATEGIC QUESTION ── Ancien format */}
           {phase === "strategic" && data && !isNewFormat(data) && strategicQuestion && (
             <motion.div
               key="strategic-old"
@@ -882,6 +1149,8 @@ const FreeMission = () => {
             >
               <StepIndicator step={3} label="DÉCISION STRATÉGIQUE" isCritical />
 
+              {!answerRevealed && <TimerBar timeLeft={timeLeft} total={FREE_MISSION_CONFIG.time_per_step} timerPercent={timerPercent} timerColor={timerColor} />}
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -891,7 +1160,7 @@ const FreeMission = () => {
               >
                 <p className="font-display tracking-wider text-primary text-xs mb-1">⚡ QUESTION CRITIQUE</p>
                 <p className="text-muted-foreground">
-                  Cette décision détermine si vous obtenez le fragment. Une erreur ici termine la mission.
+                  Cette décision détermine si vous obtenez le fragment. Une erreur coûte une vie.
                 </p>
               </motion.div>
 
@@ -925,8 +1194,87 @@ const FreeMission = () => {
                   );
                 })}
               </div>
+
+              {/* Wrong but alive on strategic — retry */}
+              {answerRevealed && selectedAnswer !== null && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index] && lives > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
+                    ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau.
+                  </div>
+                  <Button
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); }}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    RÉESSAYER LA QUESTION →
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
           )}
+
+          {/* ── RESCUE OFFER ── */}
+          {phase === "rescue_offer" && (
+            <motion.div
+              key="rescue"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6 text-center py-8"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 150, delay: 0.1 }}
+                className="text-6xl"
+              >
+                💔
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <p className="text-xs font-display tracking-[0.4em] text-destructive mb-2">MISSION EN DANGER</p>
+                <h2 className="text-3xl font-display font-bold text-destructive">PLUS DE VIES</h2>
+                <p className="text-muted-foreground mt-2 text-sm">Vous n'avez plus de vie restante.</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="bg-card border rounded-lg p-5 mx-auto max-w-xs"
+                style={{ borderColor: "hsl(var(--gold-glow) / 0.4)", background: "hsl(var(--gold-glow) / 0.05)" }}
+              >
+                <p className="font-display tracking-wider text-xl mb-1" style={{ color: "hsl(var(--gold-glow))" }}>
+                  ⚡ {bonusPool}s de bonus
+                </p>
+                <p className="text-sm text-muted-foreground">Dépensez {FREE_MISSION_CONFIG.bonus_rescue_threshold}s pour récupérer 1 vie et continuer</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="space-y-3 max-w-xs mx-auto"
+              >
+                <Button
+                  onClick={handleRescue}
+                  className="w-full font-display tracking-wider text-base py-6"
+                  style={{ background: "hsl(var(--gold-glow))", color: "hsl(0 0% 5%)" }}
+                >
+                  ⚡ DÉPENSER {FREE_MISSION_CONFIG.bonus_rescue_threshold}s → +1 VIE
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setPhase("failed")}
+                  className="w-full text-muted-foreground font-display tracking-wider"
+                >
+                  Abandonner la mission
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ── LETTER REVEAL ── */}
           {phase === "letter_reveal" && (
             <motion.div
               key="letter"
@@ -949,7 +1297,6 @@ const FreeMission = () => {
                 <div className="h-px w-24 bg-primary/30 mx-auto" />
               </motion.div>
 
-              {/* The big letter */}
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -973,7 +1320,6 @@ const FreeMission = () => {
                     {earnedLetter}
                   </motion.span>
                 </div>
-                {/* Particles */}
                 {[0, 72, 144, 216, 288].map((deg, i) => (
                   <motion.div
                     key={i}
@@ -990,7 +1336,6 @@ const FreeMission = () => {
                 ))}
               </motion.div>
 
-              {/* Narrative unlock */}
               {narrativeText && (
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
@@ -1030,7 +1375,6 @@ const FreeMission = () => {
               exit={{ opacity: 0 }}
               className="space-y-6"
             >
-              {/* Fragment card */}
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -1048,7 +1392,6 @@ const FreeMission = () => {
                 </motion.div>
                  <p className="text-xs font-display tracking-[0.5em] text-primary/60 mb-1 relative z-10">FRAGMENT OBTENU</p>
                  <h2 className="text-2xl font-display font-bold text-primary relative z-10">
-                   {/* Nouveau format : reward.fragment.name / Ancien : fragment_reward.name */}
                    {data.reward?.fragment?.name ?? data.fragment_reward?.name ?? "Fragment Obtenu"}
                  </h2>
                  <p className="text-xs font-display tracking-widest text-muted-foreground mt-1 relative z-10">
@@ -1056,7 +1399,6 @@ const FreeMission = () => {
                  </p>
                </motion.div>
 
-              {/* Letter obtained */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1081,7 +1423,6 @@ const FreeMission = () => {
                 </div>
               </motion.div>
 
-              {/* Citation Jasper */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1099,7 +1440,6 @@ const FreeMission = () => {
                 <p className="text-xs text-muted-foreground font-display tracking-widest mt-2 relative z-10">— J. Valcourt</p>
               </motion.div>
 
-              {/* Next country hint */}
               {nextCountry && missionIndex < 5 && (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
@@ -1122,7 +1462,6 @@ const FreeMission = () => {
                 </motion.div>
               )}
 
-              {/* Last mission complete message */}
               {missionIndex === 5 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -1187,7 +1526,7 @@ const FreeMission = () => {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                  <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>ANALYSE INCORRECTE</p>
+                  <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>VIES ÉPUISÉES</p>
                   <h2 className="text-4xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 65% 42%)", textShadow: "0 0 30px hsl(0 70% 30% / 0.5)" }}>
                     ÉCHEC
                   </h2>
@@ -1240,6 +1579,28 @@ const FreeMission = () => {
     </div>
   );
 };
+
+// ── Timer Bar component ──────────────────────────────────────────────────────
+
+function TimerBar({ timeLeft, total, timerPercent, timerColor }: { timeLeft: number; total: number; timerPercent: number; timerColor: string }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-end text-xs font-display">
+        <span className={`flex items-center gap-1 ${timeLeft <= 15 ? "text-destructive animate-pulse" : "text-muted-foreground"}`}>
+          <Clock className="h-3.5 w-3.5" />
+          {timeLeft}s
+        </span>
+      </div>
+      <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+        <motion.div
+          className={`h-full rounded-full transition-colors ${timerColor}`}
+          style={{ width: `${timerPercent}%` }}
+          transition={{ duration: 0.3 }}
+        />
+      </div>
+    </div>
+  );
+}
 
 // ── Step Indicator component ─────────────────────────────────────────────────
 
