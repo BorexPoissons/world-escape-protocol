@@ -600,7 +600,13 @@ const Dashboard = () => {
 
         {/* Badges */}
         {userBadges.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
             <h2 className="text-sm font-display text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
               <Trophy className="h-4 w-4" />
               BADGES DÉBLOQUÉS ({userBadges.length})
@@ -623,9 +629,10 @@ const Dashboard = () => {
         {/* Next recommended */}
         {nextRecommended && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
             className="mb-8 bg-card border border-primary/30 rounded-lg p-5 border-glow flex items-center justify-between gap-4"
           >
             <div>
@@ -666,9 +673,10 @@ const Dashboard = () => {
           return (
             <motion.div
               key={seasonNum}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * idx }}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.55, ease: "easeOut" }}
               className="mb-14"
             >
               {/* Operation Banner */}
@@ -861,9 +869,9 @@ const Dashboard = () => {
                           <>{children}</>
                         );
 
-                      if (seqLocked) {
+                        if (seqLocked) {
                         return (
-                          <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                          <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.04 * i }}>
                             {cardWrapper(
                               <div className="relative bg-card border border-border rounded-xl p-5 select-none overflow-hidden h-full">
                                 {/* Blur overlay */}
@@ -909,23 +917,23 @@ const Dashboard = () => {
                         <motion.div
                           key={country.id}
                           initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "-40px" }}
                           animate={
                             isNext
                               ? {
-                                  opacity: 1,
-                                  y: 0,
                                   boxShadow: [
                                     "0 0 0px hsl(40 80% 55% / 0)",
                                     "0 0 22px hsl(40 80% 55% / 0.65)",
                                     "0 0 0px hsl(40 80% 55% / 0)",
                                   ],
                                 }
-                              : { opacity: 1, y: 0 }
+                              : {}
                           }
                           transition={
                             isNext
-                              ? { delay: 0.05 * i, boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" } }
-                              : { delay: 0.05 * i }
+                              ? { duration: 0.4, delay: 0.04 * i, boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" } }
+                              : { duration: 0.4, delay: 0.04 * i }
                           }
                           className={isSignalInitialGroup ? "min-w-[280px] w-[280px] flex-shrink-0 rounded-xl" : ""}
                         >
@@ -944,7 +952,7 @@ const Dashboard = () => {
               {group.locked.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
                   {group.locked.map((country, i) => (
-                    <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                    <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.04 * i }}>
                       <button
                         onClick={() => setUpgradeModal({ open: true, type: tier === "season1" ? "director" : "agent" })}
                         className="w-full text-left group relative bg-card border border-primary/20 rounded-xl p-6 cursor-pointer hover:border-primary/50 transition-all duration-300"
@@ -974,7 +982,7 @@ const Dashboard = () => {
               {group.silhouette.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {group.silhouette.map((country, i) => (
-                    <motion.div key={country.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.03 * i }}>
+                    <motion.div key={country.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.03 * i }}>
                       <div
                         className="relative bg-card border border-border/30 rounded-xl p-6 cursor-pointer select-none overflow-hidden"
                         onClick={() => setUpgradeModal({ open: true, type: "agent" })}
