@@ -1,161 +1,92 @@
 
-# La Révélation Finale — 195 Pièces : Expérience Cinématique Complète
+# Indice Archive : Photo du Pays, Sans Révéler la Réponse
 
-## Ce qui existe déjà
+## Objectif
 
-L'architecture actuelle prépare déjà plusieurs éléments pour ce moment :
-- `RevealOverlay` avec des seuils narratifs progressifs (0% → 100%)
-- `CinematicWorldMap` avec un zoom lent déjà codé à 99%
-- Le message final de Jasper Velcourt : *"Le Cercle n'est pas une organisation. C'est une architecture."*
-- La luminosité de la carte qui évolue avec `mapBrightness`
+Remplacer le toast "Bonne réponse : [texte]" par un **modal cinématique** qui affiche une vraie photo ou archive du pays, liée à la question en cours, sans donner la réponse en clair. Le joueur doit interpréter l'image pour trouver la bonne réponse.
 
-Ce qui manque : une **séquence cinématique dédiée** pour le moment exact où la 195e pièce est placée.
+## Ce que verra le joueur
 
----
+Quand il clique "UTILISER" dans la bannière CONFIANCE ÉLEVÉE :
 
-## La Séquence Complète — 7 Actes
-
-### ACTE 1 — Le "Snap" final (0s → 3s)
-La 195e pièce est glissée sur la carte. Au lieu du simple snap normal :
-
-- Toutes les 195 gemmes sur la carte **pulsent simultanément** (flash blanc)
-- Un son de "verrouillage" (vibration CSS)
-- Le message HUD change : `"⬢ CONVERGENCE COMPLÈTE — ANALYSE EN COURS…"`
-- Écran **freeze pendant 0.8s** — silence total
-
-### ACTE 2 — L'Onde de Choc (3s → 6s)
-Une onde circulaire se propage depuis le dernier pays placé vers les bords de la carte :
-
-- Anneau SVG animé (`r` de 0 → 200, opacity 1 → 0, durée 2s)
-- Couleur : blanc pur puis or `hsl(40 90% 72%)`
-- Tous les nœuds de pays **s'illuminent dans l'ordre de l'onde**
-- Les lignes intercontinentales deviennent **toutes dorées** simultanément
-
-### ACTE 3 — La Révélation de la Carte (6s → 12s)
-La carte se révèle progressivement :
-
-- `brightness` passe de la valeur courante → `1.0` en 4s (transition fluide)
-- `saturate` monte → `1.8` (couleurs éclatantes)
-- `scale` : zoom lent 1.0 → 1.08 → retour à 1.0
-- Le fond sombre disparaît progressivement (vignette opacity → 0)
-- Les scanlines s'effacent
-
-### ACTE 4 — Le Symbole Central (8s → 14s)
-Le symbole central (déjà présent à 75%) se **cristallise** :
-
-- Le cercle flou se rend net et lumineux (feGaussianBlur stdDeviation : 2.5 → 0)
-- Les 5 nœuds stratégiques (α, β, γ, δ, ε) convergent visuellement vers le centre avec des traits
-- Le symbole tourne lentement une fois (360° en 3s) puis se stabilise
-
-### ACTE 5 — Le Message de Jasper (12s → 20s)
-**Plein écran avec fond semi-transparent** :
-
-```
-TRANSMISSION CHIFFRÉE — NIVEAU DIRECTEUR
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-"Le Cercle n'est pas une organisation.
- C'est une architecture."
-                        — JASPER VELCOURT
-                          AGENT PRINCIPAL W.E.P.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROTOCOLE OMÉGA : COMPLÉTÉ
-195 TERRITOIRES · 975 FRAGMENTS · 1 VÉRITÉ
+```text
+┌──────────────────────────────────────────────────────┐
+│  📁 DOSSIER D'ARCHIVE — CLASSIFIÉ W.E.P.         [X] │
+│──────────────────────────────────────────────────────│
+│  ┌────────────────────────────────────────────────┐  │
+│  │  [Vraie photo : ex. Palais des Nations, Genève]│  │
+│  │  Caption : "Genève, siège de l'ONU, 1945"      │  │
+│  └────────────────────────────────────────────────┘  │
+│                                                      │
+│  TRANSMISSION CRYPTÉE DE JASPER VALCOURT             │
+│  ──────────────────────────────────────────────────  │
+│  "L'image parle. Laissez-la vous guider."            │
+│                                                      │
+│  [FERMER — CONTINUER LA MISSION]                     │
+└──────────────────────────────────────────────────────┘
 ```
 
-Chaque ligne apparaît avec un effet typing (délai 0.5s entre chaque ligne).
+La réponse n'est pas écrite — la photo est l'indice.
 
-### ACTE 6 — Le Badge "MAÎTRE DU PROTOCOLE" (18s → 22s)
-Un badge unique se révèle au centre :
+## Architecture technique
 
-- Fond noir avec cadre or animé
-- Icône : symbole W.E.P. central (Ω doré)
-- Titre : `MAÎTRE DU PROTOCOLE`
-- Sous-titre : `AGENT #00195 · RÉVÉLATION TOTALE`
-- Bouton : `[ENREGISTRER MON TITRE]` → sauvegarde en BDD dans `profiles`
+### 1. Ajout d'un champ `hint` dans les JSON par pays
 
-### ACTE 7 — État Final Permanent (après 22s)
-La carte reste dans son état "révélé" pour toujours :
+Chaque question dans le `question_bank` peut avoir un champ optionnel `hint_image` :
 
-- Toutes les connexions actives et dorées
-- Carte à pleine luminosité
-- HUD permanent : `✦ RÉVÉLATION TOTALE · LE PLAN EST COMPLET`
-- Un bouton discret `[VOIR MON PALMARÈS]` mène vers une page de galerie
+```json
+{
+  "id": "CH_Q3",
+  "question": "Dans quelle ville siège la BRI ?",
+  "hint_image": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/.../Basel_Muenster.jpg/640px-Basel_Muenster.jpg",
+    "caption": "Vue de Bâle depuis le Rhin, Suisse"
+  }
+}
+```
 
----
+Ou un champ `hint` global au niveau mission pour les pays qui n'ont pas d'image par question.
 
-## Ce que je propose de construire
+### 2. Nouveau composant `ArchiveHintModal.tsx`
 
-### Composant `FinalRevealSequence.tsx` — NOUVEAU
-Un overlay plein écran (z-index 100) déclenché quand `globalProgress >= 100` pour la première fois (flag `has_completed_puzzle` en BDD pour ne le jouer qu'une fois).
+Un modal Framer Motion stylisé W.E.P. avec :
+- Overlay sombre + flou
+- Header "DOSSIER D'ARCHIVE CLASSIFIÉ" avec bordure dorée animée
+- Image de la photo avec overlay gradient et caption
+- Texte narratif de Jasper Valcourt (jamais la réponse)
+- Bouton "FERMER"
+- Fallback si pas d'image : icône document + texte "Aucune archive disponible"
 
-Props : `onDismiss: () => void`
+### 3. Modification de `Mission.tsx`
 
-Séquence contrôlée par un `step` state (0→7) avancé via `setTimeout` chainés.
+- Ajouter `showHintModal: boolean` dans les states
+- Charger le JSON du pays complet (déjà fait dans `loadMission`) pour lire `question_bank[i].hint_image`
+- Au clic "UTILISER" : ouvrir `showHintModal = true` (plus de toast avec la réponse)
+- Passer au modal : l'image hint de la question courante + caption
 
-### Améliorations de `RevealOverlay.tsx`
-- Ajouter l'**onde de choc circulaire** au step 2
-- Renforcer l'animation du **symbole central** à 100%
-- Supprimer la vignette à 100% (fond entièrement visible)
+### 4. Mise à jour des JSON pays
 
-### Améliorations de `CinematicWorldMap.tsx`
-- Au step 3, forcer `mapBrightness = 1.0` et `saturate = 1.8`
-- Déclencher le zoom via un state externe passé en prop
+Ajouter `hint_image` pour chaque question des pays CH et US en priorité, avec des URLs Wikimedia Commons (domaine public) :
 
-### Colonne BDD `has_completed_puzzle` dans `profiles`
-Pour ne jamais rejouer la séquence si l'utilisateur rafraîchit la page après avoir complété le puzzle.
+**CH.json** :
+- CH_Q3 (BRI → Bâle) : Photo de Bâle / Tour de la BRI
+- CH_Q4 (ONU → Genève) : Palais des Nations Genève
+- CH_Q2 (langues) : Carte linguistique Suisse
 
----
+**US.json** :
+- US_Q3 (Fed Reserve 1913) : Photo historique Wall Street 1913
+- US_Q4 (Bretton Woods 1944) : Photo conférence Bretton Woods
+- US_Q5 (dollar) : Billet dollar historique
 
-## Détails Techniques
-
-### Fichiers à créer / modifier
+## Fichiers modifiés
 
 | Fichier | Action |
 |---|---|
-| `src/components/FinalRevealSequence.tsx` | NOUVEAU — séquence 7 actes |
-| `src/components/RevealOverlay.tsx` | Onde de choc + symbole net à 100% |
-| `src/components/CinematicWorldMap.tsx` | Props `forceFullReveal` |
-| `src/pages/Puzzle.tsx` | Détecter 100%, afficher la séquence |
-| Migration BDD | Colonne `has_completed_puzzle boolean` dans `profiles` |
+| `src/components/ArchiveHintModal.tsx` | Créé — modal cinématique |
+| `src/pages/Mission.tsx` | Modifié — remplace toast par modal, lit hint_image de la question courante |
+| `public/content/countries/CH.json` | Ajout `hint_image` sur les questions clés |
+| `public/content/countries/US.json` | Ajout `hint_image` sur les questions clés |
 
-### Gestion du "une seule fois"
+## Comportement de fallback
 
-```typescript
-// Dans Puzzle.tsx
-const [showFinalReveal, setShowFinalReveal] = useState(false);
-
-useEffect(() => {
-  if (globalProgressOn195 >= 100 && !profile?.has_completed_puzzle) {
-    setShowFinalReveal(true);
-    // Marquer comme vu en BDD
-    supabase.from("profiles")
-      .update({ has_completed_puzzle: true })
-      .eq("user_id", user.id);
-  }
-}, [globalProgressOn195]);
-```
-
-### Animation onde de choc (SVG)
-
-```text
-<circle cx={lastCountry.x} cy={lastCountry.y} r={0}
-  stroke="gold" strokeWidth={0.8} fill="none"
-  animate={{ r: [0, 200], opacity: [1, 0] }}
-  transition={{ duration: 2.5, ease: "easeOut" }}
-/>
-```
-
----
-
-## Résultat pour le Joueur
-
-Ce moment sera **unique et inoubliable** :
-1. Il ressent la puissance du "snap" final différemment des 194 autres
-2. L'onde de choc lui montre visuellement que "quelque chose vient de changer"
-3. La révélation de la carte est un moment de beauté pure
-4. Le message de Jasper donne un frisson narratif
-5. Le badge est un objet de fierté (il peut le partager)
-6. L'état permanent de la carte est sa récompense visuelle quotidienne
-
-Aucune dépendance supplémentaire — tout en Framer Motion + SVG + CSS déjà installés.
+Si une question n'a pas de `hint_image`, le modal s'ouvre quand même avec un texte narratif générique de Jasper Valcourt (sans révéler la réponse). Jamais de crash, jamais la réponse en clair.
