@@ -4,121 +4,60 @@
     "name_fr": "Inde"
   },
   "mission": {
-    "mission_id": "IN-S1-005",
+    "mission_id": "IN-S1-001",
+    "format": "IMMERSIVE_FREE",
     "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
-    "phase": "DEMOGRAPHIE_INNOVATION",
+    "phase": "SIGNAL_INITIAL",
     "is_free": true,
     "detective": "Jasper Valcourt",
-    "intro": "New Delhi. Chaleur sèche.\n\nAprès la Suisse, les États-Unis, la Chine et le Brésil,\nJasper découvre une autre variable.\n\nLa masse.\n\nUne population immense.\nUne jeunesse dominante.\nUn secteur technologique en croissance rapide.\n\nL'Inde ne domine pas encore le système.\nMais elle peut en modifier l'équilibre.\n\nVotre mission :\nComprendre comment démographie et innovation deviennent des leviers stratégiques mondiaux."
+    "intro": "New Delhi. Chaleur sèche.\n\nUn système peut être riche.\nUn système peut être structuré.\n\nMais sans masse,\nil reste limité.\n\nJe suis Jasper Valcourt.\nEt je regarde toujours la variable que les autres sous-estiment.\n\nUne population immense.\nUne jeunesse dominante.\nUn secteur technologique en expansion.\n\nLa démographie n'est pas un chiffre.\nC'est un potentiel.\n\nQuand la masse se connecte,\nelle devient puissance.\n\nSi les flux ont un passage,\nun rythme,\net des routes…\n\nAlors la prochaine étape\nsera la connexion.\n\n— J. Valcourt"
   },
-  "quiz_rules": {
-    "total_questions": 10,
-    "draw_per_run": 6,
-    "distribution": {
-      "A": 4,
-      "B": 1,
-      "C": 1
-    },
-    "max_mistakes": 1
+  "scene": {
+    "setup": "New Delhi. La chaleur sèche d'une nuit sans vent. Une salle de situation dans un ministère diplomatique. Trois dossiers sur la table, chacun marqué d'un symbole différent.",
+    "choices": [
+      "Examiner le rapport sur la Silicon Valley indienne",
+      "Ouvrir le dossier marqué 'Rang mondial — Population'",
+      "Lire l'analyse des corridors économiques ASEAN"
+    ],
+    "correct_choice_index": 1,
+    "wrong_feedback": "Ces informations sont exactes… mais elles ne mènent pas directement à la clé du système.",
+    "correct_feedback": "Le dossier confirme ce que Jasper suspectait. En 2023, l'Inde devient la première puissance démographique mondiale. Le rang : 1. La clé se dessine."
   },
-  "question_bank": [
-    {
-      "id": "IN_Q1",
-      "type": "A",
-      "question": "Quelle est la capitale de l'Inde ?",
-      "choices": ["Mumbai", "Bangalore", "New Delhi", "Chennai"],
-      "answer_index": 2
-    },
-    {
-      "id": "IN_Q2",
-      "type": "A",
-      "question": "L'Inde est devenue en 2023 le pays le plus peuplé du monde devant quel pays ?",
-      "choices": ["États-Unis", "Chine", "Indonésie", "Pakistan"],
-      "answer_index": 1
-    },
-    {
-      "id": "IN_Q3",
-      "type": "A",
-      "question": "Quelle ville est considérée comme le principal hub technologique de l'Inde ?",
-      "choices": ["Jaipur", "Hyderabad", "Bangalore", "Kolkata"],
-      "answer_index": 2
-    },
-    {
-      "id": "IN_Q4",
-      "type": "A",
-      "question": "Quelle est la monnaie officielle de l'Inde ?",
-      "choices": ["Roupie indienne", "Yuan", "Baht", "Ringgit"],
-      "answer_index": 0
-    },
-    {
-      "id": "IN_Q5",
-      "type": "A",
-      "question": "Quel océan borde la côte sud de l'Inde ?",
-      "choices": ["Océan Atlantique", "Océan Indien", "Océan Pacifique", "Mer Rouge"],
-      "answer_index": 1
-    },
-    {
-      "id": "IN_Q6",
-      "type": "A",
-      "question": "Quel système numérique indien permet des paiements instantanés à grande échelle ?",
-      "choices": ["UPI", "Alipay", "PayPal", "SwiftNet"],
-      "answer_index": 0
-    },
-    {
-      "id": "IN_Q7",
-      "type": "B",
-      "question": "Pourquoi une population jeune peut-elle devenir un avantage stratégique ?",
-      "choices": [
-        "Elle réduit la production",
-        "Elle soutient la croissance économique et l'innovation",
-        "Elle supprime les institutions",
-        "Elle isole le pays"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "IN_Q8",
-      "type": "B",
-      "question": "Pourquoi l'Inde est-elle considérée comme un acteur clé dans l'équilibre géopolitique asiatique ?",
-      "choices": [
-        "Elle est isolée du reste du monde",
-        "Elle est située entre grandes puissances et routes maritimes stratégiques",
-        "Elle n'a aucune influence régionale",
-        "Elle dépend totalement d'un seul pays"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "IN_Q9",
-      "type": "C",
-      "question": "Dans la logique mondiale, que représente la combinaison démographie + technologie ?",
-      "choices": [
-        "Une instabilité permanente",
-        "Un potentiel de transformation systémique",
-        "Un simple phénomène local",
-        "Un ralentissement économique"
-      ],
-      "answer_index": 1,
-      "narrative_unlock": "La masse devient puissance lorsqu'elle se connecte."
-    },
-    {
-      "id": "IN_Q10",
-      "type": "C",
-      "question": "Quel lien relie croissance démographique, innovation numérique et influence mondiale ?",
-      "choices": [
-        "La réduction des échanges",
-        "L'augmentation du poids économique et stratégique",
-        "L'isolement continental",
-        "Un effet purement culturel"
-      ],
-      "answer_index": 1,
-      "narrative_unlock": "Le futur appartient aux marchés en expansion."
-    }
-  ],
+  "clue": {
+    "title": "RAPPORT DÉMOGRAPHIQUE CLASSIFIÉ",
+    "text": "1\nRang. Nation. Connexion.\n\n« La masse n'est pas un poids.\nC'est une force qui attend d'être dirigée. »",
+    "instruction": "En 2023, l'Inde est devenue la nation la plus peuplée du monde.\nRang numéro 1.\n\nIdentifie la 1re lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+  },
+  "puzzle": {
+    "type": "direct_alphabet",
+    "question": "En 2023, l'Inde est devenue\nla 1re nation la plus peuplée du monde.\n\nQuelle est la 1re lettre de l'alphabet ?",
+    "letter_choices": ["A", "B", "C", "D"],
+    "solution_number": 1,
+    "solution_letter": "A",
+    "explanation": "Rang mondial n°1 → 1re lettre de l'alphabet = A"
+  },
+  "final_question": {
+    "question": "Si l'Inde connecte 1,4 milliard de personnes au réseau économique mondial, quel devient son rôle stratégique ?",
+    "choices": [
+      "Un réservoir de main-d'œuvre bon marché sans influence réelle",
+      "Un catalyseur de puissance connectant masse humaine et économie mondiale",
+      "Un acteur régional sans portée globale"
+    ],
+    "answer_index": 1,
+    "narrative_unlock": "Quand la masse se connecte, elle devient puissance."
+  },
+  "reward": {
+    "letter_obtained": "A",
+    "fragment_name": "Fragment du Subcontinent",
+    "fragment_concept": "PUISSANCE_DÉMOGRAPHIQUE",
+    "jasper_quote": "Quand la masse se connecte, elle devient puissance.",
+    "next_destination_hint": "Tous les nœuds sont maintenant actifs. Le Signal Initial est complet. Le Protocole Omega commence.",
+    "unlocked_message": "La puissance démographique est le cinquième mécanisme. Le signal est complet."
+  },
   "fragment_reward": {
-    "id": "FRAG-IN-005",
-    "name": "Fragment Subcontinent Silencieux",
-    "concept": "NŒUD_DEMOGRAPHIQUE",
-    "unlocked_message": "La masse devient puissance lorsqu'elle se connecte."
+    "id": "FRAG-IN-001",
+    "name": "Fragment du Subcontinent",
+    "concept": "PUISSANCE_DÉMOGRAPHIQUE",
+    "unlocked_message": "La puissance démographique est le cinquième mécanisme. Le signal est complet."
   }
 }
