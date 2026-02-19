@@ -8,7 +8,7 @@
     "total_free": 5,
     "mission_title": "OPÉRATION DRAGON SILENCIEUX",
     "detective": "Jasper Valcourt",
-    "intro_text": "Pékin. Ciel gris. Silence dense.\n\nJe suis Jasper Valcourt.\nEt je sais reconnaître une stratégie patiente.\n\nPendant que d’autres parlent, certains construisent.\nPorts. Rails. Câbles.\n\nLa puissance ne crie pas toujours.\nParfois, elle s’installe.\n\nSi les flux ont un rythme… ils ont aussi des chemins.\n— Jasper Valcourt"
+    "intro_text": "Pékin. Ciel gris. Silence dense.\n\nUn système ne tient pas uniquement par la finance.\nIl a besoin de routes.\n\nPorts.\nRails.\nCâbles sous-marins.\nCorridors numériques.\n\nJe suis Jasper Valcourt.\nEt je sais reconnaître une stratégie patiente.\n\nPendant que d'autres parlent,\ncertains construisent.\n\nDes infrastructures qui relient des continents.\nDes dépendances qui ne disent pas leur nom.\n\nLa puissance ne crie pas toujours.\nParfois, elle s'installe.\n\nSi les flux ont un rythme,\nils ont aussi des chemins.\n\nEt celui qui construit les chemins\nchoisit les directions.\n\n— J. Valcourt"
   },
   "scene": {
     "prompt": "Dans un centre logistique, trois accès :",
@@ -46,6 +46,6 @@
     "fragment": { "id": "FRAG-CN-FREE-003", "concept": "NOEUD_INFRASTRUCTURE", "name": "Fragment Dragon Silencieux" },
     "jasper_quote": "Le réseau précède le pouvoir.",
     "next_country_code": "BR",
-    "next_destination_hint": "Les routes mènent toujours à quelque chose… ou à quelqu’un."
+    "next_destination_hint": "Les routes mènent toujours à quelque chose… ou à quelqu'un."
   }
 }
