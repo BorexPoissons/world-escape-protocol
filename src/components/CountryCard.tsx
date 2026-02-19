@@ -83,8 +83,8 @@ const CountryCard = ({
                 </h3>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-primary text-xs font-display">
-                    {"★".repeat(country.difficulty_base)}
-                    <span className="text-muted-foreground/40">{"★".repeat(5 - country.difficulty_base)}</span>
+                    {"★".repeat(Math.min(5, Math.max(0, country.difficulty_base)))}
+                    <span className="text-muted-foreground/40">{"★".repeat(Math.max(0, 5 - country.difficulty_base))}</span>
                   </span>
                   {isFree && (
                     <span className="text-xs font-display tracking-wider px-1.5 py-0.5 rounded"
