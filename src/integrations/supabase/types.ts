@@ -55,6 +55,8 @@ export type Database = {
           monuments: string[] | null
           name: string
           phase: number
+          puzzle_position_x: number | null
+          puzzle_position_y: number | null
           release_order: number
           season_number: number
           symbols: string[] | null
@@ -73,6 +75,8 @@ export type Database = {
           monuments?: string[] | null
           name: string
           phase?: number
+          puzzle_position_x?: number | null
+          puzzle_position_y?: number | null
           release_order?: number
           season_number?: number
           symbols?: string[] | null
@@ -91,6 +95,8 @@ export type Database = {
           monuments?: string[] | null
           name?: string
           phase?: number
+          puzzle_position_x?: number | null
+          puzzle_position_y?: number | null
           release_order?: number
           season_number?: number
           symbols?: string[] | null
