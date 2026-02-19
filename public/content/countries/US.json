@@ -1,79 +1,124 @@
 {
-  "mission_title": "OPÉRATION DARK MIRROR",
-  "intro": "Agent, bienvenue aux États-Unis.\n\nWashington D.C., 4h17 du matin. Les serveurs de la NSA — National Security Agency — ont enregistré une anomalie. Quelqu'un a accédé à un dossier classifié TOP SECRET // UMBRA que vous ne deviez pas connaître. Le dossier contient le nom de l'Opérateur Zéro.\n\nMais voici le problème : vous êtes cet agent. C'est vous qui avez accédé à ce dossier. Sauf que vous ne vous en souvenez pas.\n\nVotre couverture : analyste senior au Congressional Research Service. Votre vrai rôle : retrouver comment et pourquoi votre propre identité numérique a été utilisée — et par qui.\n\nDans ce pays, tout est observé. Les caméras de surveillance couvrent 80% de Washington. Les métadonnées de votre téléphone sont collectées en temps réel. Certaines informations que vous allez voir dans cette mission sont **volontairement fausses** — intégrées dans le système pour identifier les fuites. Votre travail : distinguer le vrai du faux.\n\nLe Cercle de Davos contrôle peut-être déjà cet espace. Ou peut-être êtes-vous dans une simulation. L'Amérique a toujours aimé confondre la réalité et la mise en scène.",
-  "enigmes": [
+  "country": {
+    "code": "US",
+    "name_fr": "États-Unis"
+  },
+  "mission": {
+    "mission_id": "US-S0-002",
+    "mission_title": "OPÉRATION FEDERAL SHADOW",
+    "phase": "SIGNAL_INITIAL",
+    "is_free": true,
+    "detective": "Jasper Velcourt",
+    "intro": "Washington, D.C. Nuit lourde.\n\nAprès la Suisse, Jasper Velcourt suit la logique des flux.\n\nSi les capitaux transitent,\nil faut bien un endroit où le rythme est fixé.\n\nLa création d'une banque centrale moderne.\n\nUn nouvel ordre monétaire mondial à Bretton Woods.\n\nUne crise qui redéfinit l'équilibre entre sécurité et liberté.\n\nLes États-Unis ne sont pas seulement une puissance.\nIls sont un régulateur.\n\nLa monnaie, la confiance, le crédit.\nTrois leviers capables d'influencer des continents entiers.\n\nSi la Suisse canalise les flux,\nalors ici… on en règle la cadence.\n\nVotre mission :\nIdentifier comment le système monétaire devient un nœud stratégique mondial."
+  },
+  "quiz_rules": {
+    "total_questions": 10,
+    "draw_per_run": 6,
+    "distribution": {
+      "A": 4,
+      "B": 1,
+      "C": 1
+    },
+    "max_mistakes": 1
+  },
+  "question_bank": [
     {
-      "question": "La NSA (National Security Agency) fut révélée au grand public en 2013 grâce aux documents d'Edward Snowden. Quel programme de surveillance massive de la NSA collectait les métadonnées téléphoniques de millions d'Américains ?",
-      "type": "culture",
-      "choices": [
-        "Programme PRISM",
-        "Programme MYSTIC",
-        "Programme STELLAR WIND",
-        "Programme BOUNDLESS INFORMANT"
-      ],
-      "answer": "Programme PRISM",
-      "explanation": "PRISM, révélé en juin 2013, permettait à la NSA d'accéder directement aux serveurs de Google, Apple, Facebook, Microsoft, Yahoo, YouTube, Skype, AOL et PalTalk. Snowden révéla aussi XKeyscore (capture de tout le trafic internet) et Boundless Informant (cartographie mondiale de la surveillance). La Cour suprême jugea STELLAR WIND illégal en 2020 — sept ans après son exposition."
+      "id": "US_Q1",
+      "type": "A",
+      "question": "En quelle année la Réserve fédérale américaine (Federal Reserve) a-t-elle été créée ?",
+      "choices": ["1893", "1907", "1913", "1929"],
+      "answer_index": 2
     },
     {
-      "question": "Le projet MKUltra de la CIA, découvert en 1977, visait à développer quoi exactement ?",
-      "type": "observation",
-      "choices": [
-        "Des armes biologiques à base de champignons",
-        "Des techniques de contrôle mental via LSD et privation sensorielle",
-        "Un programme d'assassinats politiques ciblés",
-        "Une méthode pour décrypter les communications soviétiques"
-      ],
-      "answer": "Des techniques de contrôle mental via LSD et privation sensorielle",
-      "explanation": "MKUltra (1953-1973) fut un programme secret de la CIA testant LSD, hypnose, privation sensorielle et torture psychologique — parfois sur des sujets non consentants, dont des patients psychiatriques et des prisonniers. Il fut exposé lors des auditions Church de 1975. La CIA détruisit 90% des documents en 1973. Ce qui reste confirme les expériences. Ce qui manque reste inconnu."
+      "id": "US_Q2",
+      "type": "A",
+      "question": "Dans quelle ville se trouve le siège principal de la Réserve fédérale (Board of Governors) ?",
+      "choices": ["New York", "Chicago", "Washington D.C.", "Boston"],
+      "answer_index": 2
     },
     {
-      "question": "ATTENTION : Cette question contient une information délibérément fausse. Parmi ces affirmations sur la CIA, laquelle est VRAIE ?",
-      "type": "logique",
-      "choices": [
-        "La CIA a son siège à New York depuis 1952",
-        "La CIA a orchestré le coup d'État contre le Premier ministre iranien Mossadegh en 1953",
-        "La CIA est sous l'autorité directe du Congrès américain",
-        "La CIA a été fondée en 1961 par John F. Kennedy"
-      ],
-      "answer": "La CIA a orchestré le coup d'État contre le Premier ministre iranien Mossadegh en 1953",
-      "explanation": "L'opération AJAX (1953) : la CIA et le MI6 britannique renversèrent Mossadegh, premier ministre élu d'Iran, qui avait nationalisé les compagnies pétrolières. Le Shah fut replacé au pouvoir. Cet événement explique directement la révolution islamique de 1979 et 70 ans de tension américano-iranienne. La CIA a son siège à Langley, Virginie (pas New York), a été fondée en 1947, et répond au président — pas au Congrès."
+      "id": "US_Q3",
+      "type": "A",
+      "question": "En quelle année a eu lieu la conférence de Bretton Woods qui a reconfiguré le système monétaire international ?",
+      "choices": ["1939", "1944", "1947", "1952"],
+      "answer_index": 1
     },
     {
-      "question": "La désinformation est une arme de guerre moderne. Quel terme désigne une information vraie mais sortie de son contexte pour créer une impression fausse ?",
-      "type": "logique",
+      "id": "US_Q4",
+      "type": "A",
+      "question": "Quelle institution internationale a été créée à Bretton Woods pour stabiliser les taux de change ?",
+      "choices": ["La Banque mondiale", "Le FMI (Fonds Monétaire International)", "La BIS", "L'OMC"],
+      "answer_index": 1
+    },
+    {
+      "id": "US_Q5",
+      "type": "A",
+      "question": "En quelle année Nixon a-t-il suspendu la convertibilité du dollar en or, mettant fin au système de Bretton Woods ?",
+      "choices": ["1965", "1968", "1971", "1975"],
+      "answer_index": 2
+    },
+    {
+      "id": "US_Q6",
+      "type": "A",
+      "question": "Combien de banques de réserve fédérale régionales composent le système de la Fed ?",
+      "choices": ["8", "10", "12", "15"],
+      "answer_index": 2
+    },
+    {
+      "id": "US_Q7",
+      "type": "B",
+      "question": "Pourquoi le statut de monnaie de réserve mondiale du dollar confère-t-il aux États-Unis un avantage stratégique ?",
       "choices": [
-        "Malinformation",
-        "Désinformation pure",
-        "Misinformation",
-        "Infox basique"
+        "Parce qu'il empêche les autres pays d'avoir des banques centrales",
+        "Parce qu'il leur permet de financer leurs déficits en émettant une devise acceptée mondialement",
+        "Parce qu'il rend le commerce international impossible sans accord américain",
+        "Parce qu'il oblige les autres pays à fixer leurs taux d'intérêt selon la Fed"
       ],
-      "answer": "Malinformation",
-      "explanation": "Les experts en guerre de l'information distinguent trois catégories : la Misinformation (fausse info partagée sans intention de nuire), la Désinformation (fausse info partagée avec intention de tromper), et la Malinformation (info VRAIE utilisée pour causer du tort — ex: révéler la vie privée de quelqu'un ou sortir une statistique réelle de son contexte). La malinformation est souvent la plus difficile à contrer car elle est irréfutable."
+      "answer_index": 1
+    },
+    {
+      "id": "US_Q8",
+      "type": "B",
+      "question": "Comment la politique monétaire de la Réserve fédérale influence-t-elle les économies mondiales ?",
+      "choices": [
+        "Elle n'a d'effets qu'aux États-Unis",
+        "En modifiant ses taux directeurs, elle affecte les flux de capitaux mondiaux et les taux de change",
+        "Elle contrôle directement les banques centrales étrangères",
+        "En imposant des sanctions commerciales bilatérales"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "US_Q9",
+      "type": "C",
+      "question": "Dans la logique de l'enquête, quel rôle jouent les États-Unis dans le système mondial des flux ?",
+      "choices": [
+        "Un empire militaire qui impose ses règles par la force",
+        "Un régulateur monétaire dont les décisions fixent la cadence des flux financiers mondiaux",
+        "Un pays isolationniste sans influence internationale",
+        "Une puissance régionale limitée à l'Amérique du Nord"
+      ],
+      "answer_index": 1,
+      "narrative_unlock": "La puissance ne s'impose pas toujours. Parfois, elle se règle — comme une fréquence."
+    },
+    {
+      "id": "US_Q10",
+      "type": "C",
+      "question": "Si la Suisse est le nœud de transit des flux, que représentent alors les États-Unis dans ce modèle ?",
+      "choices": [
+        "Le commandant secret du système",
+        "Le point de départ de tous les capitaux",
+        "Le régulateur de cadence — celui qui fixe le tempo du système",
+        "Un acteur parmi d'autres, sans rôle particulier"
+      ],
+      "answer_index": 2,
+      "narrative_unlock": "Deux nœuds identifiés. Le modèle commence à prendre forme."
     }
   ],
-  "false_hint": "Le dossier compromettant sur l'Opérateur Zéro est stocké sur un serveur isolé au sous-sol du J. Edgar Hoover Building, accessible uniquement avec le badge d'accès niveau 7 du FBI.",
-  "moral_choice": {
-    "description": "Vous avez trouvé qui a utilisé votre identité — un haut responsable du renseignement américain, membre du Cercle de Davos. Mais les preuves que vous avez récupérées ont été obtenues illégalement. Les publier pourrait déclencher une crise diplomatique. Les garder vous rend complice.",
-    "option_a": "Transmettez les preuves à un comité parlementaire de surveillance du renseignement — dans le système.",
-    "option_b": "Fuyez avec les preuves et contactez une organisation journalistique internationale — hors système.",
-    "impact_a": { "trust": 5, "suspicion": -3 },
-    "impact_b": { "trust": -7, "suspicion": 12 }
-  },
-  "final_fragment": "Fragment UMBRA — niveau Surveillance obtenu.\n\nDans le dossier, une dernière ligne chiffrée en SHA-256 se traduit par : *« Vous pensez surveiller le Cercle. Le Cercle vous observe depuis votre première mission. Le prochain fragment est gardé par celui qui voit tout sans être vu — dans le pays des illusions sacrées. »*\n\nDirection : Asie du Sud.",
-  "historical_fact": "Les États-Unis dépensent plus en renseignement que les 10 pays suivants réunis. Le budget officiel de la 'communauté du renseignement' (17 agences) dépasse 80 milliards de dollars annuels — le budget secret n'est pas publié. En 1975, la Commission Church révéla que la CIA avait planifié l'assassinat de 8 chefs d'État étrangers. Officiellement.",
-  "next_hint": "Là où le monde est une illusion, là où le réel et l'imaginaire se confondent dans une danse millénaire, le gardien du prochain fragment porte mille visages. Cherchez le mandala qui tourne.",
-  "lore": {
-    "titre": "DARK MIRROR ET LA SURVEILLANCE TOTALE",
-    "texte": "En 2024, un document interne de la NSA mentionnait pour la première fois 'Project Omega' — non comme nom de code d'une opération, mais comme désignation d'un réseau humain. Le Protocole Omega n'est pas un programme informatique. C'est une structure de personnes. Et vous en faites peut-être partie.",
-    "personnages": [
-      {
-        "nom": "Director Hartman",
-        "role": "Responsable NSA. Trop coopératif. A accès au dossier UMBRA depuis 2019."
-      },
-      {
-        "nom": "L'Opérateur Zéro",
-        "role": "Son vrai nom apparaît dans le dossier. Vous avez vu. Vous ne pouvez pas le dévoir."
-      }
-    ]
+  "fragment_reward": {
+    "id": "FRAG-US-002",
+    "name": "Fragment du Régulateur",
+    "concept": "CADENCE_MONÉTAIRE",
+    "unlocked_message": "Le second mécanisme est le tempo. Celui qui fixe le rythme contrôle les flux."
   }
 }
