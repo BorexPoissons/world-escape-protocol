@@ -542,6 +542,7 @@ const Puzzle = () => {
           unlockedPieces={selectedCountry.unlockedPieces}
           totalPieces={selectedCountry.totalPieces}
           missions={selectedCountry.missions}
+          hasFragment={selectedCountry.unlockedPieces > 0}
           onClose={() => setSelectedCountry(null)}
         />
       )}
