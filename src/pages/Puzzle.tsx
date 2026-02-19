@@ -344,7 +344,7 @@ const Puzzle = () => {
           {/* Global stats */}
           <div className="hidden md:flex items-center gap-6">
             <div className="text-right">
-              <p className="text-xs font-display tracking-widest text-muted-foreground">PROGRESSION</p>
+              <p className="text-xs font-display tracking-widest text-muted-foreground">🧩 PLAN RÉVÉLÉ</p>
               <p className="text-sm font-display font-bold text-primary">{globalProgressOn195}%</p>
             </div>
             <div className="h-8 w-px bg-border" />
@@ -356,18 +356,22 @@ const Puzzle = () => {
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="text-right">
-              <p className="text-xs font-display tracking-widest text-muted-foreground">TIER</p>
+              <p className="text-xs font-display tracking-widest text-muted-foreground">STATUT</p>
               <p
                 className="text-sm font-display font-bold"
                 style={{
-                  color: tier === "director"
-                    ? "hsl(280 60% 65%)"
-                    : tier === "agent"
-                    ? "hsl(220 80% 65%)"
-                    : "hsl(var(--muted-foreground))",
+                  color:
+                    globalProgressOn195 >= 100 ? "hsl(0 70% 58%)" :
+                    globalProgressOn195 >= 50  ? "hsl(280 65% 62%)" :
+                    globalProgressOn195 >= 20  ? "hsl(160 60% 52%)" :
+                    globalProgressOn195 >= 5   ? "hsl(220 80% 65%)" :
+                    "hsl(40 85% 62%)",
                 }}
               >
-                {tier === "director" ? "DIRECTEUR" : tier === "agent" ? "AGENT" : "EXPLORATEUR"}
+                {globalProgressOn195 >= 100 ? "MAÎTRE DU PROTOCOLE" :
+                 globalProgressOn195 >= 50  ? "ARCHITECTE" :
+                 globalProgressOn195 >= 20  ? "STRATÈGE" :
+                 globalProgressOn195 >= 5   ? "AGENT" : "EXPLORATEUR"}
               </p>
             </div>
           </div>
@@ -449,6 +453,7 @@ const Puzzle = () => {
             placedCountryIds={placedCountryIds}
             onDropOnCountry={handleDropOnCountry}
             onCountryClick={handleCountryClick}
+            globalProgress={globalProgressOn195}
           />
         </motion.div>
 
