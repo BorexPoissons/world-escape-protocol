@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 import UpgradeModal from "@/components/UpgradeModal";
+import IntroScreen from "@/components/IntroScreen";
 
 type ProfileData = Tables<"profiles"> & { subscription_type?: string };
 type CountryRow = Tables<"countries"> & {
@@ -160,6 +161,8 @@ const FLAG_EMOJI: Record<string, string> = {
   KR: "🇰🇷", GR: "🇬🇷", PT: "🇵🇹", NL: "🇳🇱", SE: "🇸🇪",
 };
 
+const INTRO_SEEN_KEY = "wep_intro_seen";
+
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -173,7 +176,26 @@ const Dashboard = () => {
     open: false,
     type: "agent",
   });
+  // Cinematic intro — auto on first visit, replayable
+  const [showIntro, setShowIntro] = useState(false);
   const isDemo = !user;
+
+  // Auto-play intro on first visit (per-browser flag)
+  useEffect(() => {
+    const seen = localStorage.getItem(INTRO_SEEN_KEY);
+    if (!seen) {
+      setShowIntro(true);
+    }
+  }, []);
+
+  const handleIntroComplete = () => {
+    localStorage.setItem(INTRO_SEEN_KEY, "1");
+    setShowIntro(false);
+  };
+
+  const handleReplayIntro = () => {
+    setShowIntro(true);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -271,6 +293,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background bg-grid">
+      {/* Cinematic intro overlay */}
+      {showIntro && <IntroScreen onComplete={handleIntroComplete} />}
+
       {/* Upgrade modal */}
       <UpgradeModal
         open={upgradeModal.open}
@@ -307,6 +332,17 @@ const Dashboard = () => {
                 </p>
               </div>
             )}
+            {/* Replay intro — always visible */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleReplayIntro}
+              title="Revoir l'introduction"
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              <PlayCircle className="h-5 w-5" />
+            </Button>
+
             {isDemo ? (
               <Link to="/auth">
                 <Button size="sm" className="font-display tracking-wider text-xs">CRÉER UN COMPTE</Button>
