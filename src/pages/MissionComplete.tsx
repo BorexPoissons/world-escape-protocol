@@ -272,12 +272,12 @@ const MissionComplete = () => {
                     className="relative rounded-xl overflow-hidden"
                     style={{ boxShadow: "0 0 60px hsl(40 80% 55% / 0.3)" }}
                   >
-                    <img
-                      src={cinematicImg}
-                      alt={`Jasper Valcourt — Mission ${country?.name} complète`}
-                      className="w-full object-cover"
-                      style={{ maxHeight: "540px", objectPosition: "top" }}
-                    />
+                     <img
+                       src={cinematicImg}
+                       alt={`Jasper Valcourt — Mission ${country?.name} complète`}
+                       className="w-full object-contain"
+                       style={{ maxHeight: "820px" }}
+                     />
                     {/* Fade bottom into background */}
                     <div
                       className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
