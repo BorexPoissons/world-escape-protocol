@@ -6,10 +6,10 @@
   "mission": {
     "mission_id": "IN-S1-005",
     "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
-    "phase": "DEMOGRAPHIQUE_PIVOT",
-    "is_free": false,
+    "phase": "DEMOGRAPHIE_INNOVATION",
+    "is_free": true,
     "detective": "Jasper Valcourt",
-    "intro": "New Delhi.\nChaleur sèche. Poussière suspendue.\n\nLe bruit est constant.\nMoteurs, voix, sirènes, prières.\n\nAprès les flux suisses,\nle rythme américain,\nle réseau chinois,\net les ressources brésiliennes…\n\nJasper Valcourt découvre une autre force.\n\nLa masse.\n\nPlus d'un milliard d'habitants.\nUne population jeune.\nUn secteur technologique en expansion rapide.\n\nUne démocratie immense.\nUn carrefour stratégique entre Occident et Asie.\n\nL'Inde ne domine pas encore le système.\nMais elle peut en modifier l'équilibre.\n\nQuand une population grandit,\nle marché suit.\n\nQuand la technologie se développe,\nl'influence se diffuse.\n\nVotre mission :\nComprendre comment la démographie et l'innovation transforment un pays en futur pivot mondial.\n\nLe pouvoir de demain ne se décrète pas.\nIl se prépare."
+    "intro": "New Delhi. Chaleur sèche.\n\nAprès la Suisse, les États-Unis, la Chine et le Brésil,\nJasper découvre une autre variable.\n\nLa masse.\n\nUne population immense.\nUne jeunesse dominante.\nUn secteur technologique en croissance rapide.\n\nL'Inde ne domine pas encore le système.\nMais elle peut en modifier l'équilibre.\n\nVotre mission :\nComprendre comment démographie et innovation deviennent des leviers stratégiques mondiaux."
   },
   "quiz_rules": {
     "total_questions": 10,
@@ -26,103 +26,99 @@
       "id": "IN_Q1",
       "type": "A",
       "question": "Quelle est la capitale de l'Inde ?",
-      "choices": ["Mumbai", "Kolkata", "New Delhi", "Chennai"],
+      "choices": ["Mumbai", "Bangalore", "New Delhi", "Chennai"],
       "answer_index": 2
     },
     {
       "id": "IN_Q2",
       "type": "A",
-      "question": "En 2023, l'Inde est devenue le pays le plus peuplé du monde, devançant quel autre pays ?",
-      "choices": ["États-Unis", "Russie", "Chine", "Indonésie"],
-      "answer_index": 2,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Simple_world_map.svg/640px-Simple_world_map.svg.png",
-        "caption": "L'Inde a dépassé la Chine en 2023 pour devenir la nation la plus peuplée du monde"
-      }
+      "question": "L'Inde est devenue en 2023 le pays le plus peuplé du monde devant quel pays ?",
+      "choices": ["États-Unis", "Chine", "Indonésie", "Pakistan"],
+      "answer_index": 1
     },
     {
       "id": "IN_Q3",
       "type": "A",
-      "question": "Quelle ville indienne est considérée comme le principal hub mondial de l'externalisation technologique (IT) ?",
-      "choices": ["Mumbai", "Bangalore", "Hyderabad", "Pune"],
-      "answer_index": 1
+      "question": "Quelle ville est considérée comme le principal hub technologique de l'Inde ?",
+      "choices": ["Jaipur", "Hyderabad", "Bangalore", "Kolkata"],
+      "answer_index": 2
     },
     {
       "id": "IN_Q4",
       "type": "A",
-      "question": "L'Inde est membre fondateur de quel groupement regroupant également le Brésil, la Russie, la Chine et l'Afrique du Sud ?",
-      "choices": ["G7", "ASEAN", "BRICS", "OPEP"],
-      "answer_index": 2
+      "question": "Quelle est la monnaie officielle de l'Inde ?",
+      "choices": ["Roupie indienne", "Yuan", "Baht", "Ringgit"],
+      "answer_index": 0
     },
     {
       "id": "IN_Q5",
       "type": "A",
-      "question": "Quelle est la monnaie officielle de l'Inde ?",
-      "choices": ["Taka", "Roupie", "Rupiah", "Dirham"],
+      "question": "Quel océan borde la côte sud de l'Inde ?",
+      "choices": ["Océan Atlantique", "Océan Indien", "Océan Pacifique", "Mer Rouge"],
       "answer_index": 1
     },
     {
       "id": "IN_Q6",
       "type": "A",
-      "question": "Quel grand fleuve sacré traversant l'Inde est au cœur de la culture et de l'agriculture du pays ?",
-      "choices": ["Indus", "Brahmapoutre", "Gange", "Yamuna"],
-      "answer_index": 2
+      "question": "Quel système numérique indien permet des paiements instantanés à grande échelle ?",
+      "choices": ["UPI", "Alipay", "PayPal", "SwiftNet"],
+      "answer_index": 0
     },
     {
       "id": "IN_Q7",
       "type": "B",
-      "question": "Pourquoi une population jeune et nombreuse est-elle un atout géopolitique ?",
+      "question": "Pourquoi une population jeune peut-elle devenir un avantage stratégique ?",
       "choices": [
-        "Elle consomme uniquement des ressources locales",
-        "Elle représente un marché intérieur et une main-d'œuvre compétitive à l'échelle mondiale",
-        "Elle fragilise automatiquement les institutions",
-        "Elle n'a aucun impact sur la croissance économique"
+        "Elle réduit la production",
+        "Elle soutient la croissance économique et l'innovation",
+        "Elle supprime les institutions",
+        "Elle isole le pays"
       ],
       "answer_index": 1
     },
     {
       "id": "IN_Q8",
       "type": "B",
-      "question": "Comment le secteur technologique indien influence-t-il l'économie mondiale ?",
+      "question": "Pourquoi l'Inde est-elle considérée comme un acteur clé dans l'équilibre géopolitique asiatique ?",
       "choices": [
-        "En isolant l'Inde des marchés étrangers",
-        "En fournissant des services numériques et en formant des ingénieurs pour les grandes entreprises mondiales",
-        "En remplaçant les industries manufacturières globales",
-        "En créant une dépendance aux matières premières"
+        "Elle est isolée du reste du monde",
+        "Elle est située entre grandes puissances et routes maritimes stratégiques",
+        "Elle n'a aucune influence régionale",
+        "Elle dépend totalement d'un seul pays"
       ],
       "answer_index": 1
     },
     {
       "id": "IN_Q9",
       "type": "C",
-      "question": "Dans la logique du système mondial, que représente la montée en puissance de l'Inde ?",
+      "question": "Dans la logique mondiale, que représente la combinaison démographie + technologie ?",
       "choices": [
-        "Un facteur régional sans portée internationale",
-        "Un contre-poids potentiel modifiant les équilibres entre grandes puissances",
-        "Une menace militaire directe",
-        "Un phénomène purement culturel"
+        "Une instabilité permanente",
+        "Un potentiel de transformation systémique",
+        "Un simple phénomène local",
+        "Un ralentissement économique"
       ],
       "answer_index": 1,
-      "narrative_unlock": "La démographie est le levier le plus lent — et le plus puissant."
+      "narrative_unlock": "La masse devient puissance lorsqu'elle se connecte."
     },
     {
       "id": "IN_Q10",
       "type": "C",
-      "question": "Quel lien relie démographie, technologie et influence géopolitique indienne ?",
+      "question": "Quel lien relie croissance démographique, innovation numérique et influence mondiale ?",
       "choices": [
-        "Un hasard historique",
-        "La capacité à peser sur les chaînes d'approvisionnement mondiales et les alliances stratégiques",
-        "Une domination militaire régionale",
-        "Un isolement volontaire"
+        "La réduction des échanges",
+        "L'augmentation du poids économique et stratégique",
+        "L'isolement continental",
+        "Un effet purement culturel"
       ],
       "answer_index": 1,
-      "narrative_unlock": "Le pouvoir de demain ne se décrète pas. Il se prépare."
+      "narrative_unlock": "Le futur appartient aux marchés en expansion."
     }
   ],
   "fragment_reward": {
     "id": "FRAG-IN-005",
-    "name": "Fragment Subcontinent",
+    "name": "Fragment Subcontinent Silencieux",
     "concept": "NŒUD_DEMOGRAPHIQUE",
-    "unlocked_message": "La démographie est le levier le plus lent — et le plus puissant."
+    "unlocked_message": "La masse devient puissance lorsqu'elle se connecte."
   }
 }
