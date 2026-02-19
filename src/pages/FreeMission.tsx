@@ -16,16 +16,66 @@ import type { Tables } from "@/integrations/supabase/types";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface FreeCountryData {
-  country: { code: string; name_fr: string };
+  country: { code: string; name_fr?: string; name?: string };
   mission: {
     mission_id: string;
     mission_title: string;
-    phase: string;
-    is_free: boolean;
-    detective: string;
-    intro: string;
+    phase?: string;
+    is_free?: boolean;
+    detective?: string;
+    // Nouveau format
+    intro_text?: string;
+    // Ancien format
+    intro?: string;
+    // Champs additionnels nouveau format
+    order_index?: number;
+    total_free?: number;
+    format?: string;
   };
-  question_bank: Array<{
+  // Nouveau format : scène immersive narrative
+  scene?: {
+    prompt?: string;
+    setup?: string;
+    choices: string[];
+    correct_choice_index: number;
+    success_text?: string;
+    correct_feedback?: string;
+    wrong_feedback?: string;
+  };
+  // Nouveau format : indice
+  clue?: {
+    title?: string;
+    text?: string;
+  };
+  // Nouveau format : puzzle logique (lettre)
+  puzzle?: {
+    type?: string;
+    instruction?: string;
+    question?: string;
+    input?: string;
+    solution_number?: number;
+    solution_letter?: string;
+    explain_if_failed?: string;
+    explanation?: string;
+    letter_choices?: string[];
+  };
+  // Nouveau format : question finale stratégique
+  final_question?: {
+    question: string;
+    choices: string[];
+    answer_index: number;
+    narrative_unlock?: string;
+  };
+  // Nouveau format : récompense
+  reward?: {
+    letter_obtained: string;
+    fragment?: { id: string; concept: string; name: string };
+    jasper_quote?: string;
+    next_country_code?: string | null;
+    next_destination_hint?: string;
+  };
+  // Ancien format : banque de questions classique
+  question_bank?: Array<{
     id: string;
     type: "A" | "B" | "C";
     question: string;
@@ -34,24 +84,31 @@ interface FreeCountryData {
     narrative_unlock?: string;
     hint_image?: { url: string; caption: string };
   }>;
-  fragment_reward: {
+  // Ancien format : fragment reward
+  fragment_reward?: {
     id: string;
     name: string;
     concept: string;
     unlocked_message: string;
   };
-  next_country_hint?: string; // optional: narrative hint towards next country
+  next_country_hint?: string;
 }
 
 type FreePhase =
   | "loading"
   | "intro"           // Scène immersive avec texte
-  | "scene_choice"    // 3 choix (1 seul correct) — question Type A
-  | "logic_puzzle"    // Énigme logique — résultat = une lettre (question Type B)
-  | "strategic"       // Question stratégique finale (question Type C)
+  | "scene_choice"    // 3 choix immersifs (nouveau) ou question Type A (ancien)
+  | "logic_puzzle"    // Énigme logique — résultat = une lettre
+  | "strategic"       // Question stratégique finale
   | "letter_reveal"   // Révélation de la lettre obtenue
   | "reward"          // Fragment + citation + hint vers pays suivant
   | "failed";         // Échec
+
+// Détecte si le JSON utilise le nouveau format (scène + puzzle + final_question)
+// ou l'ancien format (question_bank avec types A/B/C)
+function isNewFormat(data: FreeCountryData): boolean {
+  return !!(data.scene || data.puzzle || data.final_question || data.reward);
+}
 
 const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
 
@@ -63,13 +120,14 @@ const NEXT_COUNTRY_HINTS: Record<string, string> = {
   IN: "Tous les nœuds sont maintenant actifs. Le signal initial est complet.",
 };
 
-// Letters assigned to each free country (form a hidden word across the 5 missions)
+// Letters — fallback si reward.letter_obtained absent du JSON
+// (le JSON définit la lettre via reward.letter_obtained, ces valeurs sont des backups)
 const COUNTRY_LETTERS: Record<string, string> = {
-  CH: "O",
-  US: "M",
-  CN: "E",
-  BR: "G",
-  IN: "A",
+  CH: "O",  // Fragment de la Croix Alpine (ancien format CH.json)
+  US: "N",  // Fragment Federal Shadow (nouveau format: 1+9+1+3=14→N)
+  CN: "F",  // Fragment Dragon Silencieux (nouveau format: 2+0+1+3=6→F)
+  BR: "J",  // Fragment Carnaval Noir (nouveau format: 2+0+0+8=10→J)
+  IN: "I",  // Fragment Subcontinent (nouveau format: 2+0+1+6=9→I)
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -94,10 +152,11 @@ const FreeMission = () => {
   const [phase, setPhase] = useState<FreePhase>("loading");
   const [missionStartTime] = useState(() => Date.now());
 
-  // The 3 selected questions (one per step)
-  const [sceneQuestion, setSceneQuestion] = useState<FreeCountryData["question_bank"][0] | null>(null);
-  const [logicQuestion, setLogicQuestion] = useState<FreeCountryData["question_bank"][0] | null>(null);
-  const [strategicQuestion, setStrategicQuestion] = useState<FreeCountryData["question_bank"][0] | null>(null);
+  // The 3 selected questions — ancien format (question_bank A/B/C)
+  type QBankItem = NonNullable<FreeCountryData["question_bank"]>[0];
+  const [sceneQuestion, setSceneQuestion] = useState<QBankItem | null>(null);
+  const [logicQuestion, setLogicQuestion] = useState<QBankItem | null>(null);
+  const [strategicQuestion, setStrategicQuestion] = useState<QBankItem | null>(null);
 
   // Shuffled choices for each step
   const [sceneChoices, setSceneChoices] = useState<string[]>([]);
@@ -108,11 +167,13 @@ const FreeMission = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [sceneCorrect, setSceneCorrect] = useState(false);
+  // Feedback texte pour la scène immersive (nouveau format)
+  const [sceneFeedback, setSceneFeedback] = useState<string>("");
 
   // The letter obtained
   const [earnedLetter, setEarnedLetter] = useState<string>("");
 
-  // Narrative unlock text (from Type C correct answer)
+  // Narrative unlock text (from strategic answer)
   const [narrativeText, setNarrativeText] = useState<string>("");
 
   // Next country info
@@ -126,7 +187,6 @@ const FreeMission = () => {
   }, [countryId]);
 
   const loadFreeMission = async () => {
-    // Load country from DB
     const { data: countryData } = await supabase
       .from("countries")
       .select("*")
@@ -136,7 +196,7 @@ const FreeMission = () => {
     if (!countryData) { navigate("/dashboard"); return; }
     setCountry(countryData);
 
-    // Load next country in sequence
+    // Charger le prochain pays dans la séquence
     const nextCode = getNextCode(countryData.code);
     if (nextCode) {
       const { data: nextData } = await supabase
@@ -147,33 +207,42 @@ const FreeMission = () => {
       if (nextData) setNextCountry(nextData);
     }
 
-    // Load static JSON
     try {
       const res = await fetch(`/content/countries/${countryData.code}.json`);
       if (!res.ok) throw new Error("no static file");
       const json: FreeCountryData = await res.json();
       setData(json);
 
-      // Draw questions: 1 Type A, 1 Type B, 1 Type C
-      const typeA = shuffle(json.question_bank.filter(q => q.type === "A"));
-      const typeB = shuffle(json.question_bank.filter(q => q.type === "B"));
-      const typeC = shuffle(json.question_bank.filter(q => q.type === "C"));
+      if (isNewFormat(json)) {
+        // ── Nouveau format : scène narrative + puzzle lettre + question finale ──
+        const letter = json.reward?.letter_obtained
+          ?? COUNTRY_LETTERS[countryData.code]
+          ?? "?";
+        setEarnedLetter(letter);
+        if (json.scene?.choices) setSceneChoices([...json.scene.choices]);
+        if (json.final_question?.choices) setStrategicChoices(shuffle([...json.final_question.choices]));
+      } else {
+        // ── Ancien format : question_bank A/B/C ──
+        const qbank = json.question_bank ?? [];
+        const typeA = shuffle(qbank.filter(q => q.type === "A"));
+        const typeB = shuffle(qbank.filter(q => q.type === "B"));
+        const typeC = shuffle(qbank.filter(q => q.type === "C"));
 
-      const sq = typeA[0] ?? null;
-      const lq = typeB[0] ?? null;
-      const stq = typeC[0] ?? null;
+        const sq = typeA[0] ?? null;
+        const lq = typeB[0] ?? null;
+        const stq = typeC[0] ?? null;
 
-      setSceneQuestion(sq);
-      setLogicQuestion(lq);
-      setStrategicQuestion(stq);
+        setSceneQuestion(sq);
+        setLogicQuestion(lq);
+        setStrategicQuestion(stq);
 
-      if (sq) setSceneChoices(shuffle([...sq.choices]));
-      if (lq) setLogicChoices(shuffle([...lq.choices]));
-      if (stq) setStrategicChoices(shuffle([...stq.choices]));
+        if (sq) setSceneChoices(shuffle([...sq.choices]));
+        if (lq) setLogicChoices(shuffle([...lq.choices]));
+        if (stq) setStrategicChoices(shuffle([...stq.choices]));
+      }
 
       setPhase("intro");
     } catch {
-      // No static file — redirect to classic mission
       navigate(`/mission-classic/${countryId}`);
     }
   };
@@ -186,6 +255,21 @@ const FreeMission = () => {
 
   // ── Answer handlers ─────────────────────────────────────────────────────────
 
+  // Nouveau format : scène immersive (choices directs dans json.scene)
+  const handleNewFormatSceneAnswer = (choice: string) => {
+    if (answerRevealed || !data?.scene) return;
+    const scene = data.scene;
+    const correctChoice = scene.choices[scene.correct_choice_index];
+    const correct = choice === correctChoice;
+    setSelectedAnswer(choice);
+    setAnswerRevealed(true);
+    setSceneCorrect(correct);
+    setSceneFeedback(correct
+      ? (scene.success_text ?? scene.correct_feedback ?? "✓ Bonne analyse.")
+      : (scene.wrong_feedback ?? "✗ Ce n'est pas le bon angle."));
+  };
+
+  // Ancien format : question Type A
   const handleSceneAnswer = (choice: string) => {
     if (answerRevealed || !sceneQuestion) return;
     const correct = choice === sceneQuestion.choices[sceneQuestion.answer_index];
@@ -194,17 +278,31 @@ const FreeMission = () => {
     setSceneCorrect(correct);
   };
 
+  // Ancien format : question Type B
   const handleLogicAnswer = (choice: string) => {
     if (answerRevealed || !logicQuestion) return;
     const correct = choice === logicQuestion.choices[logicQuestion.answer_index];
     setSelectedAnswer(choice);
     setAnswerRevealed(true);
-    if (!correct) {
-      // Wrong logic answer → fail
+    if (!correct) setTimeout(() => setPhase("failed"), 1200);
+  };
+
+  // Nouveau format : question finale stratégique (json.final_question)
+  const handleNewFormatFinalAnswer = (choice: string) => {
+    if (answerRevealed || !data?.final_question) return;
+    const fq = data.final_question;
+    const correct = choice === fq.choices[fq.answer_index];
+    setSelectedAnswer(choice);
+    setAnswerRevealed(true);
+    if (correct) {
+      if (fq.narrative_unlock) setNarrativeText(fq.narrative_unlock);
+      setTimeout(() => setPhase("letter_reveal"), 1000);
+    } else {
       setTimeout(() => setPhase("failed"), 1200);
     }
   };
 
+  // Ancien format : question Type C
   const handleStrategicAnswer = (choice: string) => {
     if (answerRevealed || !strategicQuestion) return;
     const correct = choice === strategicQuestion.choices[strategicQuestion.answer_index];
@@ -216,10 +314,8 @@ const FreeMission = () => {
     }
 
     if (!correct) {
-      // Wrong strategic answer → fail (it's the final critical question)
       setTimeout(() => setPhase("failed"), 1200);
     } else {
-      // Reveal the letter
       const letter = country ? (COUNTRY_LETTERS[country.code] ?? "?") : "?";
       setEarnedLetter(letter);
       setTimeout(() => setPhase("letter_reveal"), 1000);
@@ -232,10 +328,9 @@ const FreeMission = () => {
     if (!countryId || !data || !country) return;
 
     const timeElapsed = Math.round((Date.now() - missionStartTime) / 1000);
-    const xpGained = 150; // fixed XP for free missions
+    const xpGained = 150;
 
     if (!user) {
-      // Demo mode
       const prev = JSON.parse(localStorage.getItem("wep_demo_progress") || "{}");
       prev[countryId] = { score: 3, total: 3, time: timeElapsed, letter: earnedLetter };
       localStorage.setItem("wep_demo_progress", JSON.stringify(prev));
@@ -244,30 +339,24 @@ const FreeMission = () => {
       return;
     }
 
-    // Save via RPC
     const { error: rpcError } = await (supabase as any).rpc("complete_country_attempt", {
       p_user_id: user.id,
       p_country_code: country.code,
       p_score: 3,
       p_total: 3,
     });
+    if (rpcError) console.error("complete_country_attempt error:", rpcError);
 
-    if (rpcError) {
-      console.error("complete_country_attempt error:", rpcError);
-    }
-
-    // Save mission record
     await supabase.from("missions").insert({
       user_id: user.id,
       country_id: countryId,
       mission_title: data.mission.mission_title,
-      mission_data: { letter: earnedLetter, format: "free_v2" } as any,
+      mission_data: { letter: earnedLetter, format: isNewFormat(data) ? "free_v3" : "free_v2" } as any,
       completed: true,
       score: 3,
       completed_at: new Date().toISOString(),
     });
 
-    // Update XP + streak
     const { data: profileRaw } = await supabase
       .from("profiles")
       .select("xp, level, streak, longest_streak")
@@ -281,14 +370,10 @@ const FreeMission = () => {
     const newLevel = Math.floor(newXp / 200) + 1;
 
     await (supabase.from("profiles") as any).update({
-      xp: newXp,
-      level: newLevel,
-      streak: newStreak,
-      longest_streak: longestStreak,
-      last_mission_at: new Date().toISOString(),
+      xp: newXp, level: newLevel, streak: newStreak,
+      longest_streak: longestStreak, last_mission_at: new Date().toISOString(),
     }).eq("user_id", user.id);
 
-    // Badges
     const { count: missionCount } = await supabase
       .from("missions")
       .select("id", { count: "exact" })
@@ -296,18 +381,10 @@ const FreeMission = () => {
       .eq("completed", true);
 
     checkAndAwardBadges({
-      userId: user.id,
-      score: 3,
-      total: 3,
-      timeElapsed,
-      usedHint: false,
-      ignoredFakeClue: true,
-      missionCount: missionCount ?? 1,
-      streak: newStreak,
-      trustLevel: 50,
-      suspicionLevel: 0,
-      completedCountries: 1,
-      xp: newXp,
+      userId: user.id, score: 3, total: 3, timeElapsed,
+      usedHint: false, ignoredFakeClue: true,
+      missionCount: missionCount ?? 1, streak: newStreak,
+      trustLevel: 50, suspicionLevel: 0, completedCountries: 1, xp: newXp,
     });
 
     toast({ title: "Mission accomplie !", description: `Lettre débloquée : ${earnedLetter} · +${xpGained} XP` });
@@ -319,6 +396,7 @@ const FreeMission = () => {
     setSelectedAnswer(null);
     setAnswerRevealed(false);
     setSceneCorrect(false);
+    setSceneFeedback("");
     setEarnedLetter("");
     setNarrativeText("");
     loadFreeMission();
@@ -419,11 +497,11 @@ const FreeMission = () => {
                 </div>
               </div>
 
-              {/* Intro narrative */}
+              {/* Intro narrative — supporte intro_text (nouveau) et intro (ancien) */}
               <div className="bg-card border border-border rounded-lg p-6 border-glow relative overflow-hidden">
                 <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
                 <TypewriterText
-                  text={data.mission.intro}
+                  text={data.mission.intro_text ?? data.mission.intro ?? ""}
                   speed={18}
                   className="text-foreground leading-relaxed whitespace-pre-line relative z-10"
                 />
@@ -438,19 +516,91 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── SCENE CHOICE ── */}
-          {phase === "scene_choice" && sceneQuestion && (
+          {/* ── SCENE CHOICE ── Nouveau format : scène narrative + choix directs */}
+          {phase === "scene_choice" && data && isNewFormat(data) && data.scene && (
             <motion.div
-              key="scene"
+              key="scene-new"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               className="space-y-6"
             >
-              {/* Step indicator */}
               <StepIndicator step={1} label="SCÈNE IMMERSIVE" />
 
-              {/* Scene narrative hint */}
+              {/* Prompt narratif de la scène */}
+              <div className="bg-card border border-primary/15 rounded-lg px-5 py-4 relative overflow-hidden">
+                <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
+                <p className="text-xs font-display tracking-[0.4em] text-primary/60 mb-2 relative z-10">TRANSMISSION EN COURS</p>
+                <p className="text-foreground leading-relaxed relative z-10 whitespace-pre-line">
+                  {data.scene.prompt ?? data.scene.setup}
+                </p>
+              </div>
+
+              {/* Clue / indice si présent */}
+              {data.clue && (
+                <div className="rounded-lg p-4 border border-primary/20 bg-primary/4 text-sm">
+                  <p className="text-xs font-display tracking-widest text-primary/60 mb-1">{data.clue.title}</p>
+                  <p className="text-muted-foreground whitespace-pre-line">{data.clue.text}</p>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {data.scene.choices.map((choice, i) => {
+                  const correctChoice = data.scene!.choices[data.scene!.correct_choice_index];
+                  const isCorrect = choice === correctChoice;
+                  const isSelected = choice === selectedAnswer;
+                  let cls = "border-border hover:border-primary/50 cursor-pointer hover:bg-primary/5";
+                  if (answerRevealed) {
+                    if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
+                    else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
+                    else cls = "border-border opacity-40 cursor-default";
+                  }
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleNewFormatSceneAnswer(choice)}
+                      disabled={answerRevealed}
+                      className={`w-full text-left p-4 rounded-lg border transition-all bg-card ${cls}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-foreground leading-snug">{choice}</span>
+                        {answerRevealed && isCorrect && <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />}
+                        {answerRevealed && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {answerRevealed && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className={`rounded-lg px-5 py-4 border text-sm ${
+                    sceneCorrect ? "border-primary/40 bg-primary/8 text-primary" : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
+                  }`}>
+                    {sceneFeedback}
+                  </div>
+                  <Button
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("logic_puzzle"); }}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    CONTINUER L'ENQUÊTE →
+                  </Button>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── SCENE CHOICE ── Ancien format : question Type A */}
+          {phase === "scene_choice" && data && !isNewFormat(data) && sceneQuestion && (
+            <motion.div
+              key="scene-old"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              <StepIndicator step={1} label="SCÈNE IMMERSIVE" />
+
               <div className="bg-card border border-primary/15 rounded-lg px-5 py-4 flex items-start gap-3">
                 <Zap className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-muted-foreground italic">
@@ -471,8 +621,7 @@ const FreeMission = () => {
                     if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
                     else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
                     else cls = "border-border opacity-40 cursor-default";
-                  } else if (isSelected) cls = "border-primary/50 bg-primary/5";
-
+                  }
                   return (
                     <button
                       key={i}
@@ -490,24 +639,15 @@ const FreeMission = () => {
                 })}
               </div>
 
-              {/* After answer feedback */}
               {answerRevealed && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                   <div className={`rounded-lg px-5 py-4 border text-sm font-display tracking-wider ${
-                    sceneCorrect
-                      ? "border-primary/40 bg-primary/8 text-primary"
-                      : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
+                    sceneCorrect ? "border-primary/40 bg-primary/8 text-primary" : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
                   }`}>
-                    {sceneCorrect
-                      ? "✓ ANALYSE CORRECTE — Jasper confirme votre évaluation."
-                      : "✗ ANALYSE INCORRECTE — Jasper note l'erreur mais continue la mission."}
+                    {sceneCorrect ? "✓ ANALYSE CORRECTE — Jasper confirme votre évaluation." : "✗ ANALYSE INCORRECTE — Jasper note l'erreur mais continue la mission."}
                   </div>
                   <Button
-                    onClick={() => {
-                      setSelectedAnswer(null);
-                      setAnswerRevealed(false);
-                      setPhase("logic_puzzle");
-                    }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("logic_puzzle"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     PASSER À L'ÉNIGME LOGIQUE →
@@ -517,10 +657,10 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── LOGIC PUZZLE ── */}
-          {phase === "logic_puzzle" && logicQuestion && (
+          {/* ── LOGIC PUZZLE ── Nouveau format : puzzle alphabet (lettre directe, pas de question B) */}
+          {phase === "logic_puzzle" && data && isNewFormat(data) && data.puzzle && (
             <motion.div
-              key="logic"
+              key="logic-new"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
@@ -528,7 +668,94 @@ const FreeMission = () => {
             >
               <StepIndicator step={2} label="ÉNIGME LOGIQUE" />
 
-              {/* Logic puzzle narrative */}
+              <div
+                className="rounded-xl p-5 space-y-3 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--card)), hsl(var(--primary) / 0.05))",
+                  border: "1px solid hsl(var(--primary) / 0.25)",
+                }}
+              >
+                <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
+                <p className="text-xs font-display tracking-[0.4em] text-primary/60 relative z-10">TRANSMISSION CRYPTÉE</p>
+                {data.puzzle.input && (
+                  <p className="text-4xl font-display font-bold text-primary text-center relative z-10 tracking-[0.3em]">
+                    {data.puzzle.input}
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground relative z-10 whitespace-pre-line">
+                  {data.puzzle.instruction ?? data.puzzle.question}
+                </p>
+              </div>
+
+              {/* Lettre à trouver — on propose A-Z filtré selon solution_letter */}
+              {(() => {
+                const sol = data.puzzle.solution_letter ?? "A";
+                const distractors = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                  .split("")
+                  .filter(l => l !== sol)]
+                  .flat()
+                  .sort(() => Math.random() - 0.5)
+                  .slice(0, 3);
+                const choices = shuffle([sol, ...distractors]);
+                return (
+                  <div className="grid grid-cols-4 gap-3">
+                    {choices.map((letter, i) => {
+                      const isCorrect = letter === sol;
+                      const isSelected = letter === selectedAnswer;
+                      let cls = "border-border hover:border-primary/50 cursor-pointer hover:bg-primary/5";
+                      if (answerRevealed) {
+                        if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
+                        else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
+                        else cls = "border-border opacity-40 cursor-default";
+                      }
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (answerRevealed) return;
+                            setSelectedAnswer(letter);
+                            setAnswerRevealed(true);
+                            if (letter !== sol) setTimeout(() => setPhase("failed"), 1200);
+                          }}
+                          disabled={answerRevealed}
+                          className={`p-5 rounded-lg border transition-all bg-card text-center font-display text-2xl font-bold ${cls}`}
+                          style={{ color: answerRevealed && isCorrect ? "hsl(var(--primary))" : undefined }}
+                        >
+                          {letter}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {answerRevealed && selectedAnswer === data.puzzle.solution_letter && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="rounded-lg px-5 py-4 border border-primary/40 bg-primary/8 text-primary text-sm font-display tracking-wider">
+                    ✓ LETTRE IDENTIFIÉE — {data.puzzle.explanation ?? `La lettre ${data.puzzle.solution_letter} a été décodée.`}
+                  </div>
+                  <Button
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("strategic"); }}
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    DÉCISION FINALE →
+                  </Button>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── LOGIC PUZZLE ── Ancien format : question Type B */}
+          {phase === "logic_puzzle" && data && !isNewFormat(data) && logicQuestion && (
+            <motion.div
+              key="logic-old"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              <StepIndicator step={2} label="ÉNIGME LOGIQUE" />
+
               <div
                 className="rounded-xl p-5 space-y-3 relative overflow-hidden"
                 style={{
@@ -556,8 +783,7 @@ const FreeMission = () => {
                     if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
                     else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
                     else cls = "border-border opacity-40 cursor-default";
-                  } else if (isSelected) cls = "border-primary/50 bg-primary/5";
-
+                  }
                   return (
                     <button
                       key={i}
@@ -578,11 +804,7 @@ const FreeMission = () => {
               {answerRevealed && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                   <Button
-                    onClick={() => {
-                      setSelectedAnswer(null);
-                      setAnswerRevealed(false);
-                      setPhase("strategic");
-                    }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     DÉCISION FINALE →
@@ -592,10 +814,10 @@ const FreeMission = () => {
             </motion.div>
           )}
 
-          {/* ── STRATEGIC QUESTION ── */}
-          {phase === "strategic" && strategicQuestion && (
+          {/* ── STRATEGIC QUESTION ── Nouveau format : final_question */}
+          {phase === "strategic" && data && isNewFormat(data) && data.final_question && (
             <motion.div
-              key="strategic"
+              key="strategic-new"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
@@ -603,16 +825,69 @@ const FreeMission = () => {
             >
               <StepIndicator step={3} label="DÉCISION STRATÉGIQUE" isCritical />
 
-              {/* Critical warning */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
                 className="rounded-lg px-5 py-4 border text-sm"
-                style={{
-                  borderColor: "hsl(var(--primary) / 0.5)",
-                  background: "hsl(var(--primary) / 0.06)",
-                }}
+                style={{ borderColor: "hsl(var(--primary) / 0.5)", background: "hsl(var(--primary) / 0.06)" }}
+              >
+                <p className="font-display tracking-wider text-primary text-xs mb-1">⚡ QUESTION CRITIQUE</p>
+                <p className="text-muted-foreground">
+                  Cette décision détermine si vous obtenez le fragment. Une erreur ici termine la mission.
+                </p>
+              </motion.div>
+
+              <h2 className="text-2xl font-display font-bold text-foreground leading-snug">
+                {data.final_question.question}
+              </h2>
+
+              <div className="space-y-3">
+                {strategicChoices.map((choice, i) => {
+                  const isCorrect = choice === data.final_question!.choices[data.final_question!.answer_index];
+                  const isSelected = choice === selectedAnswer;
+                  let cls = "border-border hover:border-primary/50 cursor-pointer hover:bg-primary/5";
+                  if (answerRevealed) {
+                    if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
+                    else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
+                    else cls = "border-border opacity-40 cursor-default";
+                  }
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleNewFormatFinalAnswer(choice)}
+                      disabled={answerRevealed}
+                      className={`w-full text-left p-4 rounded-lg border transition-all bg-card ${cls}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-foreground leading-snug">{choice}</span>
+                        {answerRevealed && isCorrect && <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />}
+                        {answerRevealed && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STRATEGIC QUESTION ── Ancien format : question Type C */}
+          {phase === "strategic" && data && !isNewFormat(data) && strategicQuestion && (
+            <motion.div
+              key="strategic-old"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              <StepIndicator step={3} label="DÉCISION STRATÉGIQUE" isCritical />
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-lg px-5 py-4 border text-sm"
+                style={{ borderColor: "hsl(var(--primary) / 0.5)", background: "hsl(var(--primary) / 0.06)" }}
               >
                 <p className="font-display tracking-wider text-primary text-xs mb-1">⚡ QUESTION CRITIQUE</p>
                 <p className="text-muted-foreground">
@@ -633,8 +908,7 @@ const FreeMission = () => {
                     if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
                     else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
                     else cls = "border-border opacity-40 cursor-default";
-                  } else if (isSelected) cls = "border-primary/50 bg-primary/5";
-
+                  }
                   return (
                     <button
                       key={i}
@@ -653,8 +927,6 @@ const FreeMission = () => {
               </div>
             </motion.div>
           )}
-
-          {/* ── LETTER REVEAL ── */}
           {phase === "letter_reveal" && (
             <motion.div
               key="letter"
@@ -774,12 +1046,15 @@ const FreeMission = () => {
                 >
                   🧩
                 </motion.div>
-                <p className="text-xs font-display tracking-[0.5em] text-primary/60 mb-1 relative z-10">FRAGMENT OBTENU</p>
-                <h2 className="text-2xl font-display font-bold text-primary relative z-10">{data.fragment_reward.name}</h2>
-                <p className="text-xs font-display tracking-widest text-muted-foreground mt-1 relative z-10">
-                  TYPE : {data.fragment_reward.concept}
-                </p>
-              </motion.div>
+                 <p className="text-xs font-display tracking-[0.5em] text-primary/60 mb-1 relative z-10">FRAGMENT OBTENU</p>
+                 <h2 className="text-2xl font-display font-bold text-primary relative z-10">
+                   {/* Nouveau format : reward.fragment.name / Ancien : fragment_reward.name */}
+                   {data.reward?.fragment?.name ?? data.fragment_reward?.name ?? "Fragment Obtenu"}
+                 </h2>
+                 <p className="text-xs font-display tracking-widest text-muted-foreground mt-1 relative z-10">
+                   TYPE : {data.reward?.fragment?.concept ?? data.fragment_reward?.concept}
+                 </p>
+               </motion.div>
 
               {/* Letter obtained */}
               <motion.div
@@ -806,7 +1081,7 @@ const FreeMission = () => {
                 </div>
               </motion.div>
 
-              {/* Citation */}
+              {/* Citation Jasper */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -819,7 +1094,7 @@ const FreeMission = () => {
               >
                 <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
                 <p className="text-foreground leading-relaxed relative z-10">
-                  "{data.fragment_reward.unlocked_message}"
+                  "{data.reward?.jasper_quote ?? data.fragment_reward?.unlocked_message ?? ""}"
                 </p>
                 <p className="text-xs text-muted-foreground font-display tracking-widest mt-2 relative z-10">— J. Valcourt</p>
               </motion.div>
@@ -840,7 +1115,9 @@ const FreeMission = () => {
                     {nextCountry.name.toUpperCase()}
                   </h3>
                   <p className="text-sm text-muted-foreground italic">
-                    {NEXT_COUNTRY_HINTS[country?.code ?? ""] ?? "Le prochain nœud vous attend."}
+                    {data.reward?.next_destination_hint
+                      ?? NEXT_COUNTRY_HINTS[country?.code ?? ""]
+                      ?? "Le prochain nœud vous attend."}
                   </p>
                 </motion.div>
               )}
