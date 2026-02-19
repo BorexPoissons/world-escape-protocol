@@ -799,12 +799,12 @@ const Dashboard = () => {
                     const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
 
                     // ── SIGNAL_INITIAL sequential lock ──────────────────────
-                    // country N+1 locked until country N has best_score ≥ 8
+                    // country N+1 locked until country N has best_score ≥ 5 (5/6 pour gagner)
                     const seqIdx = SIGNAL_INITIAL_SEQUENCE.indexOf(country.code);
                     const isSignalInitial = seasonNum === 0 && seqIdx !== -1;
                     const prevCode = seqIdx > 0 ? SIGNAL_INITIAL_SEQUENCE[seqIdx - 1] : null;
-                    const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 8; // first country always unlocked
-                    const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 8;
+                    const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 5; // first country always unlocked
+                    const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 5;
 
                     if (seqLocked) {
                       return (
@@ -814,10 +814,10 @@ const Dashboard = () => {
                             <div className="absolute inset-0 backdrop-blur-[4px] bg-background/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2 px-4 text-center">
                               <Lock className="h-6 w-6 text-muted-foreground mb-1" />
                               <p className="text-xs font-display text-muted-foreground tracking-wider">
-                                RÉUSSIS {prevCode} AVEC 8/10
+                                RÉUSSIS {prevCode} AVEC 5/6
                               </p>
                               <p className="text-[11px] text-muted-foreground/60 mt-1">
-                                Score actuel : {signalProgress[prevCode!] ?? 0}/10
+                                Score actuel : {signalProgress[prevCode!] ?? 0}/6
                               </p>
                             </div>
                             {/* Blurred content underneath */}
