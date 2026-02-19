@@ -169,15 +169,15 @@ const Puzzle = () => {
       return;
     }
 
-    const [countriesRes, piecesRes, missionsRes, profileRes] = await Promise.all([
+    const [countriesRes, fragmentsRes, missionsRes, profileRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
-      supabase.from("puzzle_pieces").select("*").eq("user_id", user.id).eq("unlocked", true),
+      supabase.from("user_fragments" as any).select("id, country_id, fragment_index, is_placed").eq("user_id", user.id),
       supabase.from("missions").select("id, mission_title, score, completed_at, mission_data, country_id").eq("user_id", user.id).eq("completed", true).order("completed_at"),
       supabase.from("profiles").select("subscription_type").eq("user_id", user.id).single(),
     ]);
 
     const countries = countriesRes.data || [];
-    const pieces = piecesRes.data || [];
+    const fragments = (fragmentsRes.data as any[]) || [];
     const missions = missionsRes.data || [];
 
     // Set tier
@@ -185,10 +185,11 @@ const Puzzle = () => {
     setTier(getTier(subType));
 
     const data: CountryPuzzleData[] = countries.map((country) => {
-      const countryPieces = pieces.filter((p) => p.country_id === country.id).length;
+      // Count user_fragments per country (each fragment = 1 unlocked piece)
+      const countryFragmentCount = fragments.filter((f: any) => f.country_id === country.id).length;
       return {
         country,
-        unlockedPieces: countryPieces,
+        unlockedPieces: countryFragmentCount,
         totalPieces: TOTAL_PIECES_PER_COUNTRY,
         missions: missions
           .filter((m) => m.country_id === country.id)
@@ -454,6 +455,7 @@ const Puzzle = () => {
             onDropOnCountry={handleDropOnCountry}
             onCountryClick={handleCountryClick}
             globalProgress={globalProgressOn195}
+            collectedCountryCodes={fragments.map(f => f.countryCode)}
           />
         </motion.div>
 

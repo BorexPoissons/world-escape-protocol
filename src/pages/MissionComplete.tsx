@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Puzzle, MapPin, ArrowRight, Shield, Sparkles, Eye, EyeOff, Home, Trophy, Flame } from "lucide-react";
+import { Puzzle, MapPin, ArrowRight, Shield, Eye, EyeOff, Home, Trophy, Flame } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 
@@ -265,21 +265,67 @@ const MissionComplete = () => {
               >
                 {/* Fragment unlocked card */}
                 <div className="text-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                  <motion.h2
+                    className="text-2xl font-display font-bold text-primary text-glow tracking-wider"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
                   >
-                    <Sparkles className="h-10 w-10 text-primary mx-auto mb-4" />
-                  </motion.div>
-                  <h2 className="text-2xl font-display font-bold text-primary text-glow tracking-wider">FRAGMENT DÉBLOQUÉ</h2>
+                    FRAGMENT DÉBLOQUÉ
+                  </motion.h2>
                 </div>
+
+                {/* Animated puzzle piece */}
+                <motion.div
+                  className="flex justify-center"
+                  initial={{ scale: 0, y: -40, rotate: -15, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, rotate: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.3 }}
+                >
+                  <div className="relative">
+                    <svg width="96" height="96" viewBox="-0.35 -0.35 1.7 1.7" overflow="visible">
+                      <defs>
+                        <linearGradient id="piece-grad-complete" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="hsl(40 80% 65%)" />
+                          <stop offset="100%" stopColor="hsl(40 60% 40%)" />
+                        </linearGradient>
+                        <filter id="piece-glow-complete" x="-30%" y="-30%" width="160%" height="160%">
+                          <feGaussianBlur stdDeviation="0.06" result="blur" />
+                          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                      </defs>
+                      {/* Glow */}
+                      <path
+                        d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
+                        fill="hsl(40 80% 55% / 0.2)"
+                        stroke="hsl(40 80% 65%)"
+                        strokeWidth="0.04"
+                        filter="url(#piece-glow-complete)"
+                      />
+                      {/* Main piece */}
+                      <path
+                        d="M 0 0 L 0.35 0 Q 0.35 -0.3 0.5 -0.3 Q 0.65 -0.3 0.65 0 L 1 0 L 1 0.35 Q 1.3 0.35 1.3 0.5 Q 1.3 0.65 1 0.65 L 1 1 L 0.65 1 Q 0.65 1.3 0.5 1.3 Q 0.35 1.3 0.35 1 L 0 1 L 0 0.65 Q -0.3 0.65 -0.3 0.5 Q -0.3 0.35 0 0.35 Z"
+                        fill="url(#piece-grad-complete)"
+                        stroke="hsl(40 80% 70%)"
+                        strokeWidth="0.025"
+                        opacity="0.95"
+                      />
+                    </svg>
+                    {/* Pulsing ring */}
+                    <motion.div
+                      className="absolute inset-[-12px] rounded-full pointer-events-none"
+                      style={{ border: "1px solid hsl(40 80% 55% / 0.5)" }}
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    />
+                  </div>
+                </motion.div>
 
                 {fragmentName && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.7 }}
                     className="bg-card border border-primary/30 rounded-lg p-6 border-glow relative overflow-hidden text-center"
                   >
                     <div className="scanline absolute inset-0 pointer-events-none opacity-20" />
@@ -290,9 +336,14 @@ const MissionComplete = () => {
                         TYPE : {fragmentConcept}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-3 relative z-10">
+                    <motion.p
+                      className="text-xs text-muted-foreground mt-3 relative z-10"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1 }}
+                    >
                       Fragment ajouté à votre inventaire — consultez le Puzzle Mondial pour le placer.
-                    </p>
+                    </motion.p>
                   </motion.div>
                 )}
 

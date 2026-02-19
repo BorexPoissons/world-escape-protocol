@@ -23,6 +23,7 @@ interface CinematicWorldMapProps {
   onDropOnCountry: (countryId: string) => void;
   onCountryClick: (country: MapCountry) => void;
   globalProgress?: number; // 0–100 % of countries completed out of 195
+  collectedCountryCodes?: string[]; // country codes where user has a fragment
 }
 
 // Fallback geo positions
@@ -153,6 +154,7 @@ const CinematicWorldMap = ({
   onDropOnCountry,
   onCountryClick,
   globalProgress = 0,
+  collectedCountryCodes = [],
 }: CinematicWorldMapProps) => {
   const playableNodes = countries.filter(c => c.visibility === "playable");
   const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
@@ -265,15 +267,16 @@ const CinematicWorldMap = ({
 
       {/* ── Playable nodes ── */}
       {playableNodes.map((node, i) => {
-        const isFree     = FREE_COUNTRY_CODES.has(node.code);
-        const isComplete = node.unlockedPieces >= node.totalPieces;
-        const hasAny     = node.unlockedPieces > 0;
-        const wasPlaced  = placedCountryIds.includes(node.id);
+        const isFree       = FREE_COUNTRY_CODES.has(node.code);
+        const isComplete   = node.unlockedPieces >= node.totalPieces;
+        const hasAny       = node.unlockedPieces > 0;
+        const wasPlaced    = placedCountryIds.includes(node.id);
+        const hasFragment  = collectedCountryCodes.includes(node.code);
         const isDropTarget = draggingFragmentId !== null;
 
-        const borderColor = isComplete ? "hsl(40 85% 65%)" : isFree ? "hsl(40 70% 50%)" : "hsl(220 15% 28%)";
-        const bgColor     = isComplete ? "hsl(40 50% 13%)" : isFree ? "hsl(220 22% 11%)" : "hsl(220 18% 9%)";
-        const labelColor  = isComplete ? "hsl(40 85% 70%)" : isFree ? "hsl(40 65% 62%)" : "hsl(220 10% 50%)";
+        const borderColor = isComplete ? "hsl(40 85% 65%)" : hasFragment ? "hsl(40 70% 55%)" : isFree ? "hsl(40 70% 50%)" : "hsl(220 15% 28%)";
+        const bgColor     = isComplete ? "hsl(40 50% 13%)" : hasFragment ? "hsl(40 40% 10%)" : isFree ? "hsl(220 22% 11%)" : "hsl(220 18% 9%)";
+        const labelColor  = isComplete ? "hsl(40 85% 70%)" : hasFragment ? "hsl(40 75% 65%)" : isFree ? "hsl(40 65% 62%)" : "hsl(220 10% 50%)";
 
         return (
           <motion.div
@@ -290,6 +293,15 @@ const CinematicWorldMap = ({
                 style={{ inset: "-14px", background: "radial-gradient(circle, hsl(40 80% 55% / 0.2) 0%, transparent 70%)" }}
                 animate={{ scale: [1, 1.35, 1], opacity: [0.4, 0.85, 0.4] }}
                 transition={{ repeat: Infinity, duration: 3.2, delay: i * 0.55, ease: "easeInOut" }}
+              />
+            )}
+            {/* Fragment collected glow ring */}
+            {hasFragment && !wasPlaced && (
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{ inset: "-8px", border: "1px solid hsl(40 80% 55% / 0.7)" }}
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.9, 0.5] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
               />
             )}
             {isDropTarget && (
@@ -321,7 +333,7 @@ const CinematicWorldMap = ({
                 className="relative w-9 h-9 rounded-full flex items-center justify-center border-2 transition-transform duration-150 group-hover:scale-110"
                 style={{
                   background: bgColor, borderColor,
-                  boxShadow: (isFree || isComplete) ? `0 0 12px ${borderColor}, 0 0 3px ${borderColor}` : "none",
+                  boxShadow: (isFree || isComplete || hasFragment) ? `0 0 12px ${borderColor}, 0 0 3px ${borderColor}` : "none",
                 }}
               >
                 {hasAny && !isComplete && (
@@ -333,6 +345,14 @@ const CinematicWorldMap = ({
                   </svg>
                 )}
                 <span className="text-base leading-none">{FLAG_EMOJI[node.code] || "🌍"}</span>
+                {/* Fragment collected badge (🧩) — only if not yet placed */}
+                {hasFragment && !wasPlaced && (
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px]"
+                    style={{ background: "hsl(40 80% 45%)", border: "1px solid hsl(40 80% 65%)" }}
+                    initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}
+                  >🧩</motion.div>
+                )}
                 {wasPlaced && (
                   <motion.div
                     className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold"
