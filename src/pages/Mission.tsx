@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { checkAndAwardBadges } from "@/lib/badges";
 import ArchiveHintModal from "@/components/ArchiveHintModal";
+import TypewriterText from "@/components/TypewriterText";
 
 interface HintImage {
   url: string;
@@ -889,7 +890,11 @@ const Mission = () => {
               </div>
 
               <div className="bg-card border border-border rounded-lg p-6 border-glow">
-                <p className="text-foreground leading-relaxed whitespace-pre-line">{mission.intro}</p>
+                <TypewriterText
+                  text={mission.intro}
+                  speed={22}
+                  className="text-foreground leading-relaxed"
+                />
               </div>
               <div className="bg-card border border-primary/20 rounded-lg p-4 flex items-start gap-3">
                 <BookOpen className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
