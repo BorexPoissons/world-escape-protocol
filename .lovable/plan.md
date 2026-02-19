@@ -1,172 +1,161 @@
 
-# Puzzle Pieces Uniques par Pays — Système W.E.P.
+# La Révélation Finale — 195 Pièces : Expérience Cinématique Complète
 
-## Contexte & Analyse de l'existant
+## Ce qui existe déjà
 
-L'architecture actuelle utilise :
-- **5 formes SVG génériques** (`PIECE_PATHS` dans `FragmentInventory.tsx`) assignées aléatoirement selon `fragmentIndex % 5`
-- **Des couleurs par pays** (`COUNTRY_COLORS`) mais identiques quelle que soit la pièce
-- **Aucun symbole central** gravé, ni gemme, ni mot-clé géopolitique
+L'architecture actuelle prépare déjà plusieurs éléments pour ce moment :
+- `RevealOverlay` avec des seuils narratifs progressifs (0% → 100%)
+- `CinematicWorldMap` avec un zoom lent déjà codé à 99%
+- Le message final de Jasper Velcourt : *"Le Cercle n'est pas une organisation. C'est une architecture."*
+- La luminosité de la carte qui évolue avec `mapBrightness`
 
-L'objectif est de créer un **système de pièces uniques par pays**, entièrement en SVG (pas d'images IA), avec une identité visuelle forte, scalable à 195 pays.
-
----
-
-## Architecture de la Solution
-
-### Principe fondamental
-
-Chaque pièce W.E.P. partagera :
-- Une **forme de base commune** (puzzle piece standard à 4 connecteurs)
-- Une **profondeur 3D** via dégradés et ombres portées
-- Un **contour gravé** or métallique
-
-Et sera unique grâce à :
-- Une **gemme centrale** (couleur + forme géométrique selon le pays)
-- Un **symbole central gravé** (croix alpine, étoile, dragon géométrique…)
-- Un **mot-clé microscopique** gravé en bas de la pièce (ex: "NEUTRALITY")
-- Un **micro-motif de fond** (hachuré, triangulaire, rayé selon la région)
+Ce qui manque : une **séquence cinématique dédiée** pour le moment exact où la 195e pièce est placée.
 
 ---
 
-## Données par Pays — Définition statique
+## La Séquence Complète — 7 Actes
 
-Un dictionnaire TypeScript `PIECE_DNA` sera créé dans un fichier `src/lib/pieceDNA.ts` :
+### ACTE 1 — Le "Snap" final (0s → 3s)
+La 195e pièce est glissée sur la carte. Au lieu du simple snap normal :
+
+- Toutes les 195 gemmes sur la carte **pulsent simultanément** (flash blanc)
+- Un son de "verrouillage" (vibration CSS)
+- Le message HUD change : `"⬢ CONVERGENCE COMPLÈTE — ANALYSE EN COURS…"`
+- Écran **freeze pendant 0.8s** — silence total
+
+### ACTE 2 — L'Onde de Choc (3s → 6s)
+Une onde circulaire se propage depuis le dernier pays placé vers les bords de la carte :
+
+- Anneau SVG animé (`r` de 0 → 200, opacity 1 → 0, durée 2s)
+- Couleur : blanc pur puis or `hsl(40 90% 72%)`
+- Tous les nœuds de pays **s'illuminent dans l'ordre de l'onde**
+- Les lignes intercontinentales deviennent **toutes dorées** simultanément
+
+### ACTE 3 — La Révélation de la Carte (6s → 12s)
+La carte se révèle progressivement :
+
+- `brightness` passe de la valeur courante → `1.0` en 4s (transition fluide)
+- `saturate` monte → `1.8` (couleurs éclatantes)
+- `scale` : zoom lent 1.0 → 1.08 → retour à 1.0
+- Le fond sombre disparaît progressivement (vignette opacity → 0)
+- Les scanlines s'effacent
+
+### ACTE 4 — Le Symbole Central (8s → 14s)
+Le symbole central (déjà présent à 75%) se **cristallise** :
+
+- Le cercle flou se rend net et lumineux (feGaussianBlur stdDeviation : 2.5 → 0)
+- Les 5 nœuds stratégiques (α, β, γ, δ, ε) convergent visuellement vers le centre avec des traits
+- Le symbole tourne lentement une fois (360° en 3s) puis se stabilise
+
+### ACTE 5 — Le Message de Jasper (12s → 20s)
+**Plein écran avec fond semi-transparent** :
+
+```
+TRANSMISSION CHIFFRÉE — NIVEAU DIRECTEUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"Le Cercle n'est pas une organisation.
+ C'est une architecture."
+                        — JASPER VELCOURT
+                          AGENT PRINCIPAL W.E.P.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROTOCOLE OMÉGA : COMPLÉTÉ
+195 TERRITOIRES · 975 FRAGMENTS · 1 VÉRITÉ
+```
+
+Chaque ligne apparaît avec un effet typing (délai 0.5s entre chaque ligne).
+
+### ACTE 6 — Le Badge "MAÎTRE DU PROTOCOLE" (18s → 22s)
+Un badge unique se révèle au centre :
+
+- Fond noir avec cadre or animé
+- Icône : symbole W.E.P. central (Ω doré)
+- Titre : `MAÎTRE DU PROTOCOLE`
+- Sous-titre : `AGENT #00195 · RÉVÉLATION TOTALE`
+- Bouton : `[ENREGISTRER MON TITRE]` → sauvegarde en BDD dans `profiles`
+
+### ACTE 7 — État Final Permanent (après 22s)
+La carte reste dans son état "révélé" pour toujours :
+
+- Toutes les connexions actives et dorées
+- Carte à pleine luminosité
+- HUD permanent : `✦ RÉVÉLATION TOTALE · LE PLAN EST COMPLET`
+- Un bouton discret `[VOIR MON PALMARÈS]` mène vers une page de galerie
+
+---
+
+## Ce que je propose de construire
+
+### Composant `FinalRevealSequence.tsx` — NOUVEAU
+Un overlay plein écran (z-index 100) déclenché quand `globalProgress >= 100` pour la première fois (flag `has_completed_puzzle` en BDD pour ne le jouer qu'une fois).
+
+Props : `onDismiss: () => void`
+
+Séquence contrôlée par un `step` state (0→7) avancé via `setTimeout` chainés.
+
+### Améliorations de `RevealOverlay.tsx`
+- Ajouter l'**onde de choc circulaire** au step 2
+- Renforcer l'animation du **symbole central** à 100%
+- Supprimer la vignette à 100% (fond entièrement visible)
+
+### Améliorations de `CinematicWorldMap.tsx`
+- Au step 3, forcer `mapBrightness = 1.0` et `saturate = 1.8`
+- Déclencher le zoom via un state externe passé en prop
+
+### Colonne BDD `has_completed_puzzle` dans `profiles`
+Pour ne jamais rejouer la séquence si l'utilisateur rafraîchit la page après avoir complété le puzzle.
+
+---
+
+## Détails Techniques
+
+### Fichiers à créer / modifier
+
+| Fichier | Action |
+|---|---|
+| `src/components/FinalRevealSequence.tsx` | NOUVEAU — séquence 7 actes |
+| `src/components/RevealOverlay.tsx` | Onde de choc + symbole net à 100% |
+| `src/components/CinematicWorldMap.tsx` | Props `forceFullReveal` |
+| `src/pages/Puzzle.tsx` | Détecter 100%, afficher la séquence |
+| Migration BDD | Colonne `has_completed_puzzle boolean` dans `profiles` |
+
+### Gestion du "une seule fois"
 
 ```typescript
-interface PieceDNA {
-  gemColor: string;        // couleur HSL de la gemme
-  gemShape: "diamond" | "hexagon" | "circle" | "star" | "octagon";
-  symbolPath: string;      // SVG path du symbole central gravé
-  keyword: string;         // mot gravé (max 12 chars)
-  patternType: "grid" | "diagonal" | "dots" | "waves" | "triangles";
-  accentColor: string;     // couleur secondaire (reflet de la gemme sur le métal)
-  continentBase: string;   // couleur de base du métal selon continent
-}
+// Dans Puzzle.tsx
+const [showFinalReveal, setShowFinalReveal] = useState(false);
+
+useEffect(() => {
+  if (globalProgressOn195 >= 100 && !profile?.has_completed_puzzle) {
+    setShowFinalReveal(true);
+    // Marquer comme vu en BDD
+    supabase.from("profiles")
+      .update({ has_completed_puzzle: true })
+      .eq("user_id", user.id);
+  }
+}, [globalProgressOn195]);
 ```
 
-Exemples concrets :
-
-| Pays | Gemme | Symbole | Mot-clé | Motif |
-|------|-------|---------|---------|-------|
-| CH (Suisse) | Bleu glacier `hsl(200 80% 65%)` | Croix alpine stylisée | NEUTRALITY | Grille suisse |
-| US | Bleu-rouge `hsl(220 70% 55%)` | Étoile à 5 branches | REGULATION | Rayures |
-| CN | Rouge profond `hsl(0 75% 50%)` | Dragon géométrique | INFLUENCE | Vague |
-| BR | Vert émeraude `hsl(140 65% 45%)` | Croix du Sud (5 étoiles) | CHAOS | Triangles |
-| EG | Or ambre `hsl(45 85% 55%)` | Pyramide / œil | ANCIENNETÉ | Points |
-| JP | Rouge laqué `hsl(355 80% 50%)` | Soleil levant | TRADITION | Vague |
-| IN | Orange safran `hsl(30 85% 55%)` | Roue Ashoka | DHARMA | Triangles |
-| RU | Bleu impérial `hsl(215 65% 50%)` | Aigle bicéphale simplifié | EMPIRE | Grille |
-| FR | Bleu roi `hsl(225 75% 55%)` | Fleur de lys | DIPLOMATIE | Diagonal |
-| MA | Vert émeraude `hsl(155 55% 40%)` | Étoile à 6 branches | CARREFOUR | Points |
-| GR | Bleu méditerranéen `hsl(205 70% 55%)` | Colonne grecque | DÉMOCRATIE | Vague |
-| IT | Rouge terracotta `hsl(15 65% 50%)` | Louve stylisée | CULTURE | Diagonal |
-| ES | Rouge-or `hsl(25 75% 50%)` | Soleil de Castille | CONQUÊTE | Rayures |
-
----
-
-## Composant SVG Pièce W.E.P.
-
-### Nouveau `WEPPuzzlePiece` — Structure SVG
-
-La pièce sera rendue dans un `viewBox="0 0 100 100"` pour faciliter le positionnement des éléments internes :
+### Animation onde de choc (SVG)
 
 ```text
-┌──────────────────────────────────────┐
-│                                      │
-│   [Connecteur haut — tab/blank]      │
-│                                      │
-│ [C]  [MOTIF DE FOND GRAVÉ]  [C]     │
-│ [O]                          [O]     │
-│ [N]   ┌──────────────────┐  [N]     │
-│ [N]   │   [GEMME] centrale│  [N]    │
-│ [E]   │   [SYMBOLE SVG]  │  [E]    │
-│ [C]   └──────────────────┘  [C]    │
-│ [T]                          [T]    │
-│ [E]  [MOT-CLÉ gravé]        [E]    │
-│ [U]                          [U]    │
-│ [R]  [Connecteur bas]       [R]    │
-│                                      │
-└──────────────────────────────────────┘
+<circle cx={lastCountry.x} cy={lastCountry.y} r={0}
+  stroke="gold" strokeWidth={0.8} fill="none"
+  animate={{ r: [0, 200], opacity: [1, 0] }}
+  transition={{ duration: 2.5, ease: "easeOut" }}
+/>
 ```
 
-### Couches de rendu (ordre) :
-1. **Ombre portée** (décalée de +4px en Y, noir translucide)
-2. **Corps principal** — dégradé or métallique `continentBase`
-3. **Micro-motif de fond** (SVG pattern, opacité 0.08)
-4. **Cadre gravé intérieur** (rect arrondi, stroke or clair, opacité 0.3)
-5. **Gemme centrale** — forme géométrique avec dégradé radial + reflet blanc
-6. **Halo de gemme** (feGaussianBlur autour de la gemme)
-7. **Symbole gravé** (SVG path centré, fill "none", stroke or clair)
-8. **Mot-clé microscopique** (text SVG en bas, font-family monospace, fill or)
-9. **Reflet supérieur** (linearGradient blanc→transparent sur la moitié haute)
-10. **Contour** (stroke or + strokeWidth mince)
-
 ---
 
-## Fichiers à Créer / Modifier
+## Résultat pour le Joueur
 
-### 1. `src/lib/pieceDNA.ts` — NOUVEAU
-Dictionnaire statique de toutes les identités visuelles des pièces. Commence avec les 15 pays actuels, extensible à 195.
+Ce moment sera **unique et inoubliable** :
+1. Il ressent la puissance du "snap" final différemment des 194 autres
+2. L'onde de choc lui montre visuellement que "quelque chose vient de changer"
+3. La révélation de la carte est un moment de beauté pure
+4. Le message de Jasper donne un frisson narratif
+5. Le badge est un objet de fierté (il peut le partager)
+6. L'état permanent de la carte est sa récompense visuelle quotidienne
 
-### 2. `src/components/WEPPuzzlePiece.tsx` — NOUVEAU
-Composant SVG pur qui reçoit `countryCode` + `size` + `animated` et rend la pièce unique. Remplace `FragmentPiece3D` dans `FragmentInventory.tsx`.
-
-- Props : `countryCode: string`, `size?: number`, `animated?: boolean`, `showKeyword?: boolean`
-- Export réutilisable dans `FragmentInventory`, `MissionComplete`, `MissionDetailModal`, `Puzzle`
-
-### 3. `src/components/FragmentInventory.tsx` — MODIFIÉ
-- Remplacer `FragmentPiece3D` par `WEPPuzzlePiece`
-- Le modal de détail `FragmentDetailModal` affiche également la grande pièce unique
-
-### 4. `src/pages/MissionComplete.tsx` — MODIFIÉ
-- La pièce animée au centre (actuellement un SVG générique doré) devient la vraie pièce unique du pays
-- Affichage de la gemme + symbole lors du déverrouillage
-
-### 5. `src/components/MissionDetailModal.tsx` — MODIFIÉ
-- Remplacer l'aperçu de pièce existant par `WEPPuzzlePiece`
-
----
-
-## Technique — Détails SVG Critiques
-
-### Forme puzzle (connecteurs)
-
-La forme de base utilise 4 connecteurs via des arcs de Bézier cubiques :
-- Tab (saille) : convexe vers l'extérieur
-- Blank (creux) : concave vers l'intérieur
-
-La **géométrie des connecteurs reste identique pour tous les pays** (same viewBox, same path skeleton). Seuls les éléments internes changent.
-
-### Gemmes — 3 formes de base
-- **Diamond** : polygone 4 points, dégradé radial `gemColor → dark`
-- **Hexagon** : polygone 6 points réguliers
-- **Circle** : `<circle>` avec dégradé radial + reflet blanc en haut à gauche
-
-### Patterns SVG (micro-texture de fond)
-Utilisation de `<pattern>` SVG défini dans `<defs>` pour chaque type (grid, diagonal, dots, waves, triangles), avec une opacité de 6-10% pour rester subtil sur le métal.
-
-### Animations Framer Motion
-- **Inventaire** : `rotateY` oscillation lente (±12°), halo de gemme en pulse
-- **MissionComplete** : drop animation depuis le haut + rotation progressive, puis stabilisation
-- **Modal détail** : rotation lente continue (360° en 12s)
-
----
-
-## Scalabilité vers 195 pays
-
-Le système `pieceDNA.ts` est conçu pour :
-1. Un `DEFAULT` fallback pour les pays sans DNA défini (utilise continent + couleur calculée)
-2. Un utilitaire `getDefaultDNA(countryCode)` qui génère un DNA déterministe à partir du hash du code pays (gemme aléatoire mais stable, motif, couleur)
-3. En saison 2+, il suffira d'ajouter l'entrée dans le dictionnaire
-
----
-
-## Résultat Visuel Final
-
-- **Inventaire** : Chaque pièce est immédiatement reconnaissable (gemme bleue = Suisse, verte = Brésil, rouge = Chine…)
-- **MissionComplete** : La pièce unique du pays tombe et s'accroche avec son symbole spécifique visible
-- **Modal détail** : La pièce tourne lentement, gemme scintillante, symbole gravé visible
-- **Puzzle mondial** : 195 pièces distinctes forment la mosaïque finale W.E.P.
-
-Aucune dépendance externe supplémentaire — tout en SVG pur + Framer Motion (déjà installé).
+Aucune dépendance supplémentaire — tout en Framer Motion + SVG + CSS déjà installés.
