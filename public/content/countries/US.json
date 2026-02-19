@@ -8,7 +8,7 @@
     "total_free": 5,
     "mission_title": "OPÉRATION FEDERAL SHADOW",
     "detective": "Jasper Valcourt",
-    "intro_text": "Washington D.C. Nuit lourde.\n\nSi la Suisse canalise les flux… quelqu’un doit en fixer le rythme.\n\nJe m’appelle Jasper Valcourt.\nEt je n’aime pas les endroits où l’on appelle « stabilité » ce qui ressemble à un bouton de contrôle.\n\nIci, on ne fait pas passer l’argent.\nOn décide à quelle vitesse il circule.\n\nRegardez bien.\nLe rythme est un levier.\n— Jasper Valcourt"
+    "intro_text": "Washington D.C. Nuit lourde.\n\nSi la Suisse canalise les flux…\nquelqu'un doit en fixer le rythme.\n\nJe m'appelle Jasper Valcourt.\nEt je n'aime pas les endroits où l'on parle de stabilité\ncomme d'un dogme.\n\nUne banque centrale moderne.\n\nUn nouvel ordre monétaire.\n\nUn monde qui vacille… puis redémarre.\n\nLa puissance ne réside pas toujours dans la force.\nParfois, elle réside dans la confiance.\n\nIci, on ne fait pas passer l'argent.\nOn décide à quelle vitesse il circule.\n\nRegardez bien.\nLe rythme est un levier.\n\n— J. Valcourt"
   },
   "scene": {
     "prompt": "Vous entrez dans une archive sécurisée. Trois éléments :",
@@ -22,7 +22,7 @@
   },
   "clue": {
     "title": "Dossier 1913",
-    "text": "1913\n\nAnnotation : « Le flux a besoin d’un rythme. »\n\nIndice : additionne les chiffres."
+    "text": "1913\n\nAnnotation : « Le flux a besoin d'un rythme. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
     "type": "alphabet_sum",
@@ -33,7 +33,7 @@
     "explain_if_failed": "1 + 9 + 1 + 3 = 14 → 14e lettre = N"
   },
   "final_question": {
-    "question": "Quel est le levier principal d’une banque centrale en période de crise ?",
+    "question": "Quel est le levier principal d'une banque centrale en période de crise ?",
     "choices": ["La propagande", "La confiance et le crédit", "Le contrôle des frontières"],
     "answer_index": 1
   },
