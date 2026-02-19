@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2, PlayCircle } from "lucide-react";
+import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2, PlayCircle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
 import FlagImage from "@/components/FlagImage";
@@ -179,6 +179,9 @@ const Dashboard = () => {
   });
   // Cinematic intro — auto on first visit, replayable
   const [showIntro, setShowIntro] = useState(false);
+  // Leaderboard visibility toggle
+  const [leaderboardVisible, setLeaderboardVisible] = useState(true);
+  const [leaderboardTogglingLoading, setLeaderboardTogglingLoading] = useState(false);
   const isDemo = !user;
 
   // Auto-play intro on first visit (per-browser flag)
@@ -222,7 +225,11 @@ const Dashboard = () => {
     ]);
 
     if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
-    if (profileRes.data) setProfile(profileRes.data as any);
+    if (profileRes.data) {
+      setProfile(profileRes.data as any);
+      // Load leaderboard_visible from profile
+      setLeaderboardVisible((profileRes.data as any).leaderboard_visible ?? true);
+    }
     if (missionsRes.data) setCompletedCountries(missionsRes.data.map((m: any) => m.country_id));
     if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
     if (badgesRes.data) setUserBadges(badgesRes.data.map((b: any) => b.badge_key));
@@ -239,6 +246,15 @@ const Dashboard = () => {
     }
     setLoading(false);
   }, [user]);
+
+  const handleLeaderboardToggle = async () => {
+    if (!user || leaderboardTogglingLoading) return;
+    setLeaderboardTogglingLoading(true);
+    const newValue = !leaderboardVisible;
+    setLeaderboardVisible(newValue);
+    await (supabase.from("profiles") as any).update({ leaderboard_visible: newValue }).eq("user_id", user.id);
+    setLeaderboardTogglingLoading(false);
+  };
 
   useEffect(() => {
     fetchData();
@@ -347,6 +363,13 @@ const Dashboard = () => {
             <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>
           <div className="flex items-center gap-4">
+            {/* Leaderboard button — always visible */}
+            <Link to="/leaderboard">
+              <Button variant="outline" size="sm" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                <Trophy className="h-4 w-4" />
+                <span className="hidden sm:inline">CLASSEMENT</span>
+              </Button>
+            </Link>
             {isAdmin && (
               <Link to="/admin">
                 <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
@@ -595,6 +618,19 @@ const Dashboard = () => {
               <TrendingUp className="h-3 w-3" />
               VOIR LA CARTE
             </Link>
+            {/* Leaderboard visibility toggle */}
+            {!isDemo && (
+              <button
+                onClick={handleLeaderboardToggle}
+                disabled={leaderboardTogglingLoading}
+                className="flex items-center gap-1.5 text-[10px] font-display tracking-wider transition-colors"
+                style={{ color: leaderboardVisible ? "hsl(var(--gold-glow))" : "hsl(var(--muted-foreground))" }}
+                title={leaderboardVisible ? "Visible dans le classement — cliquer pour masquer" : "Masqué du classement — cliquer pour apparaître"}
+              >
+                <Users className="h-3 w-3" />
+                <span className="hidden sm:inline">{leaderboardVisible ? "CLASSEMENT VISIBLE" : "CLASSEMENT MASQUÉ"}</span>
+              </button>
+            )}
           </div>
         </motion.div>
 

@@ -499,27 +499,7 @@ export type Database = {
       }
     }
     Views: {
-      leaderboard: {
-        Row: {
-          display_name: string | null
-          level: number | null
-          subscription_type: string | null
-          xp: number | null
-        }
-        Insert: {
-          display_name?: string | null
-          level?: number | null
-          subscription_type?: string | null
-          xp?: number | null
-        }
-        Update: {
-          display_name?: string | null
-          level?: number | null
-          subscription_type?: string | null
-          xp?: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       complete_country_attempt: {
