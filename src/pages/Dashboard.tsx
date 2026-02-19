@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Globe, LogOut, Shield, Star, Map, Puzzle, Home, Lock, Flame, Trophy, Eye, ChevronRight, TrendingUp, CheckCircle2, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountryCard from "@/components/CountryCard";
+import FlagImage from "@/components/FlagImage";
 import type { Tables } from "@/integrations/supabase/types";
 import { BADGE_META, type BadgeKey } from "@/lib/badges";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -153,13 +154,6 @@ const SEASON_META: Record<number, {
   },
 };
 
-const FLAG_EMOJI: Record<string, string> = {
-  CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", DE: "🇩🇪",
-  IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷", US: "🇺🇸",
-  CA: "🇨🇦", AU: "🇦🇺", CN: "🇨🇳", IN: "🇮🇳", MX: "🇲🇽",
-  RU: "🇷🇺", ZA: "🇿🇦", MA: "🇲🇦", TR: "🇹🇷", AR: "🇦🇷",
-  KR: "🇰🇷", GR: "🇬🇷", PT: "🇵🇹", NL: "🇳🇱", SE: "🇸🇪",
-};
 
 const INTRO_SEEN_KEY = "wep_intro_seen";
 
@@ -938,7 +932,7 @@ const Dashboard = () => {
                         <div className="absolute inset-0 rounded-xl bg-primary/5" />
                         <div className="relative">
                           <div className="flex items-center gap-3 mb-3">
-                            <span className="text-3xl opacity-60">{FLAG_EMOJI[country.code] ?? "🌍"}</span>
+                            <FlagImage code={country.code} size={48} className="opacity-60 rounded-md" />
                             <div>
                               <h3 className="font-display font-bold text-foreground tracking-wider text-lg">{country.name.toUpperCase()}</h3>
                               <p className="text-xs text-primary font-display">{"★".repeat(country.difficulty_base)}</p>

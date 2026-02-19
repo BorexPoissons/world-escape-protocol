@@ -2,14 +2,10 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle, ChevronRight, Clock, Star, BookOpen, Map } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import FlagImage from "@/components/FlagImage";
 
-const FLAG_EMOJI: Record<string, string> = {
-  CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", DE: "🇩🇪",
-  IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷", US: "🇺🇸",
-  CA: "🇨🇦", AU: "🇦🇺", CN: "🇨🇳", IN: "🇮🇳", MX: "🇲🇽",
-  RU: "🇷🇺", ZA: "🇿🇦", MA: "🇲🇦", TR: "🇹🇷", AR: "🇦🇷",
-  KR: "🇰🇷", GR: "🇬🇷", PT: "🇵🇹", NL: "🇳🇱", SE: "🇸🇪",
-};
+
+
 
 // Static lore — 5 pays gratuits officiels + Saison 1
 const COUNTRY_LORE: Record<string, { theme: string; intro: string; missions: number }> = {
@@ -37,7 +33,6 @@ const CountryCard = ({
   country: Tables<"countries">;
   completed: boolean;
 }) => {
-  const flag = FLAG_EMOJI[country.code] || "🌍";
   const lore = COUNTRY_LORE[country.code];
   const seasonNumber = (country as any).season_number ?? 1;
   const isFree = seasonNumber === 0;
@@ -70,13 +65,13 @@ const CountryCard = ({
           {/* Header row */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
-              <motion.span
-                className="text-4xl"
-                animate={completed ? { scale: [1, 1.1, 1] } : {}}
+              <motion.div
+                animate={completed ? { scale: [1, 1.05, 1] } : {}}
                 transition={{ duration: 0.5 }}
+                className="flex-shrink-0"
               >
-                {flag}
-              </motion.span>
+                <FlagImage code={country.code} size={48} className="rounded-md shadow-sm" />
+              </motion.div>
               <div>
                 <h3 className="font-display font-bold text-foreground tracking-wider text-base group-hover:text-primary transition-colors">
                   {country.name.toUpperCase()}
