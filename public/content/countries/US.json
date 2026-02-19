@@ -41,21 +41,33 @@
       "type": "A",
       "question": "En quelle année la Réserve fédérale (Federal Reserve) a-t-elle été créée ?",
       "choices": ["1901", "1913", "1929", "1944"],
-      "answer_index": 1
+      "answer_index": 1,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Marriner_S._Eccles_Federal_Reserve_Board_Building.jpg/640px-Marriner_S._Eccles_Federal_Reserve_Board_Building.jpg",
+        "caption": "Bâtiment Marriner S. Eccles — siège du Conseil des gouverneurs de la Réserve fédérale, Washington D.C."
+      }
     },
     {
       "id": "US_Q4",
       "type": "A",
       "question": "Quelle conférence internationale de 1944 a établi un cadre monétaire mondial d'après-guerre ?",
       "choices": ["Yalta", "Bretton Woods", "Versailles", "San Francisco"],
-      "answer_index": 1
+      "answer_index": 1,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Bretton_Woods_Conference%2C_1944.jpg/640px-Bretton_Woods_Conference%2C_1944.jpg",
+        "caption": "Conférence monétaire et financière des Nations Unies — Mount Washington Hotel, New Hampshire, juillet 1944"
+      }
     },
     {
       "id": "US_Q5",
       "type": "A",
       "question": "Quelle monnaie est utilisée comme principale devise de réserve mondiale depuis le XXe siècle ?",
       "choices": ["Euro", "Yen", "Dollar américain", "Livre sterling"],
-      "answer_index": 2
+      "answer_index": 2,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/1_dollar_bill%2C_obverse%2C_series_2009.jpg/640px-1_dollar_bill%2C_obverse%2C_series_2009.jpg",
+        "caption": "Billet de 1 dollar américain — la devise de réserve internationale dominante depuis Bretton Woods"
+      }
     },
     {
       "id": "US_Q6",

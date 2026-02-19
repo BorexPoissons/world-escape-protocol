@@ -34,21 +34,33 @@
       "type": "A",
       "question": "Combien de langues nationales la Suisse reconnaît-elle ?",
       "choices": ["2", "3", "4", "5"],
-      "answer_index": 2
+      "answer_index": 2,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Languages_of_Switzerland_2000.png/640px-Languages_of_Switzerland_2000.png",
+        "caption": "Répartition des langues nationales en Suisse — carte linguistique officielle"
+      }
     },
     {
       "id": "CH_Q3",
       "type": "A",
       "question": "Dans quelle ville siège la Banque des Règlements Internationaux (BIS) ?",
       "choices": ["Genève", "Zurich", "Bâle", "Lausanne"],
-      "answer_index": 2
+      "answer_index": 2,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Basel_-_Mittlere_Bruecke1.jpg/640px-Basel_-_Mittlere_Bruecke1.jpg",
+        "caption": "Vue panoramique de la ville au bord du Rhin, cœur financier de la coopération bancaire internationale"
+      }
     },
     {
       "id": "CH_Q4",
       "type": "A",
       "question": "Quelle ville accueille de nombreuses organisations internationales comme l'ONU et l'OMC ?",
       "choices": ["Berne", "Genève", "Lucerne", "Lugano"],
-      "answer_index": 1
+      "answer_index": 1,
+      "hint_image": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Palais_des_Nations%2C_Geneva.jpg/640px-Palais_des_Nations%2C_Geneva.jpg",
+        "caption": "Palais des Nations — siège européen des organisations internationales, 1936"
+      }
     },
     {
       "id": "CH_Q5",
