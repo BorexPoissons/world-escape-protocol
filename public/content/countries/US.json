@@ -4,133 +4,60 @@
     "name_fr": "États-Unis"
   },
   "mission": {
-    "mission_id": "US-S1-002",
+    "mission_id": "US-S1-001",
+    "format": "IMMERSIVE_FREE",
     "mission_title": "OPÉRATION FEDERAL SHADOW",
     "phase": "SIGNAL_INITIAL",
     "is_free": true,
     "detective": "Jasper Valcourt",
-    "intro": "Washington, D.C. Nuit lourde.\n\nAprès la Suisse, Jasper Valcourt suit la logique des flux.\n\nSi les capitaux transitent,\nil faut bien un endroit où le rythme est fixé.\n\n1913.\nLa création d'une banque centrale moderne.\n\n1944.\nUn nouvel ordre monétaire mondial à Bretton Woods.\n\n2001.\nUne crise qui redéfinit l'équilibre entre sécurité et liberté.\n\nLes États-Unis ne sont pas seulement une puissance.\nIls sont un régulateur.\n\nLa monnaie, la confiance, le crédit.\nTrois leviers capables d'influencer des continents entiers.\n\nSi la Suisse canalise les flux,\nalors ici… on en règle la cadence.\n\nVotre mission :\nIdentifier comment le système monétaire devient un nœud stratégique mondial."
+    "intro": "Washington D.C. Nuit lourde.\n\nSi la Suisse canalise les flux…\nquelqu'un doit en fixer le rythme.\n\nJe m'appelle Jasper Valcourt.\nEt je n'aime pas les endroits où l'on parle de stabilité\ncomme d'un dogme.\n\nUne banque centrale moderne.\n\nUn nouvel ordre monétaire.\n\nUn monde qui vacille… puis redémarre.\n\nLa puissance ne réside pas toujours dans la force.\nParfois, elle réside dans la confiance.\n\nIci, on ne fait pas passer l'argent.\nOn décide à quelle vitesse il circule.\n\nRegardez bien.\nLe rythme est un levier.\n\n— J. Valcourt"
   },
-  "quiz_rules": {
-    "total_questions": 10,
-    "draw_per_run": 6,
-    "distribution": {
-      "A": 4,
-      "B": 1,
-      "C": 1
-    },
-    "max_mistakes": 1
+  "scene": {
+    "setup": "Une salle sécurisée aux sous-sols du Trésor américain. Trois dossiers reposent sur la table, chacun portant un sceau présidentiel. Le silence a une texture particulière ici.",
+    "choices": [
+      "Étudier le rapport Nixon — 1971",
+      "Ouvrir le dossier marqué '13 colonies'",
+      "Lire le mémo confidentiel de la Fed"
+    ],
+    "correct_choice_index": 1,
+    "wrong_feedback": "Ce dossier contient des informations utiles… mais l'angle n'est pas le bon pour l'instant.",
+    "correct_feedback": "Le dossier s'ouvre. Une carte des 13 colonies originelles. Un chiffre gravé à l'encre rouge : 13. Une clé se dessine."
   },
-  "question_bank": [
-    {
-      "id": "US_Q1",
-      "type": "A",
-      "question": "Quelle est la capitale fédérale des États-Unis ?",
-      "choices": ["New York", "Washington, D.C.", "Chicago", "Boston"],
-      "answer_index": 1
-    },
-    {
-      "id": "US_Q2",
-      "type": "A",
-      "question": "Combien d'États composent les États-Unis ?",
-      "choices": ["48", "49", "50", "52"],
-      "answer_index": 2
-    },
-    {
-      "id": "US_Q3",
-      "type": "A",
-      "question": "En quelle année la Réserve fédérale (Federal Reserve) a-t-elle été créée ?",
-      "choices": ["1901", "1913", "1929", "1944"],
-      "answer_index": 1,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Marriner_S._Eccles_Federal_Reserve_Board_Building.jpg/640px-Marriner_S._Eccles_Federal_Reserve_Board_Building.jpg",
-        "caption": "Bâtiment Marriner S. Eccles — siège du Conseil des gouverneurs de la Réserve fédérale, Washington D.C."
-      }
-    },
-    {
-      "id": "US_Q4",
-      "type": "A",
-      "question": "Quelle conférence internationale de 1944 a établi un cadre monétaire mondial d'après-guerre ?",
-      "choices": ["Yalta", "Bretton Woods", "Versailles", "San Francisco"],
-      "answer_index": 1,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Bretton_Woods_Conference%2C_1944.jpg/640px-Bretton_Woods_Conference%2C_1944.jpg",
-        "caption": "Conférence monétaire et financière des Nations Unies — Mount Washington Hotel, New Hampshire, juillet 1944"
-      }
-    },
-    {
-      "id": "US_Q5",
-      "type": "A",
-      "question": "Quelle monnaie est utilisée comme principale devise de réserve mondiale depuis le XXe siècle ?",
-      "choices": ["Euro", "Yen", "Dollar américain", "Livre sterling"],
-      "answer_index": 2,
-      "hint_image": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/1_dollar_bill%2C_obverse%2C_series_2009.jpg/640px-1_dollar_bill%2C_obverse%2C_series_2009.jpg",
-        "caption": "Billet de 1 dollar américain — la devise de réserve internationale dominante depuis Bretton Woods"
-      }
-    },
-    {
-      "id": "US_Q6",
-      "type": "A",
-      "question": "Combien de branches composent le gouvernement fédéral américain ?",
-      "choices": ["2", "3", "4", "5"],
-      "answer_index": 1
-    },
-    {
-      "id": "US_Q7",
-      "type": "B",
-      "question": "Pourquoi une banque centrale est-elle stratégique en période de crise ?",
-      "choices": [
-        "Elle organise les élections",
-        "Elle stabilise la monnaie et la confiance",
-        "Elle contrôle les frontières",
-        "Elle dirige le parlement"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "US_Q8",
-      "type": "B",
-      "question": "Quel a été l'objectif principal des accords de Bretton Woods ?",
-      "choices": [
-        "Créer une alliance militaire",
-        "Établir un cadre financier international stable",
-        "Supprimer les monnaies nationales",
-        "Créer un gouvernement mondial"
-      ],
-      "answer_index": 1
-    },
-    {
-      "id": "US_Q9",
-      "type": "C",
-      "question": "Dans la logique du modèle mondial, que représente le système monétaire américain ?",
-      "choices": [
-        "Un simple outil national",
-        "Un centre militaire",
-        "Un régulateur du rythme économique mondial",
-        "Un mécanisme isolé"
-      ],
-      "answer_index": 2,
-      "narrative_unlock": "Le flux a besoin d'un rythme."
-    },
-    {
-      "id": "US_Q10",
-      "type": "C",
-      "question": "Quel élément relie la Réserve fédérale, Bretton Woods et le rôle du dollar ?",
-      "choices": [
-        "Le contrôle territorial",
-        "La gestion de la confiance et du crédit",
-        "La domination militaire directe",
-        "L'isolement économique"
-      ],
-      "answer_index": 1,
-      "narrative_unlock": "Un système ne commande pas toujours. Il ajuste."
-    }
-  ],
+  "clue": {
+    "title": "DOCUMENT DÉCLASSIFIÉ",
+    "text": "13\nColonies. Bandes. Fondateurs.\n\n« La confiance n'est pas gratuite.\nElle a un prix : la crédibilité. »",
+    "instruction": "13 colonies d'origine.\n13 bandes sur le drapeau.\n\nIdentifie la 13e lettre de l'alphabet (A=1).\nCette lettre est votre fragment du Code Omega."
+  },
+  "puzzle": {
+    "type": "direct_alphabet",
+    "question": "13 colonies originelles.\n13 bandes sur le drapeau américain.\n\nQuelle est la 13e lettre de l'alphabet ?",
+    "letter_choices": ["L", "M", "N", "K"],
+    "solution_number": 13,
+    "solution_letter": "M",
+    "explanation": "13 colonies → 13e lettre de l'alphabet = M"
+  },
+  "final_question": {
+    "question": "Si le dollar est la monnaie de réserve mondiale, quel est son véritable levier de pouvoir ?",
+    "choices": [
+      "La force militaire américaine",
+      "La confiance des marchés mondiaux",
+      "Le stock d'or de Fort Knox"
+    ],
+    "answer_index": 1,
+    "narrative_unlock": "La confiance est une monnaie. Et comme toute monnaie, elle peut s'imprimer… ou s'effondrer."
+  },
+  "reward": {
+    "letter_obtained": "M",
+    "fragment_name": "Fragment du Dollar Fédéral",
+    "fragment_concept": "RYTHME_MONÉTAIRE",
+    "jasper_quote": "La confiance est une monnaie. Et comme toute monnaie, elle peut s'imprimer… ou s'effondrer.",
+    "next_destination_hint": "Celui qui construit les routes décide où passent les flux. Cap à l'Est.",
+    "unlocked_message": "Le rythme monétaire est le deuxième mécanisme."
+  },
   "fragment_reward": {
-    "id": "FRAG-US-002",
-    "name": "Fragment Federal Shadow",
-    "concept": "NŒUD_MONÉTAIRE",
-    "unlocked_message": "Le flux a besoin d'un rythme."
+    "id": "FRAG-US-001",
+    "name": "Fragment du Dollar Fédéral",
+    "concept": "RYTHME_MONÉTAIRE",
+    "unlocked_message": "Le rythme monétaire est le deuxième mécanisme."
   }
 }
