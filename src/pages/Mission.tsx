@@ -458,49 +458,76 @@ const Mission = () => {
   };
 
   const completeMission = async () => {
-    if (!countryId || !mission) return;
+    if (!countryId || !mission || !country) return;
 
     const timeElapsed = Math.round((Date.now() - missionStartTime) / 1000);
     const total = mission.enigmes.length;
 
-    // ─── 80% SUCCESS RULE ────────────────────────────────────────────────
-    // Max 20% failure allowed: need at least ceil(total * 0.8) correct
-    const requiredScore = Math.ceil(total * 0.8);
-    const missionSuccess = score >= requiredScore;
+    // ─── FRAGMENT THRESHOLD: 8/10 ─────────────────────────────────────────
+    const FRAGMENT_THRESHOLD = 8;
+    const fragmentEarned = score >= FRAGMENT_THRESHOLD;
 
-    if (!missionSuccess) {
-      // Update user_progress (increment attempts, no fragment)
-      if (user) {
-        await (supabase as any).from("user_progress").upsert({
-          user_id: user.id,
-          country_id: countryId,
-          attempts: 1,
-          best_score: score,
-          success: false,
-          fragment_unlocked: false,
-          last_attempt_at: new Date().toISOString(),
-        }, { onConflict: "user_id,country_id", ignoreDuplicates: false });
+    // Demo mode — no DB
+    if (!user) {
+      const prev = JSON.parse(localStorage.getItem("wep_demo_progress") || "{}");
+      prev[countryId] = { score, total, time: timeElapsed };
+      localStorage.setItem("wep_demo_progress", JSON.stringify(prev));
+      if (!fragmentEarned) {
+        toast({
+          title: `Score: ${score}/${total}`,
+          description: "Il faut 8/10 pour obtenir la pièce. Rejouer ?",
+          variant: "destructive",
+        });
+        setPhase("failed");
+        return;
       }
+      const xp = 50 + score * 25;
+      toast({ title: "Mission accomplie! (Mode Démo)", description: `+${xp} XP — Créez un compte pour sauvegarder.` });
+      navigate(`/mission/${countryId}/complete?score=${score}&total=${total}&xp=${xp}&demo=1`);
+      return;
+    }
+
+    // ─── ATOMIC SERVER CALL ─────────────────────────────────────────────
+    // complete_country_attempt handles: progress upsert + fragment insert (ON CONFLICT DO NOTHING)
+    const { data: rpcResult, error: rpcError } = await (supabase as any).rpc(
+      "complete_country_attempt",
+      {
+        p_user_id: user.id,
+        p_country_code: country.code,
+        p_score: score,
+        p_total: total,
+      }
+    );
+
+    if (rpcError) {
+      console.error("complete_country_attempt error:", rpcError);
+      toast({ title: "Erreur de sauvegarde", description: rpcError.message, variant: "destructive" });
+    }
+
+    const result = rpcResult as {
+      best_score: number;
+      fragment_granted: boolean;
+      fragment_new: boolean;
+      unlocked_next: boolean;
+    } | null;
+
+    // Score < 8 → pas de fragment, mission échouée (peut rejouer)
+    if (!fragmentEarned) {
+      toast({
+        title: `Score: ${score}/${total}`,
+        description: "Il faut 8/10 minimum pour obtenir la pièce. Vous pouvez rejouer.",
+        variant: "destructive",
+      });
       setPhase("failed");
       return;
     }
 
-    // Compute XP (only on success)
+    // Score ≥ 8 → succès, XP, badges, redirection
     const timeBonus = Math.max(0, 30 - Math.floor(timeElapsed / 10)) * 2;
     const perfectBonus = score === total ? 50 : 0;
     const xpGained = 50 + score * 25 + timeBonus + perfectBonus;
 
-    if (!user) {
-      // Demo mode: save to localStorage
-      const prev = JSON.parse(localStorage.getItem("wep_demo_progress") || "{}");
-      prev[countryId] = { score, total, xp: xpGained, time: timeElapsed };
-      localStorage.setItem("wep_demo_progress", JSON.stringify(prev));
-      toast({ title: "Mission accomplie! (Mode Démo)", description: `+${xpGained} XP — Créez un compte pour sauvegarder.` });
-      navigate(`/mission/${countryId}/complete?score=${score}&total=${total}&xp=${xpGained}&demo=1`);
-      return;
-    }
-
-    // Save mission
+    // Save mission record
     await supabase.from("missions").insert({
       user_id: user.id,
       country_id: countryId,
@@ -511,61 +538,17 @@ const Mission = () => {
       completed_at: new Date().toISOString(),
     });
 
-    // Check if fragment already unlocked (avoid duplicates on replay)
-    const { data: existingProgress } = await supabase
-      .from("user_progress")
-      .select("fragment_unlocked")
-      .eq("user_id", user.id)
-      .eq("country_id", countryId)
-      .maybeSingle();
-
-    const fragmentAlreadyUnlocked = existingProgress?.fragment_unlocked === true;
-
-    // Create puzzle piece + persist fragment in user_fragments + update user_progress
-    const inserts: Promise<any>[] = [
-      supabase.from("puzzle_pieces").insert({
-        user_id: user.id,
-        country_id: countryId,
-        unlocked: true,
-        unlocked_at: new Date().toISOString(),
-      }),
-      (supabase as any).from("user_progress").upsert({
-        user_id: user.id,
-        country_id: countryId,
-        attempts: 1,
-        best_score: score,
-        success: true,
-        fragment_unlocked: true,
-        last_attempt_at: new Date().toISOString(),
-      }, { onConflict: "user_id,country_id", ignoreDuplicates: false }),
-    ];
-
-    // Only insert fragment once (first success)
-    if (!fragmentAlreadyUnlocked) {
-      inserts.push(
-        (supabase as any).from("user_fragments").insert({
-          user_id: user.id,
-          country_id: countryId,
-          fragment_index: 0,
-          is_placed: false,
-          obtained_at: new Date().toISOString(),
-        })
-      );
-    }
-
-    await Promise.all(inserts);
-
     // Update XP + streak
     const { data: profileRaw } = await supabase
       .from("profiles")
       .select("xp, level, streak, longest_streak")
       .eq("user_id", user.id)
       .single();
-    const profile = profileRaw as any;
+    const prof = profileRaw as any;
 
-    let newStreak = (profile?.streak ?? 0) + 1;
-    let longestStreak = Math.max(profile?.longest_streak ?? 0, newStreak);
-    const newXp = (profile?.xp ?? 0) + xpGained;
+    let newStreak = (prof?.streak ?? 0) + 1;
+    let longestStreak = Math.max(prof?.longest_streak ?? 0, newStreak);
+    const newXp = (prof?.xp ?? 0) + xpGained;
     const streakMultiplier = Math.min(1.5, 1 + newStreak * 0.1);
     const finalXp = Math.round(newXp * (newStreak >= 2 ? streakMultiplier : 1));
     const newLevel = Math.floor(finalXp / 200) + 1;
@@ -589,7 +572,7 @@ const Mission = () => {
       .select("country_id")
       .eq("user_id", user.id)
       .eq("unlocked", true);
-    const completedCountries = new Set(completedPieces?.map(p => p.country_id) || []).size;
+    const completedCountriesCount = new Set(completedPieces?.map((p: any) => p.country_id) || []).size;
 
     checkAndAwardBadges({
       userId: user.id,
@@ -602,7 +585,7 @@ const Mission = () => {
       streak: newStreak,
       trustLevel: storyState.trust_level,
       suspicionLevel: storyState.suspicion_level,
-      completedCountries,
+      completedCountries: completedCountriesCount,
       xp: finalXp,
     });
 
@@ -1000,15 +983,30 @@ const Mission = () => {
                   <XCircle className="h-24 w-24 mx-auto" style={{ color: "hsl(0 70% 50%)" }} />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                  <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 70% 50% / 0.6)" }}>MISSION COMPROMISE</p>
-                  <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>ÉCHEC</h2>
-                  <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    Le Cercle a détecté votre présence.<br />Vous devrez recommencer depuis le début.
-                  </p>
+                  {score < 8 && totalMistakes < 2 ? (
+                    <>
+                      <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 70% 50% / 0.6)" }}>SCORE INSUFFISANT</p>
+                      <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>
+                        {score}/10
+                      </h2>
+                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        Il faut <strong>8/10 minimum</strong> pour obtenir la pièce et débloquer le pays suivant.<br />
+                        Vous pouvez rejouer autant de fois que nécessaire.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 70% 50% / 0.6)" }}>MISSION COMPROMISE</p>
+                      <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 70% 55%)", textShadow: "0 0 30px hsl(0 70% 40% / 0.5)" }}>ÉCHEC</h2>
+                      <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        Le Cercle a détecté votre présence.<br />Vous devrez recommencer depuis le début.
+                      </p>
+                    </>
+                  )}
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="rounded-lg border px-6 py-4 inline-block" style={{ borderColor: "hsl(0 70% 30% / 0.4)", background: "hsl(0 20% 8% / 0.8)" }}>
                   <p className="text-3xl font-display font-bold mb-1" style={{ color: "hsl(0 60% 60%)" }}>{score} / {mission.enigmes.length}</p>
-                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>ÉNIGMES RÉSOLUES</p>
+                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>ÉNIGMES RÉSOLUES · MINIMUM REQUIS : 8</p>
                 </motion.div>
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(var(--muted-foreground) / 0.5)" }}>
                   "Le Cercle ne pardonne pas les erreurs. Mais chaque échec est un enseignement."<br />
@@ -1016,7 +1014,7 @@ const Mission = () => {
                 </motion.p>
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
                   <Button onClick={retryMission} className="flex-1 font-display tracking-wider py-5 border-0" style={{ background: "hsl(0 70% 35%)", color: "white" }}>
-                    <RotateCcw className="h-4 w-4 mr-2" />RÉESSAYER
+                    <RotateCcw className="h-4 w-4 mr-2" />REJOUER
                   </Button>
                   <Button variant="outline" onClick={() => navigate("/dashboard")} className="flex-1 font-display tracking-wider py-5">
                     <ArrowLeft className="h-4 w-4 mr-2" />RETOUR AU QG

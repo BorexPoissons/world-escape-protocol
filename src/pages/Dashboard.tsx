@@ -163,6 +163,9 @@ const FLAG_EMOJI: Record<string, string> = {
 
 const INTRO_SEEN_KEY = "wep_intro_seen";
 
+// Fixed SIGNAL_INITIAL sequence for free sequential unlock
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -172,6 +175,8 @@ const Dashboard = () => {
   const [userBadges, setUserBadges] = useState<BadgeKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // player_country_progress: map country_code → best_score (for sequential unlock)
+  const [signalProgress, setSignalProgress] = useState<Record<string, number>>({});
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; type: "agent" | "director" }>({
     open: false,
     type: "agent",
@@ -209,12 +214,16 @@ const Dashboard = () => {
     }
 
     const fetchData = async () => {
-      const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes] = await Promise.all([
+      const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes] = await Promise.all([
         supabase.from("countries").select("*").order("release_order"),
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
         supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
         supabase.from("user_badges").select("badge_key").eq("user_id", user.id),
+        (supabase as any).from("player_country_progress")
+          .select("country_code, best_score")
+          .eq("user_id", user.id)
+          .in("country_code", SIGNAL_INITIAL_SEQUENCE),
       ]);
 
       if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
@@ -222,6 +231,14 @@ const Dashboard = () => {
       if (missionsRes.data) setCompletedCountries(missionsRes.data.map((m: any) => m.country_id));
       if (rolesRes.data && rolesRes.data.length > 0) setIsAdmin(true);
       if (badgesRes.data) setUserBadges(badgesRes.data.map((b: any) => b.badge_key));
+      // Build map: country_code → best_score
+      if (signalProgressRes.data) {
+        const map: Record<string, number> = {};
+        for (const row of signalProgressRes.data as any[]) {
+          map[row.country_code] = row.best_score ?? 0;
+        }
+        setSignalProgress(map);
+      }
       setLoading(false);
     };
 
@@ -780,7 +797,40 @@ const Dashboard = () => {
                   {group.playable.map((country, i) => {
                     const levelOk = isCountryUnlocked(country, playerLevel);
                     const requiredLevel = (country.difficulty_base - 1) * 2 + 1;
-                    if (!levelOk) {
+
+                    // ── SIGNAL_INITIAL sequential lock ──────────────────────
+                    // country N+1 locked until country N has best_score ≥ 8
+                    const seqIdx = SIGNAL_INITIAL_SEQUENCE.indexOf(country.code);
+                    const isSignalInitial = seasonNum === 0 && seqIdx !== -1;
+                    const prevCode = seqIdx > 0 ? SIGNAL_INITIAL_SEQUENCE[seqIdx - 1] : null;
+                    const prevBestScore = prevCode ? (signalProgress[prevCode] ?? 0) : 8; // first country always unlocked
+                    const seqLocked = isSignalInitial && seqIdx > 0 && prevBestScore < 8;
+
+                    if (seqLocked) {
+                      return (
+                        <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                          <div className="relative bg-card border border-border rounded-xl p-5 select-none overflow-hidden">
+                            {/* Blur overlay */}
+                            <div className="absolute inset-0 backdrop-blur-[4px] bg-background/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2 px-4 text-center">
+                              <Lock className="h-6 w-6 text-muted-foreground mb-1" />
+                              <p className="text-xs font-display text-muted-foreground tracking-wider">
+                                RÉUSSIS {prevCode} AVEC 8/10
+                              </p>
+                              <p className="text-[11px] text-muted-foreground/60 mt-1">
+                                Score actuel : {signalProgress[prevCode!] ?? 0}/10
+                              </p>
+                            </div>
+                            {/* Blurred content underneath */}
+                            <div className="opacity-30">
+                              <p className="font-display text-foreground tracking-wider mb-1">{country.name.toUpperCase()}</p>
+                              <p className="text-xs text-muted-foreground">{"★".repeat(country.difficulty_base)}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    }
+
+                    if (!levelOk && !isSignalInitial) {
                       return (
                         <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
                           <div className="relative bg-card border border-border rounded-xl p-5 opacity-60 select-none">

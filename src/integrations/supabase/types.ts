@@ -157,6 +157,39 @@ export type Database = {
           },
         ]
       }
+      player_country_progress: {
+        Row: {
+          attempts_count: number
+          best_score: number
+          country_code: string
+          fragment_granted: boolean
+          id: string
+          last_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts_count?: number
+          best_score?: number
+          country_code: string
+          fragment_granted?: boolean
+          id?: string
+          last_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts_count?: number
+          best_score?: number
+          country_code?: string
+          fragment_granted?: boolean
+          id?: string
+          last_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -451,6 +484,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_country_attempt: {
+        Args: {
+          p_country_code: string
+          p_score: number
+          p_total?: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
