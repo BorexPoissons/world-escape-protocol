@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import carteWep from "@/assets/carte-wep.png";
+import RevealOverlay from "@/components/RevealOverlay";
 
 export interface MapCountry {
   id: string;
@@ -179,13 +180,16 @@ const CinematicWorldMap = ({
         boxShadow: "0 0 60px hsl(40 80% 55% / 0.08)",
       }}
     >
-      {/* Background */}
+      {/* Background — brightness + optional slow-zoom at 99% */}
       <motion.img
         src={carteWep}
         alt="Carte World Escape Protocol"
         className="absolute inset-0 w-full h-full object-cover"
-        animate={{ filter: `brightness(${mapBrightness}) saturate(${0.7 + globalProgress * 0.003})` }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+        animate={{
+          filter: `brightness(${mapBrightness}) saturate(${0.7 + globalProgress * 0.003})`,
+          scale: globalProgress >= 99 && globalProgress < 100 ? 1.04 : 1,
+        }}
+        transition={{ duration: globalProgress >= 99 ? 8 : 1.2, ease: "easeOut" }}
         draggable={false}
       />
 
@@ -201,7 +205,8 @@ const CinematicWorldMap = ({
         style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(220 15% 4%) 2px, hsl(220 15% 4%) 4px)" }}
       />
 
-      {/* SVG: connection lines */}
+      {/* ── Cinematic revelation overlay (all thresholds, SVG arcs, zones, labels, Jasper) ── */}
+      <RevealOverlay globalProgress={globalProgress} />
       <svg
         viewBox="0 0 100 56.25"
         className="absolute inset-0 w-full h-full pointer-events-none"
