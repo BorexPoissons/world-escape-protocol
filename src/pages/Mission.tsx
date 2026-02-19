@@ -55,6 +55,9 @@ const PUZZLE_TIMER_SECONDS = 120;
 // 1 mistake allowed: first wrong = warning, second wrong = fail
 const MAX_MISTAKES_TOTAL = 2;
 const MAX_ATTEMPTS_PER_PUZZLE = 2;
+// Mission scoring constants
+const TOTAL_QUESTIONS = 10;
+const SCORE_THRESHOLD = 8;
 
 const LIVES_HEART_COLORS = ["text-destructive", "text-destructive", "text-destructive"];
 
@@ -329,6 +332,7 @@ const Mission = () => {
     setAnswerRevealed(true);
     setSelectedAnswer("__timeout__");
     if (timerRef.current) clearInterval(timerRef.current);
+    // ── Immediate fail check on timeout ─────────────────────────────────────
     if (newMistakes >= MAX_MISTAKES_TOTAL) {
       setTimeout(() => setPhase("failed"), 1400);
     } else {
@@ -351,7 +355,8 @@ const Mission = () => {
     setAttemptsOnCurrent(prev => prev + 1);
 
     if (correct) {
-      setScore(s => s + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       setAnswerRevealed(true);
       setFirstMistakeWarning(false);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -359,6 +364,12 @@ const Mission = () => {
       // Type C correct → set narrative unlock to display after "Suivant"
       if (isTypeC && currentQ.narrative_unlock) {
         setNarrativeUnlockText(currentQ.narrative_unlock);
+      }
+      // ── Immediate win check: 8+ correct answers ──────────────────────────
+      if (newScore >= SCORE_THRESHOLD) {
+        // Small delay to show the correct answer highlight before transitioning
+        setTimeout(() => setPhase("finale"), 900);
+        return;
       }
     } else {
       // Type C wrong → instant fail
@@ -374,6 +385,7 @@ const Mission = () => {
         setTotalMistakes(newMistakes);
         setAnswerRevealed(true);
         if (timerRef.current) clearInterval(timerRef.current);
+        // ── Immediate fail check: 2 mistakes ────────────────────────────────
         if (newMistakes >= MAX_MISTAKES_TOTAL) {
           setTimeout(() => setPhase("failed"), 1400);
         } else {
@@ -397,6 +409,9 @@ const Mission = () => {
 
   const nextStep = () => {
     if (!mission) return;
+    // ── Guard: never advance if mission is not in active enigme phase ────────
+    if (phase !== "enigme") return;
+
     // If narrative unlock pending, show overlay first
     if (narrativeUnlockText) {
       setPhase("narrative_unlock");
@@ -408,7 +423,12 @@ const Mission = () => {
     if (currentEnigme < mission.enigmes.length - 1) {
       setCurrentEnigme(c => c + 1);
     } else {
-      setPhase(isStaticMission ? "finale" : "moral");
+      // All questions answered — check score threshold
+      if (score >= SCORE_THRESHOLD) {
+        setPhase(isStaticMission ? "finale" : "moral");
+      } else {
+        setPhase("failed");
+      }
     }
   };
 
@@ -421,7 +441,12 @@ const Mission = () => {
       setCurrentEnigme(c => c + 1);
       setPhase("enigme");
     } else {
-      setPhase(isStaticMission ? "finale" : "moral");
+      // All questions done — enforce score threshold
+      if (score >= SCORE_THRESHOLD) {
+        setPhase(isStaticMission ? "finale" : "moral");
+      } else {
+        setPhase("failed");
+      }
     }
   };
 
@@ -983,7 +1008,7 @@ const Mission = () => {
                   <XCircle className="h-24 w-24 mx-auto" style={{ color: "hsl(0 70% 50%)" }} />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                  {score < 8 && totalMistakes < 2 ? (
+                  {score < SCORE_THRESHOLD && totalMistakes < MAX_MISTAKES_TOTAL ? (
                     <>
                       <p className="text-xs font-display tracking-[0.4em] mb-2" style={{ color: "hsl(0 65% 38%)" }}>SCORE INSUFFISANT</p>
                       <h2 className="text-4xl md:text-5xl font-display font-bold tracking-wider mb-3" style={{ color: "hsl(0 65% 42%)", textShadow: "0 0 30px hsl(0 70% 30% / 0.5)" }}>
@@ -1005,8 +1030,8 @@ const Mission = () => {
                   )}
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="rounded-lg border px-6 py-4 inline-block" style={{ borderColor: "hsl(0 70% 25% / 0.5)", background: "hsl(0 20% 7% / 0.9)" }}>
-                  <p className="text-3xl font-display font-bold mb-1" style={{ color: "hsl(0 65% 42%)" }}>{score} / {mission.enigmes.length}</p>
-                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(0 0% 85%)" }}>ÉNIGMES RÉSOLUES · MINIMUM REQUIS : 8</p>
+                  <p className="text-3xl font-display font-bold mb-1" style={{ color: "hsl(0 65% 42%)" }}>{score} / {TOTAL_QUESTIONS}</p>
+                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(0 0% 85%)" }}>BONNES RÉPONSES · MINIMUM REQUIS : {SCORE_THRESHOLD}/{TOTAL_QUESTIONS}</p>
                 </motion.div>
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="text-xs italic max-w-xs mx-auto leading-relaxed" style={{ color: "hsl(0 0% 70%)" }}>
                   "Le Cercle ne pardonne pas les erreurs. Mais chaque échec est un enseignement."<br />
