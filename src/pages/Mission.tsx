@@ -15,10 +15,12 @@ import { checkAndAwardBadges } from "@/lib/badges";
 
 interface Enigme {
   question: string;
-  type: string;
+  type: string;       // legacy: "culture" | "logique" | etc.
+  question_type?: "A" | "B" | "C";  // structured type
   choices: string[];
-  answer: string;
+  answer: string;     // always the full text of the correct answer
   explanation?: string;
+  narrative_unlock?: string; // only on Type C
 }
 
 interface MoralChoice {
@@ -33,13 +35,20 @@ interface MissionData {
   mission_title: string;
   intro: string;
   enigmes: Enigme[];
-  false_hint: string;
-  moral_choice: MoralChoice;
-  final_fragment: string;
-  historical_fact: string;
+  false_hint?: string;
+  moral_choice?: MoralChoice;
+  final_fragment?: string;
+  historical_fact?: string;
 }
 
-type Phase = "loading" | "intro" | "enigme" | "moral" | "finale" | "failed";
+interface FragmentReward {
+  id: string;
+  name: string;
+  concept: string;
+  unlocked_message: string;
+}
+
+type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed";
 
 const DEMO_USER_ID = "demo-user-local";
 const PUZZLE_TIMER_SECONDS = 120;
@@ -106,6 +115,11 @@ const Mission = () => {
   const [usedHint, setUsedHint] = useState(false);
   const [ignoredFakeClue, setIgnoredFakeClue] = useState(true);
 
+  // Static mission state (A/B/C system)
+  const [isStaticMission, setIsStaticMission] = useState(false);
+  const [fragmentReward, setFragmentReward] = useState<FragmentReward | null>(null);
+  const [narrativeUnlockText, setNarrativeUnlockText] = useState<string | null>(null);
+
   // Compute effective timer based on suspicion
   const effectiveTimer = storyState.suspicion_level > 30
     ? Math.round(PUZZLE_TIMER_SECONDS * 0.85)
@@ -149,6 +163,63 @@ const Mission = () => {
       ? (await supabase.from("profiles").select("level").eq("user_id", user.id).single()).data
       : null;
 
+    // ── 0. PRIORITY: Try to load static JSON from /public/content/countries/ ──
+    try {
+      const res = await fetch(`/content/countries/${countryData.code}.json`);
+      if (res.ok) {
+        const staticData = await res.json();
+        // Detect new A/B/C format
+        if (staticData.question_bank && Array.isArray(staticData.question_bank)) {
+          const bank = staticData.question_bank as Array<{
+            id: string; type: "A" | "B" | "C"; question: string;
+            choices: string[]; answer_index: number; narrative_unlock?: string;
+          }>;
+          const dist = staticData.quiz_rules?.distribution ?? { A: 4, B: 1, C: 1 };
+
+          // Draw: 4xA + 1xB + 1xC (Type C mandatory)
+          const typeA = shuffle(bank.filter(q => q.type === "A")).slice(0, dist.A ?? 4);
+          const typeB = shuffle(bank.filter(q => q.type === "B")).slice(0, dist.B ?? 1);
+          const typeC = shuffle(bank.filter(q => q.type === "C")).slice(0, dist.C ?? 1);
+          const picked = shuffle([...typeA, ...typeB, ...typeC]);
+
+          // Convert to Enigme — shuffle choices but preserve correct answer as text
+          const enigmes: Enigme[] = picked.map(q => {
+            const correctText = q.choices[q.answer_index];
+            const shuffledChoices = shuffle([...q.choices]);
+            return {
+              question: q.question,
+              type: q.type,
+              question_type: q.type,
+              choices: shuffledChoices,
+              answer: correctText,
+              narrative_unlock: q.narrative_unlock,
+            };
+          });
+
+          const missionData: MissionData = {
+            mission_title: staticData.mission?.mission_title ?? `Mission : ${countryData.name}`,
+            intro: staticData.mission?.intro ?? "",
+            enigmes,
+          };
+
+          const reward: FragmentReward = staticData.fragment_reward ?? {
+            id: `FRAG-${countryData.code}-001`,
+            name: `Fragment de ${countryData.name}`,
+            concept: "FRAGMENT",
+            unlocked_message: "Un nouveau nœud s'est activé sur la carte mondiale.",
+          };
+
+          setMission(missionData);
+          setFragmentReward(reward);
+          setIsStaticMission(true);
+          setPhase("intro");
+          return;
+        }
+      }
+    } catch {
+      // Static file not found or parse error — fall through to DB/AI
+    }
+
     // ── 1. Try to load questions from DB ─────────────────────────────────────
     const { data: dbQuestions } = await supabase
       .from("questions")
@@ -156,11 +227,9 @@ const Mission = () => {
       .eq("country_id", countryId!);
 
     if (dbQuestions && dbQuestions.length >= 4) {
-      // Shuffle all questions, pick 6 (or fewer if < 6 available)
       const shuffled = shuffle(dbQuestions);
       const picked = shuffled.slice(0, Math.min(6, shuffled.length));
 
-      // Convert DB format to Enigme format
       const enigmes: Enigme[] = picked.map((q: any) => ({
         question: q.question_text,
         type: q.category || "culture",
@@ -169,7 +238,6 @@ const Mission = () => {
         explanation: q.explanation ?? undefined,
       }));
 
-      // Build a minimal MissionData (no AI generation needed)
       const missionData: MissionData = {
         mission_title: `Mission : ${countryData.name}`,
         intro: countryData.description || `Bienvenue à ${countryData.name}. Résolvez les énigmes pour débloquer le fragment.`,
@@ -205,7 +273,6 @@ const Mission = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Shuffle enigme choices to avoid patterns
       const aiMission = data as MissionData;
       aiMission.enigmes = aiMission.enigmes.map(e => ({
         ...e,
@@ -248,13 +315,20 @@ const Mission = () => {
 
   const handleTimeOut = useCallback(() => {
     if (!mission) return;
-    // Timeout counts as a mistake
+    const currentQ = mission.enigmes[currentEnigme];
+    // Timeout on Type C = instant fail
+    if (currentQ.question_type === "C") {
+      setAnswerRevealed(true);
+      setSelectedAnswer("__timeout__");
+      if (timerRef.current) clearInterval(timerRef.current);
+      setTimeout(() => setPhase("failed"), 1400);
+      return;
+    }
     const newMistakes = totalMistakes + 1;
     setTotalMistakes(newMistakes);
     setAnswerRevealed(true);
     setSelectedAnswer("__timeout__");
     if (timerRef.current) clearInterval(timerRef.current);
-
     if (newMistakes >= MAX_MISTAKES_TOTAL) {
       setTimeout(() => setPhase("failed"), 1400);
     } else {
@@ -265,11 +339,13 @@ const Mission = () => {
         variant: "destructive",
       });
     }
-  }, [totalMistakes, mission]);
+  }, [totalMistakes, mission, currentEnigme]);
 
   const handleAnswer = (choice: string) => {
     if (answerRevealed || !mission) return;
-    const correct = choice === mission.enigmes[currentEnigme].answer;
+    const currentQ = mission.enigmes[currentEnigme];
+    const correct = choice === currentQ.answer;
+    const isTypeC = currentQ.question_type === "C";
 
     setSelectedAnswer(choice);
     setAttemptsOnCurrent(prev => prev + 1);
@@ -279,23 +355,28 @@ const Mission = () => {
       setAnswerRevealed(true);
       setFirstMistakeWarning(false);
       if (timerRef.current) clearInterval(timerRef.current);
-      // Accumulate bonus seconds from remaining timer
       setBonusSeconds(prev => prev + timeLeft);
+      // Type C correct → set narrative unlock to display after "Suivant"
+      if (isTypeC && currentQ.narrative_unlock) {
+        setNarrativeUnlockText(currentQ.narrative_unlock);
+      }
     } else {
+      // Type C wrong → instant fail
+      if (isTypeC) {
+        setAnswerRevealed(true);
+        if (timerRef.current) clearInterval(timerRef.current);
+        setTimeout(() => setPhase("failed"), 1400);
+        return;
+      }
       const newAttempts = attemptsOnCurrent + 1;
-
       if (newAttempts >= MAX_ATTEMPTS_PER_PUZZLE) {
-        // Second attempt on this question = count as a mistake
         const newMistakes = totalMistakes + 1;
         setTotalMistakes(newMistakes);
         setAnswerRevealed(true);
         if (timerRef.current) clearInterval(timerRef.current);
-
         if (newMistakes >= MAX_MISTAKES_TOTAL) {
-          // 2nd global mistake → FAIL
           setTimeout(() => setPhase("failed"), 1400);
         } else {
-          // 1st global mistake → reveal answer + warning
           setFirstMistakeWarning(true);
           toast({
             title: "❌ Tentatives épuisées",
@@ -304,7 +385,6 @@ const Mission = () => {
           });
         }
       } else {
-        // First attempt wrong → allow retry on this question
         setSelectedAnswer(null);
         toast({
           title: "❌ Mauvaise réponse",
@@ -317,19 +397,36 @@ const Mission = () => {
 
   const nextStep = () => {
     if (!mission) return;
+    // If narrative unlock pending, show overlay first
+    if (narrativeUnlockText) {
+      setPhase("narrative_unlock");
+      return;
+    }
     setSelectedAnswer(null);
     setAnswerRevealed(false);
     setAttemptsOnCurrent(0);
-
     if (currentEnigme < mission.enigmes.length - 1) {
       setCurrentEnigme(c => c + 1);
     } else {
-      setPhase("moral");
+      setPhase(isStaticMission ? "finale" : "moral");
+    }
+  };
+
+  const continueFromNarrativeUnlock = () => {
+    setNarrativeUnlockText(null);
+    setSelectedAnswer(null);
+    setAnswerRevealed(false);
+    setAttemptsOnCurrent(0);
+    if (currentEnigme < mission!.enigmes.length - 1) {
+      setCurrentEnigme(c => c + 1);
+      setPhase("enigme");
+    } else {
+      setPhase(isStaticMission ? "finale" : "moral");
     }
   };
 
   const handleMoralChoice = async (option: "a" | "b") => {
-    if (!mission) return;
+    if (!mission || !mission.moral_choice) return;
     const impact = option === "a" ? mission.moral_choice.impact_a : mission.moral_choice.impact_b;
 
     if (user) {
@@ -501,6 +598,9 @@ const Mission = () => {
     setUsedHint(false);
     setBonusSeconds(0);
     setLifeTradeUsed(false);
+    setNarrativeUnlockText(null);
+    setIsStaticMission(false);
+    setFragmentReward(null);
     const newLives = storyState.suspicion_level > 70 ? 2 : 3;
     setLives(newLives);
     setMaxLives(newLives);
@@ -708,7 +808,19 @@ const Mission = () => {
               {/* Timer bar */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-display">
-                  <span className="text-muted-foreground tracking-wider">{mission.enigmes[currentEnigme].type.toUpperCase()}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground tracking-wider">
+                      {mission.enigmes[currentEnigme].question_type
+                        ? `TYPE ${mission.enigmes[currentEnigme].question_type}`
+                        : mission.enigmes[currentEnigme].type.toUpperCase()}
+                    </span>
+                    {mission.enigmes[currentEnigme].question_type === "C" && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-display tracking-wider"
+                        style={{ background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.4)" }}>
+                        CRITIQUE
+                      </span>
+                    )}
+                  </div>
                   <span className={`flex items-center gap-1 ${timeLeft <= 15 ? "text-destructive animate-pulse" : "text-muted-foreground"}`}>
                     <Clock className="h-3.5 w-3.5" />
                     {timeLeft}s
@@ -830,7 +942,11 @@ const Mission = () => {
                   )}
 
                   <Button onClick={nextStep} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90">
-                    {currentEnigme < mission.enigmes.length - 1 ? "ÉNIGME SUIVANTE →" : "CHOIX MORAL"}
+                    {narrativeUnlockText
+                      ? "RÉVÉLATION NARRATIVE →"
+                      : currentEnigme < mission.enigmes.length - 1
+                        ? "ÉNIGME SUIVANTE →"
+                        : isStaticMission ? "COMPLÉTER →" : "CHOIX MORAL"}
                   </Button>
                 </motion.div>
               )}
@@ -885,8 +1001,61 @@ const Mission = () => {
             </motion.div>
           )}
 
+          {/* ── NARRATIVE UNLOCK — cinematic overlay ── */}
+          {phase === "narrative_unlock" && narrativeUnlockText && (
+            <motion.div
+              key="narrative_unlock"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7 }}
+              className="relative min-h-[60vh] flex flex-col items-center justify-center rounded-xl overflow-hidden"
+              style={{ background: "linear-gradient(180deg, hsl(220 30% 4%) 0%, hsl(220 25% 7%) 100%)" }}
+            >
+              <div className="absolute inset-0 scanline pointer-events-none opacity-20" />
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                animate={{ opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                style={{ background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)" }}
+              />
+              <div className="relative z-10 space-y-8 px-6 text-center max-w-sm mx-auto">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                >
+                  <p className="text-xs font-display tracking-[0.5em] mb-3" style={{ color: "hsl(var(--primary) / 0.6)" }}>
+                    DÉVERROUILLAGE NARRATIF
+                  </p>
+                  <div className="w-px h-12 bg-primary/30 mx-auto mb-6" />
+                  <p className="text-2xl font-display font-bold leading-relaxed" style={{ color: "hsl(var(--primary))", textShadow: "0 0 20px hsl(var(--primary) / 0.4)" }}>
+                    "{narrativeUnlockText}"
+                  </p>
+                  <div className="w-px h-12 bg-primary/30 mx-auto mt-6" />
+                </motion.div>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="text-xs text-muted-foreground font-display tracking-widest"
+                >
+                  — J. Velcourt
+                </motion.p>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }}>
+                  <Button
+                    onClick={continueFromNarrativeUnlock}
+                    className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 px-8"
+                  >
+                    CONTINUER LA MISSION →
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+
           {/* ── MORAL CHOICE ──────────────────────── */}
-          {phase === "moral" && mission && (
+          {phase === "moral" && mission && mission.moral_choice && (
             <motion.div key="moral" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <h2 className="text-2xl font-display font-bold text-primary text-glow tracking-wider">DILEMME MORAL</h2>
               <p className="text-foreground leading-relaxed">{mission.moral_choice.description}</p>
@@ -902,6 +1071,7 @@ const Mission = () => {
               </div>
             </motion.div>
           )}
+
 
           {/* ── FINALE — cinematic fragment unlock ── */}
           {phase === "finale" && mission && (
@@ -948,12 +1118,14 @@ const Mission = () => {
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <p className="text-xs font-display tracking-[0.4em] mb-2 text-primary">FRAGMENT OBTENU</p>
                 <h2 className="text-3xl font-display font-bold text-primary text-glow tracking-wider mb-1">
-                  {country?.name?.toUpperCase()} — DÉVERROUILLÉ
+                  {isStaticMission && fragmentReward
+                    ? fragmentReward.name.toUpperCase()
+                    : `${country?.name?.toUpperCase()} — DÉVERROUILLÉ`}
                 </h2>
                 <p className="text-sm text-muted-foreground">Une nouvelle pièce du puzzle mondial a été ajoutée à votre collection.</p>
               </motion.div>
 
-              {/* Narrative fragment */}
+              {/* Narrative fragment / fragment reward message */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -962,7 +1134,16 @@ const Mission = () => {
               >
                 <div className="scanline absolute inset-0 pointer-events-none opacity-30" />
                 <p className="text-xs font-display tracking-widest mb-2 text-primary">TRANSMISSION DÉCHIFFRÉE</p>
-                <p className="text-foreground leading-relaxed italic text-sm relative z-10">"{mission.final_fragment}"</p>
+                <p className="text-foreground leading-relaxed italic text-sm relative z-10">
+                  "{isStaticMission && fragmentReward
+                    ? fragmentReward.unlocked_message
+                    : mission.final_fragment ?? "Fragment obtenu. Le réseau se révèle un peu plus."}"
+                </p>
+                {isStaticMission && fragmentReward && (
+                  <p className="text-xs font-display tracking-widest mt-2 relative z-10" style={{ color: "hsl(var(--primary) / 0.6)" }}>
+                    TYPE : {fragmentReward.concept}
+                  </p>
+                )}
               </motion.div>
 
               {/* Score + XP */}
