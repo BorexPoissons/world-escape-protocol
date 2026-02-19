@@ -21,6 +21,7 @@ import FragmentInventory from "@/components/FragmentInventory";
 import type { Fragment } from "@/components/FragmentInventory";
 import MissionDetailModal from "@/components/MissionDetailModal";
 import UpgradeModal from "@/components/UpgradeModal";
+import FinalRevealSequence from "@/components/FinalRevealSequence";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +115,10 @@ const Puzzle = () => {
   const [placedCountryIds, setPlacedCountryIds] = useState<string[]>([]);
   const [snapNotifs, setSnapNotifs] = useState<SnapNotif[]>([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showFinalReveal, setShowFinalReveal] = useState(false);
+  const [forceFullReveal, setForceFullReveal] = useState(false);
+  const [hasCompletedPuzzle, setHasCompletedPuzzle] = useState(false);
+  const prevProgressRef = useRef<number>(0);
 
   // Rotate inspiring messages
   useEffect(() => {
@@ -175,16 +180,19 @@ const Puzzle = () => {
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("user_fragments" as any).select("id, country_id, fragment_index, is_placed").eq("user_id", user.id),
       supabase.from("missions").select("id, mission_title, score, completed_at, mission_data, country_id").eq("user_id", user.id).eq("completed", true).order("completed_at"),
-      supabase.from("profiles").select("subscription_type").eq("user_id", user.id).single(),
+      supabase.from("profiles").select("subscription_type, has_completed_puzzle").eq("user_id", user.id).single(),
     ]);
 
     const countries = countriesRes.data || [];
     const fragments = (fragmentsRes.data as any[]) || [];
     const missions = missionsRes.data || [];
 
-    // Set tier
+    // Set tier and completed flag
     const subType = (profileRes.data as any)?.subscription_type ?? "free";
+    const completedFlag = (profileRes.data as any)?.has_completed_puzzle ?? false;
     setTier(getTier(subType));
+    setHasCompletedPuzzle(completedFlag);
+    if (completedFlag) setForceFullReveal(true);
 
     const data: CountryPuzzleData[] = countries.map((country) => {
       // 1 fragment per country max (has fragment or not)
@@ -248,6 +256,28 @@ const Puzzle = () => {
     setDraggingFragmentId(null);
   };
 
+  // Count countries with at least 1 fragment (1 per country max)
+  const countriesWithFragment = puzzleData.filter(d => d.unlockedPieces > 0).length;
+  const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
+
+  // Trigger final reveal sequence when 100% reached for the first time
+  useEffect(() => {
+    if (
+      globalProgressOn195 >= 100 &&
+      !hasCompletedPuzzle &&
+      !showFinalReveal &&
+      user &&
+      !loading
+    ) {
+      setShowFinalReveal(true);
+      supabase
+        .from("profiles")
+        .update({ has_completed_puzzle: true } as any)
+        .eq("user_id", user.id)
+        .then(() => setHasCompletedPuzzle(true));
+    }
+  }, [globalProgressOn195, hasCompletedPuzzle, showFinalReveal, user, loading]);
+
   // ─── Derived data ─────────────────────────────────────────────────────────
 
   if (authLoading || loading) {
@@ -263,9 +293,6 @@ const Puzzle = () => {
     );
   }
 
-  // Count countries with at least 1 fragment (1 per country max)
-  const countriesWithFragment = puzzleData.filter(d => d.unlockedPieces > 0).length;
-  const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
 
   // Build map countries — show ALL non-hidden countries (including locked ones) for full world view
   const mapCountries: MapCountry[] = puzzleData
@@ -476,6 +503,7 @@ const Puzzle = () => {
             onCountryClick={handleCountryClick}
             globalProgress={globalProgressOn195}
             collectedCountryCodes={fragments.map(f => f.countryCode)}
+            forceFullReveal={forceFullReveal}
           />
         </motion.div>
 
@@ -627,6 +655,27 @@ const Puzzle = () => {
         onClose={() => setShowUpgrade(false)}
         type="agent"
       />
+
+      {/* ═══ FINAL REVEAL SEQUENCE — 7 ACTES ═══ */}
+      <AnimatePresence>
+        {showFinalReveal && (
+          <FinalRevealSequence
+            onDismiss={() => {
+              setShowFinalReveal(false);
+              setForceFullReveal(true);
+            }}
+            onSaveTitle={async () => {
+              if (!user) return;
+              await supabase
+                .from("profiles")
+                .update({ display_name: "MAÎTRE DU PROTOCOLE" } as any)
+                .eq("user_id", user.id);
+            }}
+            lastCountryX={50}
+            lastCountryY={28}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
