@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Mission from "./pages/Mission";
+import FreeMission from "./pages/FreeMission";
 import MissionComplete from "./pages/MissionComplete";
 import Puzzle from "./pages/Puzzle";
 import Admin from "./pages/Admin";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mission/:countryId" element={<Mission />} />
+            <Route path="/free-mission/:countryId" element={<FreeMission />} />
             <Route path="/mission/:countryId/complete" element={<MissionComplete />} />
             <Route path="/puzzle" element={<Puzzle />} />
             <Route path="/admin" element={<Admin />} />

@@ -210,7 +210,14 @@ const Mission = () => {
       const res = await fetch(`/content/countries/${countryData.code}.json`);
       if (res.ok) {
         const staticData = await res.json();
-        // Detect new A/B/C format
+
+        // ── FREE mission: redirect to new immersive format ─────────────────
+        if (staticData.mission?.is_free === true) {
+          navigate(`/free-mission/${countryId}`, { replace: true });
+          return;
+        }
+
+        // Detect new A/B/C format (paid countries)
         if (staticData.question_bank && Array.isArray(staticData.question_bank)) {
           const bank = staticData.question_bank as Array<{
             id: string; type: "A" | "B" | "C"; question: string;
@@ -227,8 +234,7 @@ const Mission = () => {
           const picked = shuffle([...typeA, ...typeB, ...typeC]);
 
           // ── Build missionConfig from official spec (source of truth) ─────────
-          // Spec: 6 questions/run · 5 correct to win · 2 lives · 120s/question
-          const totalQ = picked.length; // actual questions drawn this session
+          const totalQ = picked.length;
           const cfg: MissionConfig = {
             total_questions: totalQ,
             min_correct_to_win: qr.min_correct_to_win ?? DEFAULT_MISSION_CONFIG.min_correct_to_win,
