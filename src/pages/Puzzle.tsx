@@ -39,7 +39,7 @@ interface CountryPuzzleData {
 }
 
 type Tier = "free" | "agent" | "director";
-type CountryVisibility = "playable" | "locked_upgrade" | "silhouette" | "hidden";
+type CountryVisibility = "playable" | "locked_s1" | "locked_s2" | "locked_s3" | "locked_s4" | "locked_upgrade" | "silhouette" | "hidden";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -63,25 +63,30 @@ function getTier(subscriptionType: string): Tier {
 }
 
 function getCountryVisibility(country: Tables<"countries">, tier: Tier): CountryVisibility {
-  const order = (country as any).release_order ?? 999;
-  const isSecret = (country as any).is_secret ?? false;
+  const season = country.season_number ?? 1;
+  const isSecret = country.is_secret ?? false;
 
-  if (tier === "director") return "playable";
+  // Director sees everything
+  if (tier === "director") return isSecret ? "playable" : "playable";
 
+  // Secret countries only for director
+  if (isSecret) return "hidden";
+
+  // Agent: Season 0 + Season 1 playable, rest shown locked
   if (tier === "agent") {
-    if (isSecret) return "hidden";
-    if (order <= 50) return "playable";
-    if (order === 51) return "locked_upgrade";
-    if (order <= 60) return "silhouette";
-    return "hidden";
+    if (season === 0) return "playable";
+    if (season === 1) return "playable";
+    if (season === 2) return "locked_s2";
+    if (season === 3) return "locked_s3";
+    return "locked_s4";
   }
 
-  // free
-  if (isSecret) return "hidden";
-  if (order <= 3) return "playable";
-  if (order === 4) return "locked_upgrade";
-  if (order <= 10) return "silhouette";
-  return "hidden";
+  // Free: only Season 0 playable, all others shown locked by season
+  if (season === 0) return "playable";
+  if (season === 1) return "locked_s1";
+  if (season === 2) return "locked_s2";
+  if (season === 3) return "locked_s3";
+  return "locked_s4";
 }
 
 // ─── Snap notification ───────────────────────────────────────────────────────
@@ -258,12 +263,12 @@ const Puzzle = () => {
   const totalUnlocked = puzzleData.reduce((sum, d) => sum + d.unlockedPieces, 0);
   const globalProgressOn195 = Math.round((totalUnlocked / (TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY)) * 100 * 10) / 10;
 
-  // Build map countries — DB coords take priority over COUNTRY_GEO fallback
+  // Build map countries — show ALL non-hidden countries (including locked ones) for full world view
   const mapCountries: MapCountry[] = puzzleData
     .filter(d => getCountryVisibility(d.country, tier) !== "hidden")
     .map(d => {
-      const dbX = (d.country as any).puzzle_position_x;
-      const dbY = (d.country as any).puzzle_position_y;
+      const dbX = d.country.puzzle_position_x;
+      const dbY = d.country.puzzle_position_y;
       const geo = (dbX != null && dbY != null)
         ? { x: dbX as number, y: dbY as number }
         : COUNTRY_GEO[d.country.code] ?? { x: 50, y: 50 };
@@ -276,6 +281,7 @@ const Puzzle = () => {
         visibility: getCountryVisibility(d.country, tier),
         x: geo.x,
         y: geo.y,
+        seasonNumber: d.country.season_number,
       };
     });
 
@@ -343,9 +349,9 @@ const Puzzle = () => {
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="text-right">
-              <p className="text-xs font-display tracking-widest text-muted-foreground">FRAGMENTS</p>
+              <p className="text-xs font-display tracking-widest text-muted-foreground">PAYS ACTIFS</p>
               <p className="text-sm font-display font-bold text-foreground">
-                {totalUnlocked}/{TOTAL_COUNTRIES_IN_WORLD * TOTAL_PIECES_PER_COUNTRY}
+                {puzzleData.filter(d => d.unlockedPieces > 0).length}/{TOTAL_COUNTRIES_IN_WORLD}
               </p>
             </div>
             <div className="h-8 w-px bg-border" />
@@ -410,8 +416,8 @@ const Puzzle = () => {
           className="max-w-2xl mx-auto"
         >
           <div className="flex items-center justify-between mb-1.5 text-xs font-display text-muted-foreground tracking-wider">
-            <span>PROGRESSION MONDIALE</span>
-            <span>{globalProgressOn195}% — {puzzleData.filter(d => d.unlockedPieces > 0).length} PAYS ACTIFS</span>
+            <span>PROGRESSION MONDIALE — {TOTAL_COUNTRIES_IN_WORLD} PAYS</span>
+            <span>{globalProgressOn195}% — {puzzleData.filter(d => d.unlockedPieces > 0).length}/{TOTAL_COUNTRIES_IN_WORLD} ACTIFS</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
             <motion.div
@@ -493,22 +499,30 @@ const Puzzle = () => {
         )}
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-6 pb-4 text-xs font-display tracking-wider text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-5 pb-4 text-xs font-display tracking-wider text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-            ACTIF
+            <div className="w-2 h-2 rounded-full" style={{ background: "hsl(40 85% 62%)" }} />
+            <span style={{ color: "hsl(40 85% 62%)" }}>GRATUIT (5)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full border border-primary/50" />
-            EN COURS
+            <div className="w-2 h-2 rounded-full" style={{ background: "hsl(220 80% 65%)" }} />
+            <span style={{ color: "hsl(220 80% 65%)" }}>SAISON 1 (43)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-secondary border border-border" />
-            VERROUILLÉ
+            <div className="w-2 h-2 rounded-full" style={{ background: "hsl(160 60% 52%)" }} />
+            <span style={{ color: "hsl(160 60% 52%)" }}>SAISON 2 (72)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full opacity-50" style={{ background: "hsl(280 60% 30%)", border: "1px solid hsl(280 60% 40%)" }} />
-            OMEGA — DIRECTEUR
+            <div className="w-2 h-2 rounded-full" style={{ background: "hsl(280 65% 62%)" }} />
+            <span style={{ color: "hsl(280 65% 62%)" }}>SAISON 3 (40)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: "hsl(0 70% 58%)" }} />
+            <span style={{ color: "hsl(0 70% 58%)" }}>SAISON 4 (35)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full opacity-50" style={{ background: "hsl(280 60% 30%)" }} />
+            <span>OMÉGA — DIRECTEUR</span>
           </div>
         </div>
       </main>
