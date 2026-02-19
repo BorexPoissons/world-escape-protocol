@@ -400,7 +400,7 @@ const MissionComplete = () => {
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate("/dashboard?refresh=1")}
                       className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6"
                     >
                       RETOUR AU QG
@@ -412,7 +412,7 @@ const MissionComplete = () => {
                   </Button>
                 </div>
 
-                <Button variant="ghost" onClick={() => navigate("/dashboard")} className="w-full font-display tracking-wider text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" onClick={() => navigate("/dashboard?refresh=1")} className="w-full font-display tracking-wider text-muted-foreground hover:text-foreground">
                   RETOUR AU QG
                 </Button>
               </motion.div>
