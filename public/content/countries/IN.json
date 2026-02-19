@@ -8,7 +8,7 @@
     "total_free": 5,
     "mission_title": "OPÉRATION SUBCONTINENT SILENCIEUX",
     "detective": "Jasper Valcourt",
-    "intro_text": "New Delhi. Chaleur sèche.\n\nUn système peut être riche.\nUn système peut être structuré.\n\nMais sans masse… il reste limité.\n\nJe suis Jasper Valcourt.\nEt je regarde toujours la variable que les autres sous-estiment.\n\nQuand la masse se connecte, elle devient puissance.\n— Jasper Valcourt"
+    "intro_text": "New Delhi. Chaleur sèche.\n\nUn système peut être riche.\nUn système peut être structuré.\n\nMais sans masse,\nil reste limité.\n\nJe suis Jasper Valcourt.\nEt je regarde toujours la variable que les autres sous-estiment.\n\nUne population immense.\nUne jeunesse dominante.\nUn secteur technologique en expansion.\n\nLa démographie n'est pas un chiffre.\nC'est un potentiel.\n\nQuand la masse se connecte,\nelle devient puissance.\n\nSi les flux ont un passage,\nun rythme,\net des routes…\n\nAlors la prochaine étape\nsera la connexion.\n\n— J. Valcourt"
   },
   "scene": {
     "prompt": "Dans un café surchauffé, trois pistes :",
@@ -22,7 +22,7 @@
   },
   "clue": {
     "title": "Note UPI",
-    "text": "2016\n\n« La masse devient puissance lorsqu’elle se connecte. »\n\nIndice : additionne les chiffres."
+    "text": "2016\n\n« La masse devient puissance lorsqu'elle se connecte. »\n\nIndice : additionne les chiffres."
   },
   "puzzle": {
     "type": "alphabet_sum",
@@ -35,7 +35,7 @@
   "final_question": {
     "question": "Pourquoi une population jeune peut-elle devenir un avantage stratégique ?",
     "choices": [
-      "Elle soutient la croissance économique et l’innovation",
+      "Elle soutient la croissance économique et l'innovation",
       "Elle isole le pays",
       "Elle supprime les institutions"
     ],
@@ -44,7 +44,7 @@
   "reward": {
     "letter_obtained": "I",
     "fragment": { "id": "FRAG-IN-FREE-005", "concept": "NOEUD_DEMOGRAPHIQUE", "name": "Fragment Subcontinent Silencieux" },
-    "jasper_quote": "La masse devient puissance lorsqu’elle se connecte.",
+    "jasper_quote": "La masse devient puissance lorsqu'elle se connecte.",
     "next_country_code": null,
     "next_destination_hint": "Vous avez 5 lettres. Assemblez-les. Le système commence à apparaître."
   }
