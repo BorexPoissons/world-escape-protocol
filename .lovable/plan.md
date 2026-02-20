@@ -1,19 +1,39 @@
 
 
-# Bouton Debug — Toast "SIGNAL DÉTECTÉ"
+# Toast "SIGNAL DÉTECTÉ" — Agrandissement + nouvelle photo + revue des contrastes
 
-Ajout d'un bouton temporaire sur la page Puzzle pour déclencher manuellement le toast avec le portrait de Jasper.
+## 1. Remplacer la photo de Jasper
 
-## Ce qui sera fait
+La nouvelle image uploadée (`Jasper_Valcourt_-Signal_détécté.png`) sera copiée dans `src/assets/jasper-signal.png`, remplacant l'ancienne. Elle sera utilisee automatiquement partout ou `jasperSignalImg` est importe.
 
-Un bouton "DEBUG: Signal" sera ajouté en bas à droite de l'écran (position fixe), visible uniquement pour les tests. En cliquant dessus, le toast "SIGNAL DÉTECTÉ" avec le portrait de Jasper apparaîtra exactement comme s'il se déclenchait naturellement après le placement d'un 5e fragment.
+## 2. Agrandir le toast et ajouter un bouton X
 
-## Détails techniques
+Le toast "SIGNAL DETECTE" (centre de l'ecran, lignes 616-679) sera modifie :
 
-**Fichier modifié** : `src/pages/Puzzle.tsx`
+- Portrait agrandi de **64px a 96px** (w-24 h-24)
+- Textes agrandis proportionnellement (titre 14px, nom 12px, citation 11px)
+- Padding plus genereux (px-12 py-7)
+- Ajout d'un **bouton X** en haut a droite pour fermer le toast (appelle `setMilestoneSignal(false)`)
+- Le toast reste cliquable pour ouvrir la modale Jasper
+- Le timer de 2.5s reste actif (mais l'utilisateur peut fermer avant)
 
-- Ajout d'un bouton fixe en `bottom-4 right-4` avec le texte "DEBUG: Signal"
-- Au clic, le bouton active l'état `showSignalToast` à `true` (le même état qui contrôle l'affichage du toast Jasper)
-- Le bouton sera stylé de manière discrète (petit, semi-transparent) pour ne pas gêner l'interface
-- Facile à supprimer ensuite (une seule ligne JSX à retirer)
+## 3. Revoir les contrastes (toasts, textes, modales)
+
+Certains elements ont un texte trop clair (muted-foreground sur fond sombre). Corrections :
+
+**Toast SIGNAL DETECTE** :
+- Citation : passer de `text-muted-foreground` a une couleur plus lisible (`hsl(40 15% 80%)`)
+- Compteur fragments : meme traitement
+
+**Modale MESSAGE DE JASPER** (lignes 887-917) :
+- `DialogDescription` : passer de `text-muted-foreground` a `text-foreground/80` pour meilleure lisibilite
+- Transmission securisee : de `text-muted-foreground` a `text-foreground/60`
+
+**Modale MissionDetailModal** et **UpgradeModal** : ces modales utilisent deja des contrastes corrects (fond `hsl(220 25% 6%)` avec texte `foreground`), pas de changement necessaire.
+
+## Details techniques
+
+**Fichiers modifies** :
+- `src/assets/jasper-signal.png` — remplace par la nouvelle image
+- `src/pages/Puzzle.tsx` — toast agrandi, bouton X, contrastes ameliores
 
