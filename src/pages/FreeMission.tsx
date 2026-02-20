@@ -155,7 +155,7 @@ const FreeMission = () => {
   const [missionStartTime] = useState(() => Date.now());
 
   // The 3 selected questions — ancien format (question_bank A/B/C)
-  type QBankItem = NonNullable<FreeCountryData["question_bank"]>[0];
+  type QBankItem = NonNullable<FreeCountryData["question_bank"]>[0] & { hint?: { text: string; cost_xp: number } };
   const [sceneQuestion, setSceneQuestion] = useState<QBankItem | null>(null);
   const [logicQuestion, setLogicQuestion] = useState<QBankItem | null>(null);
   const [strategicQuestion, setStrategicQuestion] = useState<QBankItem | null>(null);
@@ -177,6 +177,8 @@ const FreeMission = () => {
   // Narrative unlock text (from strategic answer)
   const [narrativeText, setNarrativeText] = useState<string>("");
   const [explanationOpen, setExplanationOpen] = useState(false);
+  const [hintRevealed, setHintRevealed] = useState(false);
+  const [playerXP, setPlayerXP] = useState(0);
 
   // Next country info
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
@@ -271,6 +273,7 @@ const FreeMission = () => {
           answer_index: ansIdx,
           narrative_unlock: q.narrative_unlock,
           explanation: q.explanation,
+          hint: q.hint,
         };
       });
 
@@ -386,6 +389,16 @@ const FreeMission = () => {
       navigate("/dashboard");
       return;
     }
+    // Load player XP for hint system
+    if (user) {
+      const { data: profData } = await supabase
+        .from("profiles")
+        .select("xp")
+        .eq("user_id", user.id)
+        .single();
+      if (profData) setPlayerXP((profData as any).xp ?? 0);
+    }
+
     setPhase(dbColdOpen ? "cold_open" : "intro");
   };
 
@@ -678,6 +691,7 @@ const FreeMission = () => {
     setSceneFeedback("");
     setEarnedLetter("");
     setNarrativeText("");
+    setHintRevealed(false);
     setLives(FREE_MISSION_CONFIG.lives);
     setFirstMistakeWarning(false);
     setBonusPool(0);
@@ -992,7 +1006,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("logic_puzzle"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); setPhase("logic_puzzle"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER L'ENQUÊTE →
@@ -1025,6 +1039,18 @@ const FreeMission = () => {
               <h2 className="text-xl font-display font-bold text-foreground leading-snug">
                 {sceneQuestion.question}
               </h2>
+
+              <HintToggle
+                hint={sceneQuestion.hint}
+                playerXP={playerXP}
+                revealed={hintRevealed}
+                answerRevealed={answerRevealed}
+                onBuy={async (cost) => {
+                  setPlayerXP(prev => prev - cost);
+                  setHintRevealed(true);
+                  if (user) await supabase.from("profiles").update({ xp: playerXP - cost } as any).eq("user_id", user.id);
+                }}
+              />
 
               <div className="space-y-3">
                 {sceneChoices.map((choice, i) => {
@@ -1067,7 +1093,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("logic_puzzle"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); setPhase("logic_puzzle"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     PASSER À L'ÉNIGME LOGIQUE →
@@ -1167,7 +1193,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("strategic"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); setPhase("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     DÉCISION FINALE →
@@ -1188,7 +1214,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setExplanationOpen(false); continueAfterWrong("strategic"); }}
+                    onClick={() => { setExplanationOpen(false); setHintRevealed(false); continueAfterWrong("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER → DÉCISION FINALE
@@ -1229,6 +1255,18 @@ const FreeMission = () => {
                 {logicQuestion.question}
               </h2>
 
+              <HintToggle
+                hint={logicQuestion.hint}
+                playerXP={playerXP}
+                revealed={hintRevealed}
+                answerRevealed={answerRevealed}
+                onBuy={async (cost) => {
+                  setPlayerXP(prev => prev - cost);
+                  setHintRevealed(true);
+                  if (user) await supabase.from("profiles").update({ xp: playerXP - cost } as any).eq("user_id", user.id);
+                }}
+              />
+
               <div className="space-y-3">
                 {logicChoices.map((choice, i) => {
                   const isCorrect = choice === logicQuestion.choices[logicQuestion.answer_index];
@@ -1266,7 +1304,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("strategic"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); setPhase("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     DÉCISION FINALE →
@@ -1287,7 +1325,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setExplanationOpen(false); continueAfterWrong("strategic"); }}
+                    onClick={() => { setExplanationOpen(false); setHintRevealed(false); continueAfterWrong("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER → DÉCISION FINALE
@@ -1367,7 +1405,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     RÉESSAYER LA QUESTION →
@@ -1406,6 +1444,18 @@ const FreeMission = () => {
               <h2 className="text-2xl font-display font-bold text-foreground leading-snug">
                 {strategicQuestion.question}
               </h2>
+
+              <HintToggle
+                hint={strategicQuestion.hint}
+                playerXP={playerXP}
+                revealed={hintRevealed}
+                answerRevealed={answerRevealed}
+                onBuy={async (cost) => {
+                  setPlayerXP(prev => prev - cost);
+                  setHintRevealed(true);
+                  if (user) await supabase.from("profiles").update({ xp: playerXP - cost } as any).eq("user_id", user.id);
+                }}
+              />
 
               <div className="space-y-3">
                 {strategicChoices.map((choice, i) => {
@@ -1447,7 +1497,7 @@ const FreeMission = () => {
                     onToggle={() => setExplanationOpen(o => !o)}
                   />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     RÉESSAYER LA QUESTION →
@@ -1868,6 +1918,62 @@ function StepIndicator({ step, label, isCritical }: { step: 1 | 2 | 3; label: st
         {isCritical && <span className="ml-2 text-[10px] tracking-widest">⚡ CRITIQUE</span>}
       </p>
       <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+// ── Hint Toggle component ────────────────────────────────────────────────────
+
+function HintToggle({
+  hint,
+  playerXP,
+  revealed,
+  answerRevealed,
+  onBuy,
+}: {
+  hint?: { text: string; cost_xp: number };
+  playerXP: number;
+  revealed: boolean;
+  answerRevealed: boolean;
+  onBuy: (cost: number) => void;
+}) {
+  if (!hint?.text) return null;
+  // Hide the buy button once the answer is revealed (but keep hint text visible if already bought)
+  if (answerRevealed && !revealed) return null;
+
+  const canAfford = playerXP >= (hint.cost_xp ?? 0);
+
+  return (
+    <div className="space-y-2">
+      {!revealed && (
+        <button
+          onClick={() => onBuy(hint.cost_xp ?? 0)}
+          disabled={!canAfford}
+          className={`text-xs font-display tracking-wider px-3 py-1.5 rounded-md border transition-colors ${
+            canAfford
+              ? "border-primary/30 text-primary hover:bg-primary/10 cursor-pointer"
+              : "border-border text-muted-foreground/50 cursor-not-allowed"
+          }`}
+          title={!canAfford ? "XP insuffisant" : `Dépenser ${hint.cost_xp} XP pour un indice`}
+        >
+          💡 Indice ({hint.cost_xp} XP)
+        </button>
+      )}
+      <AnimatePresence>
+        {revealed && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-lg px-4 py-3 border border-primary/20 bg-primary/5 text-sm text-foreground/80 leading-relaxed">
+              💡 {hint.text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
