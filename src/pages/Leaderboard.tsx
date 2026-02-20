@@ -94,26 +94,29 @@ export default function Leaderboard() {
     <div className="min-h-screen bg-background bg-grid">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-1">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
               <Home className="h-4 w-4" />
               <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
             </Link>
-            <span className="text-border">|</span>
-            <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors ml-1">
+            <span className="text-border hidden sm:inline">|</span>
+            <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
               <span className="text-xs font-display tracking-wider hidden sm:inline">DASHBOARD</span>
             </Link>
             <span className="text-border">|</span>
-            <Shield className="h-5 w-5 text-primary ml-1" />
-            <h1 className="font-display text-base font-bold text-primary tracking-wider">W.E.P. · CLASSEMENT</h1>
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+            <h1 className="font-display text-xs sm:text-base font-bold text-primary tracking-wider truncate">
+              <span className="sm:hidden">CLASSEMENT</span>
+              <span className="hidden sm:inline">W.E.P. · CLASSEMENT</span>
+            </h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {myRank && (
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] text-muted-foreground font-display tracking-wider">VOTRE RANG</p>
-                <p className="text-sm font-display font-bold" style={{ color: "hsl(var(--gold-glow))" }}>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground font-display tracking-wider hidden sm:block">VOTRE RANG</p>
+                <p className="text-xs sm:text-sm font-display font-bold" style={{ color: "hsl(var(--gold-glow))" }}>
                   #{myRank}
                 </p>
               </div>
@@ -135,15 +138,15 @@ export default function Leaderboard() {
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Trophy className="h-6 w-6" style={{ color: "hsl(var(--gold-glow))" }} />
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3">
+            <Trophy className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: "hsl(var(--gold-glow))" }} />
             <h2
-              className="text-3xl font-display font-bold tracking-widest"
+              className="text-xl sm:text-3xl font-display font-bold tracking-widest"
               style={{ color: "hsl(var(--gold-glow))" }}
             >
-              CLASSEMENT DES AGENTS
+              CLASSEMENT
             </h2>
-            <Trophy className="h-6 w-6" style={{ color: "hsl(var(--gold-glow))" }} />
+            <Trophy className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: "hsl(var(--gold-glow))" }} />
           </div>
           <p className="text-sm text-muted-foreground font-display tracking-wider">
             Les agents les plus actifs du réseau W.E.P. — classés par XP total
@@ -261,14 +264,14 @@ export default function Leaderboard() {
             >
               {/* Column headers */}
               <div
-                className="grid grid-cols-12 gap-2 px-4 py-2.5 text-[10px] font-display tracking-widest text-muted-foreground"
+                className="grid grid-cols-12 gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-display tracking-widest text-muted-foreground"
                 style={{ background: "hsl(var(--gold-glow) / 0.05)", borderBottom: "1px solid hsl(var(--gold-glow) / 0.15)" }}
               >
                 <span className="col-span-1 text-center">#</span>
-                <span className="col-span-5">AGENT</span>
+                <span className="col-span-5 sm:col-span-5">AGENT</span>
                 <span className="col-span-2 text-center">NIV.</span>
-                <span className="col-span-2 text-center">TIER</span>
-                <span className="col-span-2 text-right">XP</span>
+                <span className="col-span-2 text-center hidden sm:block">TIER</span>
+                <span className="col-span-4 sm:col-span-2 text-right">XP</span>
               </div>
 
               <AnimatePresence>
@@ -284,7 +287,7 @@ export default function Leaderboard() {
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: idx * 0.03 }}
-                      className="grid grid-cols-12 gap-2 px-4 py-3.5 items-center transition-colors"
+                      className="grid grid-cols-12 gap-1 sm:gap-2 px-3 sm:px-4 py-3 sm:py-3.5 items-center transition-colors"
                       style={{
                         background: isMe
                           ? "hsl(var(--gold-glow) / 0.07)"
@@ -313,14 +316,14 @@ export default function Leaderboard() {
                       <div className="col-span-5 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p
-                            className="text-sm font-display font-semibold truncate"
+                            className="text-xs sm:text-sm font-display font-semibold truncate"
                             style={{ color: isMe ? "hsl(var(--gold-glow))" : "hsl(var(--foreground))" }}
                           >
                             {entry.display_name}
                             {isMe && <span className="ml-1 text-[10px] opacity-70">(vous)</span>}
                           </p>
                         </div>
-                        <p className="text-[10px] font-display tracking-wider" style={{ color: title.color }}>
+                        <p className="text-[9px] sm:text-[10px] font-display tracking-wider" style={{ color: title.color }}>
                           {title.title}
                         </p>
                       </div>
@@ -336,7 +339,7 @@ export default function Leaderboard() {
                       </div>
 
                       {/* Tier badge */}
-                      <div className="col-span-2 text-center">
+                      <div className="col-span-2 text-center hidden sm:block">
                         <span
                           className="text-[9px] font-display tracking-wider px-1.5 py-0.5 rounded border"
                           style={{
@@ -350,7 +353,7 @@ export default function Leaderboard() {
                       </div>
 
                       {/* XP */}
-                      <div className="col-span-2 text-right">
+                      <div className="col-span-4 sm:col-span-2 text-right">
                         <span
                           className="text-sm font-display font-bold tabular-nums"
                           style={{ color: isMe ? "hsl(var(--gold-glow))" : "hsl(var(--primary))" }}
