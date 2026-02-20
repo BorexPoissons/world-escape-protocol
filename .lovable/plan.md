@@ -1,95 +1,74 @@
 
 
-# Responsive et Adaptatif -- Audit complet et corrections
+# Corrections Admin : donnees justes + bouton "Reinitialiser le jeu"
 
-## Problemes identifies
+## Probleme 1 : Score Moyen affiche "3.0/6" alors que les missions free sont sur 3
 
-### 1. Conteneurs trop etroits — le site ne prend pas tout l'ecran
-- **Dashboard** : `max-w-7xl` (1280px max) avec `px-4` — laisse beaucoup d'espace vide sur les grands ecrans
-- **Mission** : `max-w-3xl` (768px max) — tres etroit meme sur un ecran 1080p
-- **Puzzle** : `max-w-7xl` — meme probleme que Dashboard
-- **Leaderboard, Auth, MissionComplete** : containers limites aussi
+Les 5 missions gratuites (CH, FR, EG, US, JP) ont 3 questions chacune, pas 6. Le score moyen dans l'onglet APERCU divise toujours par 6 (`avgScore/6`), ce qui est faux.
 
-### 2. Elements masques sur mobile
-- Agent info, niveau, serie, stats : `hidden sm:block` — invisibles sur mobile
-- Boutons header : textes masques sur mobile, seules les icones restent
-- Barre de stats du Dashboard (NIVEAU, SERIE, XP) : entierement cachee sur mobile
+**Correction** : Calculer le score moyen reel en tenant compte du total par mission. Les missions free (saison 0) ont un total de 3, les missions standard ont un total de 6. L'affichage deviendra `3.0/3` ou un pourcentage.
 
-### 3. Toast "SIGNAL DETECTE"
-- Taille fixe (px-12 py-7 + portrait 96px) — deborde sur ecrans < 400px
-- Pas de classes responsive
+**Fichier** : `src/pages/Admin.tsx`
+- Ligne ~474 : remplacer le calcul `avgScore/6` par un calcul dynamique
+- Croiser avec `countries_missions` ou `countries` pour determiner le total par mission
+- Afficher le score sous forme de pourcentage (`100%`) ou ratio dynamique
 
-### 4. Mission — layout rigide
-- Grille `grid-cols-3` dans l'intro (Vies/Timer/Objectif) sans breakpoint mobile
-- Timer bar et bonus pool bar : compactes mais certains textes tronques
+## Probleme 2 : Missions recentes affichent "3/6" au lieu de "3/3"
 
-### 5. Carte mondiale (CinematicWorldMap)
-- Ratio fixe `16/9` — trop petit sur mobile portrait
-- Noeuds de pays : taille fixe, pas de scaling responsive
+Dans la section "MISSIONS RECENTES" de l'apercu et dans l'onglet MISSIONS, chaque mission affiche `score/6` en dur.
 
-### 6. FragmentInventory
-- Drag-and-drop uniquement (souris) — pas de support tactile (tap-to-place)
+**Correction** :
+- Ligne ~654 et ~1109 : remplacer `{m.score ?? 0}/6` par un ratio dynamique base sur le type de mission
+- Charger les donnees `countries_missions` pour connaitre le nombre de questions par pays
+- Afficher `3/3` pour les missions free et `X/6` pour les missions standard
 
----
+## Probleme 3 : Progression pays affiche "best_score/6" pour tous
 
-## Plan de corrections
+Dans le panneau agent expanse (ligne ~974), le score affiche `{pr.best_score}/6` en dur.
 
-### Phase 1 — Containers et pleine largeur
+**Correction** : Meme logique — utiliser le total reel par pays.
 
-**Fichiers** : `Dashboard.tsx`, `Puzzle.tsx`, `Mission.tsx`, `FreeMission.tsx`, `Leaderboard.tsx`, `MissionComplete.tsx`
+## Nouvelle fonctionnalite : Bouton "Reinitialiser le jeu"
 
-- Remplacer `max-w-7xl` par `max-w-[1600px] xl:max-w-[1800px]` pour etendre le contenu sur grands ecrans
-- Mission : passer de `max-w-3xl` a `max-w-4xl lg:max-w-5xl` pour mieux occuper l'espace
-- Ajouter un padding adaptatif : `px-4 sm:px-6 lg:px-8`
+Ajouter un bouton **visible uniquement par l'admin** dans l'onglet AGENTS (panneau expanse d'un utilisateur) permettant de reinitialiser la progression d'un joueur.
 
-### Phase 2 — Stats et infos mobiles
+### Fonctionnement
 
-**Fichier** : `Dashboard.tsx`
+Un dropdown ou dialog avec choix :
+- **Reinitialiser tout** : supprime toutes les donnees de progression du joueur
+- **Depuis Saison 0 (jeu gratuit)** : supprime tout et repart de zero
+- **Depuis Saison 1** : conserve la progression gratuite (S0), supprime S1+
+- **Depuis Saison 2** : conserve S0 et S1, supprime S2+
 
-- Rendre visible les stats agent (Niveau, Serie, XP) sur mobile via une barre compacte sous le header
-- Remplacer les `hidden sm:block` par un layout responsive en ligne sur mobile (icones + valeurs compactes)
+### Tables a nettoyer selon le choix
 
-### Phase 3 — Toast "SIGNAL DETECTE" responsive
+| Table | Donnee supprimee |
+|-------|-----------------|
+| `missions` | Toutes les missions du joueur (filtrees par saison si partiel) |
+| `player_country_progress` | Progression pays (filtree par country_code) |
+| `user_fragments` | Fragments collectes (filtres par country_id) |
+| `user_tokens` | Tokens/lettres (filtres par country_code) |
+| `user_progress` | Progression alternative (si utilisee) |
+| `profiles` | Remettre XP, level, streak a zero (ou recalculer si partiel) |
+| `user_story_state` | Reinitialiser l'etat narratif |
 
-**Fichier** : `Puzzle.tsx`
+### Implementation technique
 
-- Ajouter des classes responsive au toast : `px-6 py-4 sm:px-12 sm:py-7`
-- Portrait : `w-16 h-16 sm:w-24 sm:h-24`
-- Textes : `text-[10px] sm:text-sm`, etc.
-- `max-w-[92vw] sm:max-w-none` pour eviter le debordement
+- Creer une **edge function** `reset-player-progress` qui recoit `{ user_id, reset_from: "all" | "season0" | "season1" | "season2" }`
+- L'edge function utilise le service role key pour supprimer les donnees (les RLS empechent un admin de supprimer les donnees d'un autre utilisateur via le client)
+- Elle verifie que l'appelant est admin via `has_role()`
+- Bouton dans le panneau expanse de chaque agent avec confirmation modale
 
-### Phase 4 — Mission intro responsive
+### UI dans l'onglet AGENTS
 
-**Fichier** : `Mission.tsx`
+- Bouton rouge "REINITIALISER" dans le panneau expanse de chaque agent
+- Clic ouvre une modale de confirmation avec le choix du point de depart
+- Apres confirmation, appel de l'edge function et rafraichissement des donnees
 
-- Grille intro : `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` avec une presentation empilee sur mobile
-
-### Phase 5 — Carte mondiale mobile
-
-**Fichier** : `CinematicWorldMap.tsx`
-
-- Ratio adaptatif : `aspect-ratio: 16/9` → sur mobile `aspect-ratio: 4/3` ou `aspect-ratio: 3/2` via classes Tailwind
-- Augmenter legerement la taille des noeuds sur mobile pour faciliter le tap
-
-### Phase 6 — FragmentInventory tap-to-place
-
-**Fichier** : `FragmentInventory.tsx`
-
-- Ajouter un mode "tap-to-place" sur mobile : au lieu de drag, un tap selectionne le fragment, puis un tap sur le pays cible le place
-- Detecter mobile via `useIsMobile()` et basculer automatiquement
-
----
-
-## Resume des fichiers modifies
+## Resume des fichiers
 
 | Fichier | Modification |
 |---------|-------------|
-| `Dashboard.tsx` | Containers elargis, stats mobiles visibles |
-| `Puzzle.tsx` | Container elargi, toast responsive |
-| `Mission.tsx` | Container elargi, grille intro responsive |
-| `FreeMission.tsx` | Container elargi |
-| `MissionComplete.tsx` | Container elargi |
-| `Leaderboard.tsx` | Container elargi |
-| `CinematicWorldMap.tsx` | Ratio adaptatif, noeuds plus grands sur mobile |
-| `FragmentInventory.tsx` | Mode tap-to-place sur mobile |
+| `src/pages/Admin.tsx` | Correction scores dynamiques, ajout bouton reinitialisation, modale de confirmation |
+| `supabase/functions/reset-player-progress/index.ts` | Nouvelle edge function pour reinitialiser la progression |
 
