@@ -13,8 +13,15 @@ export interface Fragment {
   isPlaced: boolean;
 }
 
+export interface TokenData {
+  countryCode: string;
+  letter: string;
+  revealed: boolean;
+}
+
 interface FragmentInventoryProps {
   fragments: Fragment[];
+  tokens?: TokenData[];
   draggingId: string | null;
   onDragStart: (fragmentId: string) => void;
   onDragEnd: () => void;
@@ -261,6 +268,7 @@ const FragmentDetailModal = ({
 
 const FragmentInventory = ({
   fragments,
+  tokens = [],
   draggingId,
   onDragStart,
   onDragEnd,
@@ -366,6 +374,34 @@ const FragmentInventory = ({
                   title="Voir les détails"
                 >
                   {f.countryCode}-{f.fragmentIndex + 1}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Collected tokens (letters) */}
+        {tokens.length > 0 && (
+          <div className="border-t border-border/50 px-5 py-3">
+            <p className="text-xs font-display text-muted-foreground tracking-wider mb-2">
+              TOKENS COLLECTÉS ({tokens.length})
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {tokens.map(t => (
+                <div
+                  key={t.countryCode}
+                  className="flex items-center gap-1.5 text-xs font-display px-2.5 py-1 rounded"
+                  style={{
+                    background: "hsl(40 80% 55% / 0.08)",
+                    border: "1px solid hsl(40 80% 55% / 0.25)",
+                  }}
+                >
+                  <span className="text-sm font-bold" style={{ color: "hsl(40 85% 62%)" }}>
+                    {t.letter}
+                  </span>
+                  <span style={{ color: "hsl(40 80% 65% / 0.6)" }}>
+                    {t.countryCode}
+                  </span>
                 </div>
               ))}
             </div>

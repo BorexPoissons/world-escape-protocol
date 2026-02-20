@@ -530,6 +530,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tokens: {
+        Row: {
+          country_code: string
+          created_at: string
+          id: string
+          letter: string
+          obtained_at: string
+          revealed: boolean
+          user_id: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          id?: string
+          letter: string
+          obtained_at?: string
+          revealed?: boolean
+          user_id: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          id?: string
+          letter?: string
+          obtained_at?: string
+          revealed?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -168,6 +168,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [completedCountries, setCompletedCountries] = useState<string[]>([]);
   const [collectedCountryCodes, setCollectedCountryCodes] = useState<string[]>([]);
+  const [userTokens, setUserTokens] = useState<Array<{ country_code: string; letter: string; revealed: boolean }>>([]);
   const [userBadges, setUserBadges] = useState<BadgeKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -209,7 +210,7 @@ const Dashboard = () => {
       return;
     }
 
-    const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes] = await Promise.all([
+    const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes, tokensRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
@@ -221,6 +222,9 @@ const Dashboard = () => {
         .in("country_code", SIGNAL_INITIAL_SEQUENCE),
       (supabase as any).from("user_fragments")
         .select("*, countries(code)")
+        .eq("user_id", user.id),
+      (supabase as any).from("user_tokens")
+        .select("country_code, letter, revealed")
         .eq("user_id", user.id),
     ]);
 
@@ -243,6 +247,13 @@ const Dashboard = () => {
     if (fragmentsRes.data) {
       const codes = (fragmentsRes.data as any[]).map((f: any) => f.countries?.code).filter(Boolean);
       setCollectedCountryCodes([...new Set(codes)] as string[]);
+    }
+    if (tokensRes.data) {
+      setUserTokens((tokensRes.data as any[]).map((t: any) => ({
+        country_code: t.country_code,
+        letter: t.letter,
+        revealed: t.revealed,
+      })));
     }
     setLoading(false);
   }, [user]);
@@ -655,6 +666,49 @@ const Dashboard = () => {
                   <div key={key} title={meta.description} className="flex items-center gap-2 bg-card border border-primary/20 rounded-full px-3 py-1.5 text-xs font-display tracking-wider text-primary">
                     <span>{meta.icon}</span>
                     <span>{meta.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Collected Tokens (Letters) */}
+        {userTokens.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <h2 className="text-sm font-display text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
+              <Puzzle className="h-4 w-4" />
+              TOKENS COLLECTÉS ({userTokens.length}/{SIGNAL_INITIAL_SEQUENCE.length})
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {SIGNAL_INITIAL_SEQUENCE.map(code => {
+                const token = userTokens.find(t => t.country_code === code);
+                const countryName = countries.find(c => c.code === code)?.name ?? code;
+                return (
+                  <div
+                    key={code}
+                    className="flex flex-col items-center gap-1.5 rounded-xl border px-4 py-3 min-w-[70px]"
+                    style={{
+                      borderColor: token ? "hsl(40 80% 55% / 0.4)" : "hsl(var(--border) / 0.3)",
+                      background: token ? "hsl(40 80% 55% / 0.06)" : "hsl(var(--card))",
+                      boxShadow: token ? "0 0 12px hsl(40 80% 55% / 0.1)" : "none",
+                    }}
+                  >
+                    <span
+                      className="text-2xl font-display font-bold"
+                      style={{ color: token ? "hsl(40 85% 62%)" : "hsl(var(--muted-foreground) / 0.25)" }}
+                    >
+                      {token ? token.letter : "?"}
+                    </span>
+                    <span className="text-[9px] font-display tracking-wider text-muted-foreground">
+                      {countryName.toUpperCase().slice(0, 6)}
+                    </span>
                   </div>
                 );
               })}

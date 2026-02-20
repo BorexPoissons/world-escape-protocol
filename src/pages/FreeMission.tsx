@@ -533,6 +533,7 @@ const FreeMission = () => {
     });
     if (rpcError) console.error("complete_country_attempt error:", rpcError);
 
+    // Persist mission record
     await supabase.from("missions").insert({
       user_id: user.id,
       country_id: countryId,
@@ -542,6 +543,15 @@ const FreeMission = () => {
       score: 3,
       completed_at: new Date().toISOString(),
     });
+
+    // Persist token (letter) — anti-doublon via UNIQUE constraint
+    if (earnedLetter && earnedLetter !== "?") {
+      await (supabase as any).from("user_tokens").upsert({
+        user_id: user.id,
+        country_code: country.code,
+        letter: earnedLetter,
+      }, { onConflict: "user_id,country_code" });
+    }
 
     const { data: profileRaw } = await supabase
       .from("profiles")
