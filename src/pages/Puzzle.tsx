@@ -115,6 +115,7 @@ const Puzzle = () => {
   const [draggingFragmentId, setDraggingFragmentId] = useState<string | null>(null);
   const [placedCountryIds, setPlacedCountryIds] = useState<string[]>([]);
   const [snapNotifs, setSnapNotifs] = useState<SnapNotif[]>([]);
+  const [snapTargetId, setSnapTargetId] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showFinalReveal, setShowFinalReveal] = useState(false);
   const [forceFullReveal, setForceFullReveal] = useState(false);
@@ -237,33 +238,92 @@ const Puzzle = () => {
 
   // ─── Fragment drag & drop ─────────────────────────────────────────────────
 
+  // Tolerance in % — how close the drop must be to a country node
+  const DROP_TOLERANCE = 8; // 8% of map width/height
+
+  const placeFragment = async (fragmentId: string, countryId: string, countryName: string) => {
+    if (!user) return;
+
+    // Update DB
+    await supabase
+      .from("user_fragments" as any)
+      .update({ is_placed: true, placed_at: new Date().toISOString() })
+      .eq("id", fragmentId);
+
+    setFragments(prev => prev.map(f => f.id === fragmentId ? { ...f, isPlaced: true } : f));
+    setPlacedCountryIds(prev => [...prev, countryId]);
+
+    // Snap glow
+    setSnapTargetId(countryId);
+    setTimeout(() => setSnapTargetId(null), 900);
+
+    // Snap notification
+    const notifId = crypto.randomUUID();
+    setSnapNotifs(prev => [...prev, { id: notifId, countryName, success: true }]);
+    setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 3000);
+  };
+
+  const showWrongNotif = (countryName: string) => {
+    const notifId = crypto.randomUUID();
+    setSnapNotifs(prev => [...prev, { id: notifId, countryName, success: false }]);
+    setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 2500);
+  };
+
+  // Drop directly on a country node (existing behavior)
   const handleDropOnCountry = async (countryId: string) => {
     if (!draggingFragmentId || !user) return;
 
     const fragment = fragments.find(f => f.id === draggingFragmentId);
     if (!fragment) return;
 
-    const isCorrect = fragment.countryId === countryId;
-
-    if (isCorrect) {
-      // Update DB
-      await supabase
-        .from("user_fragments" as any)
-        .update({ is_placed: true, placed_at: new Date().toISOString() })
-        .eq("id", draggingFragmentId);
-
-      setFragments(prev => prev.map(f => f.id === draggingFragmentId ? { ...f, isPlaced: true } : f));
-      setPlacedCountryIds(prev => [...prev, countryId]);
-
-      // Snap notification
-      const notifId = crypto.randomUUID();
-      setSnapNotifs(prev => [...prev, { id: notifId, countryName: fragment.countryName, success: true }]);
-      setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 3000);
+    if (fragment.countryId === countryId) {
+      await placeFragment(fragment.id, countryId, fragment.countryName);
     } else {
-      // Wrong country — error notification
-      const notifId = crypto.randomUUID();
-      setSnapNotifs(prev => [...prev, { id: notifId, countryName: fragment.countryName, success: false }]);
-      setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 2500);
+      showWrongNotif(fragment.countryName);
+    }
+
+    setDraggingFragmentId(null);
+  };
+
+  // Drop anywhere on the map — find nearest country within tolerance
+  const handleDropOnMap = async (dropX: number, dropY: number) => {
+    if (!draggingFragmentId || !user) return;
+
+    const fragment = fragments.find(f => f.id === draggingFragmentId);
+    if (!fragment) return;
+
+    // Find the target country position
+    const targetCountry = puzzleData.find(d => d.country.id === fragment.countryId);
+    if (!targetCountry) {
+      setDraggingFragmentId(null);
+      return;
+    }
+
+    const targetX = targetCountry.country.puzzle_position_x ?? COUNTRY_GEO[targetCountry.country.code]?.x ?? 50;
+    const targetY = targetCountry.country.puzzle_position_y ?? COUNTRY_GEO[targetCountry.country.code]?.y ?? 50;
+
+    // Calculate distance in % space
+    const dx = dropX - targetX;
+    const dy = dropY - targetY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= DROP_TOLERANCE) {
+      // Close enough! Snap to correct position
+      await placeFragment(fragment.id, fragment.countryId, fragment.countryName);
+    } else {
+      // Find which country is closest to the drop point (for feedback)
+      let closestName = fragment.countryName;
+      let closestDist = Infinity;
+      for (const pd of puzzleData) {
+        const cx = pd.country.puzzle_position_x ?? COUNTRY_GEO[pd.country.code]?.x ?? 50;
+        const cy = pd.country.puzzle_position_y ?? COUNTRY_GEO[pd.country.code]?.y ?? 50;
+        const d = Math.sqrt((dropX - cx) ** 2 + (dropY - cy) ** 2);
+        if (d < closestDist) {
+          closestDist = d;
+          closestName = pd.country.name;
+        }
+      }
+      showWrongNotif(closestName);
     }
 
     setDraggingFragmentId(null);
@@ -513,10 +573,12 @@ const Puzzle = () => {
             draggingFragmentId={draggingFragmentId}
             placedCountryIds={placedCountryIds}
             onDropOnCountry={handleDropOnCountry}
+            onDropOnMap={handleDropOnMap}
             onCountryClick={handleCountryClick}
             globalProgress={globalProgressOn195}
             collectedCountryCodes={fragments.map(f => f.countryCode)}
             forceFullReveal={forceFullReveal}
+            snapTargetId={snapTargetId}
           />
         </motion.div>
 

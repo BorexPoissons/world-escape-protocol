@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import carteWep from "@/assets/carte-wep.png";
 import RevealOverlay from "@/components/RevealOverlay";
@@ -21,10 +21,12 @@ interface CinematicWorldMapProps {
   draggingFragmentId: string | null;
   placedCountryIds: string[];
   onDropOnCountry: (countryId: string) => void;
+  onDropOnMap?: (dropX: number, dropY: number) => void;
   onCountryClick: (country: MapCountry) => void;
-  globalProgress?: number; // 0–100 % of countries completed out of 195
-  collectedCountryCodes?: string[]; // country codes where user has a fragment
-  forceFullReveal?: boolean; // force map to full brightness/saturation (final state)
+  globalProgress?: number;
+  collectedCountryCodes?: string[];
+  forceFullReveal?: boolean;
+  snapTargetId?: string | null; // country id that just got snapped — triggers glow
 }
 
 // Fallback geo positions
@@ -153,11 +155,14 @@ const CinematicWorldMap = ({
   draggingFragmentId,
   placedCountryIds,
   onDropOnCountry,
+  onDropOnMap,
   onCountryClick,
   globalProgress = 0,
   collectedCountryCodes = [],
   forceFullReveal = false,
+  snapTargetId = null,
 }: CinematicWorldMapProps) => {
+  const mapRef = useRef<HTMLDivElement>(null);
   const playableNodes = countries.filter(c => c.visibility === "playable");
   const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
 
@@ -177,14 +182,31 @@ const CinematicWorldMap = ({
   // Connection intensity (more connections glow at higher %)
   const connectionOpacity = Math.min(0.88, 0.18 + globalProgress * 0.007);
 
+  // Map-level drop: calculate drop position in % and delegate to parent
+  const handleMapDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggingFragmentId || !mapRef.current) return;
+
+    const rect = mapRef.current.getBoundingClientRect();
+    const dropX = ((e.clientX - rect.left) / rect.width) * 100;
+    const dropY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (onDropOnMap) {
+      onDropOnMap(dropX, dropY);
+    }
+  }, [draggingFragmentId, onDropOnMap]);
+
   return (
     <div
+      ref={mapRef}
       className="relative w-full rounded-2xl overflow-hidden select-none"
       style={{
         aspectRatio: "16 / 9",
         border: "1px solid hsl(40 80% 55% / 0.25)",
         boxShadow: "0 0 60px hsl(40 80% 55% / 0.08)",
       }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleMapDrop}
     >
       {/* Background — brightness + optional slow-zoom at 99% */}
       <motion.img
@@ -277,6 +299,7 @@ const CinematicWorldMap = ({
         const wasPlaced    = placedCountryIds.includes(node.id);
         const hasFragment  = collectedCountryCodes.includes(node.code);
         const isDropTarget = draggingFragmentId !== null;
+        const justSnapped  = snapTargetId === node.id;
 
         const borderColor = isComplete ? "hsl(40 85% 65%)" : hasFragment ? "hsl(40 70% 55%)" : isFree ? "hsl(40 70% 50%)" : "hsl(220 15% 28%)";
         const bgColor     = isComplete ? "hsl(40 50% 13%)" : hasFragment ? "hsl(40 40% 10%)" : isFree ? "hsl(220 22% 11%)" : "hsl(220 18% 9%)";
@@ -316,6 +339,19 @@ const CinematicWorldMap = ({
                 transition={{ repeat: Infinity, duration: 1.1 }}
               />
             )}
+            {/* Snap glow burst */}
+            <AnimatePresence>
+              {justSnapped && (
+                <motion.div
+                  className="absolute rounded-full pointer-events-none"
+                  style={{ inset: "-20px", background: "radial-gradient(circle, hsl(40 90% 65% / 0.6) 0%, hsl(40 80% 55% / 0.2) 40%, transparent 70%)" }}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: [1, 1.8], opacity: [1, 0] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              )}
+            </AnimatePresence>
             <button
               className="relative flex flex-col items-center gap-1 group outline-none"
               onClick={() => onCountryClick(node)}
@@ -451,10 +487,10 @@ const CinematicWorldMap = ({
         {draggingFragmentId && (
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-            className="absolute bottom-14 right-3 text-[10px] font-display tracking-wider px-2.5 py-1.5 rounded border backdrop-blur-sm z-30"
+             className="absolute bottom-14 right-3 text-[10px] font-display tracking-wider px-2.5 py-1.5 rounded border backdrop-blur-sm z-30"
             style={{ background: "hsl(40 80% 55% / 0.14)", borderColor: "hsl(40 80% 55% / 0.45)", color: "hsl(40 85% 70%)" }}
           >
-            ↓ DÉPOSEZ SUR UN PAYS
+            ↓ DÉPOSEZ PRÈS DU PAYS CIBLE
           </motion.div>
         )}
       </AnimatePresence>
