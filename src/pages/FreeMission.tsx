@@ -104,7 +104,7 @@ const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
 // Derived from DB content (rewards.token.value) — used as fallback
 const COUNTRY_LETTERS: Record<string, string> = {
-  CH: "O",
+  CH: "W",
   FR: "M",
   EG: "E",
   US: "G",
@@ -550,8 +550,11 @@ const FreeMission = () => {
 
     if (correct) {
       setBonusPool(prev => prev + timeLeft);
-      const letter = country ? (COUNTRY_LETTERS[country.code] ?? "?") : "?";
-      setEarnedLetter(letter);
+      // Use already-resolved earnedLetter (from DB rewards.token.value), only fallback if empty
+      if (!earnedLetter || earnedLetter === "?") {
+        const letter = country ? (COUNTRY_LETTERS[country.code] ?? "?") : "?";
+        setEarnedLetter(letter);
+      }
       setTimeout(() => setPhase("letter_reveal"), 1000);
     } else {
       handleWrongWithLives(null);

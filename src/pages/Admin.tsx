@@ -63,6 +63,19 @@ type JsonImportPreview = {
   questionCount?: number;
   missionTitle?: string;
   parsedQuestions?: ParsedQuestion[];
+  // Story fields extracted for preview
+  storyFields?: {
+    mission_title?: string;
+    cold_open?: string;
+    intro?: string;
+    objective?: string;
+    stakes?: string;
+    location_context?: string;
+    jasper_quote?: string;
+    next_hook?: string;
+    next_country_code?: string;
+    token_letter?: string;
+  };
 } | null;
 
 const Admin = () => {
@@ -278,9 +291,24 @@ const Admin = () => {
         }
         const questionCount = rawQuestions.length;
 
+        // Extract story fields for preview
+        const storyFields = isMasterTemplate ? {
+          mission_title: json.story?.mission_title,
+          cold_open: json.story?.cold_open,
+          intro: json.story?.intro ? (json.story.intro.substring(0, 100) + (json.story.intro.length > 100 ? "…" : "")) : undefined,
+          objective: json.story?.objective,
+          stakes: json.story?.stakes,
+          location_context: json.story?.location_context,
+          jasper_quote: json.completion?.jasper_quote,
+          next_hook: json.completion?.next_hook,
+          next_country_code: json.completion?.next_country_code ?? json.completion?.unlock?.next_country_code,
+          token_letter: json.rewards?.token?.value,
+        } : undefined;
+
         setJsonImportPreview({
           code, name, description, monuments, historical_events, symbols,
           questionCount, missionTitle, parsedQuestions: rawQuestions,
+          storyFields,
           // Store full JSON for countries_missions upsert
           _fullJson: json,
           _isMasterTemplate: isMasterTemplate,
@@ -375,7 +403,11 @@ const Admin = () => {
     const parts: string[] = [];
     if (Object.keys(payload).length > 0) parts.push(`${Object.keys(payload).length} champ(s) métadonnées`);
     if (questionsImported > 0) parts.push(`${questionsImported} question(s) importée(s)`);
-    if (contentSynced) parts.push("✓ countries_missions synchronisé");
+    if (contentSynced) {
+      const storyF = preview.storyFields;
+      const storyCount = storyF ? Object.values(storyF).filter(Boolean).length : 0;
+      parts.push(`✓ countries_missions synchronisé (${storyCount} champ(s) narratifs)`);
+    }
 
     toast({
       title: `✓ ${code} importé`,
@@ -753,6 +785,45 @@ const Admin = () => {
                       </p>
                     </div>
                   </div>
+
+                  {/* Story fields preview */}
+                  {jsonImportPreview.storyFields && (
+                    <div className="mt-3 p-3 bg-primary/5 border border-primary/15 rounded-lg space-y-2">
+                      <p className="text-xs font-display tracking-widest text-primary/70">CHAMPS NARRATIFS DÉTECTÉS</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-display">
+                        {([
+                          ["mission_title", "TITRE MISSION"],
+                          ["cold_open", "COLD OPEN"],
+                          ["intro", "INTRO"],
+                          ["objective", "OBJECTIF"],
+                          ["stakes", "ENJEUX"],
+                          ["location_context", "CONTEXTE"],
+                          ["jasper_quote", "CITATION JASPER"],
+                          ["next_hook", "ACCROCHE SUIVANTE"],
+                          ["next_country_code", "PAYS SUIVANT"],
+                          ["token_letter", "LETTRE TOKEN"],
+                        ] as [string, string][]).map(([key, label]) => {
+                          const val = (jsonImportPreview.storyFields as any)?.[key];
+                          return (
+                            <div key={key} className="flex items-center gap-1.5">
+                              {val ? (
+                                <CheckCircle className="h-3 w-3 text-primary flex-shrink-0" />
+                              ) : (
+                                <XCircle className="h-3 w-3 text-muted-foreground/40 flex-shrink-0" />
+                              )}
+                              <span className={val ? "text-foreground" : "text-muted-foreground/40"}>{label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {jsonImportPreview.storyFields.token_letter && (
+                        <p className="text-xs text-primary mt-1">
+                          Lettre du token : <span className="font-bold text-sm">{jsonImportPreview.storyFields.token_letter}</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="mt-3 flex flex-wrap gap-2 text-xs font-display">
                     {(jsonImportPreview.questionCount || 0) > 0 && (
                       <span className="flex items-center gap-1 text-primary/80">
