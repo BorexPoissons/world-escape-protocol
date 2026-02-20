@@ -43,7 +43,7 @@ export const COUNTRY_GEO: Record<string, { x: number; y: number }> = {
 };
 
 const FREE_CONNECTIONS: [string, string][] = [
-  ["CH", "US"], ["CH", "CN"], ["US", "BR"], ["CN", "IN"], ["BR", "IN"],
+  ["CH", "FR"], ["FR", "EG"], ["EG", "US"], ["US", "JP"],
 ];
 
 export const FLAG_EMOJI: Record<string, string> = {
@@ -59,7 +59,7 @@ export const FLAG_EMOJI: Record<string, string> = {
   RO: "🇷🇴", HU: "🇭🇺", IL: "🇮🇱",
 };
 
-const FREE_COUNTRY_CODES = new Set(["CH", "BR", "CN", "US", "IN"]);
+const FREE_COUNTRY_CODES = new Set(["CH", "FR", "EG", "US", "JP"]);
 
 const SEASON_CONFIG: Record<number, { label: string; codename: string; color: string; lockColor: string }> = {
   0: { label: "SIGNAL INITIAL",   codename: "OP-00 · GRATUIT",  color: "hsl(40 85% 62%)",  lockColor: "hsl(40 80% 55% / 0.6)" },
@@ -278,7 +278,7 @@ const CinematicWorldMap = ({
           const qx = (x1 + x2) / 2;
           const qy = Math.min(y1, y2) - 5;
           const d  = `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`;
-          const active = from.unlockedPieces > 0 && to.unlockedPieces > 0;
+          const active = from.unlockedPieces > 0; // glow when "from" country is completed (shows path to next)
           return (
             <g key={idx}>
               <path d={d} fill="none" stroke={`hsl(40 50% 45% / ${connectionOpacity * 0.22})`} strokeWidth="0.22" strokeDasharray="0.9 0.9" />

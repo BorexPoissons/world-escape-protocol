@@ -403,7 +403,7 @@ const Puzzle = () => {
       };
     });
 
-  // Next country = respects SIGNAL INITIAL sequence (CH→US→CN→BR→EG), then other playable
+  // Next country = respects SIGNAL INITIAL sequence (CH→FR→EG→US→JP)
   const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
   // Find the first country in sequence that has no fragment yet
