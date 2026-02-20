@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock, Mail, User, Home, Radio } from "lucide-react";
 import { JasperAuthModal, useJasperAuthModalAutoOpen } from "@/components/JasperAuthModal";
+import { isDisplayNameForbidden } from "@/lib/forbiddenNames";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,6 +29,15 @@ const Auth = () => {
         await signIn(email, password);
         navigate("/dashboard");
       } else {
+        if (isDisplayNameForbidden(displayName)) {
+          toast({
+            title: "Nom de code réservé",
+            description: "Ce nom de code est déjà attribué à un agent actif. Choisissez un autre identifiant.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         await signUp(email, password, displayName);
         toast({
           title: "Inscription réussie",
