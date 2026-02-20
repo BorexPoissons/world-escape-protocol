@@ -741,7 +741,7 @@ const FreeMission = () => {
     <div className="min-h-screen bg-background bg-grid">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
               <Home className="h-4 w-4" />
@@ -815,7 +815,7 @@ const FreeMission = () => {
         {/* Bonus pool bar */}
         {phase !== "cold_open" && phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && phase !== "failed" && (
           <div className="border-t px-4 py-1.5" style={{ borderColor: "hsl(var(--gold-glow) / 0.25)" }}>
-            <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <div className="max-w-4xl lg:max-w-5xl mx-auto flex items-center gap-3">
               <span className="text-xs font-display tracking-wider flex-shrink-0" style={{ color: "hsl(var(--gold-glow))" }}>⚡ BONUS</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <motion.div
@@ -832,7 +832,7 @@ const FreeMission = () => {
         )}
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
 
           {/* ── COLD OPEN (Écran 1) ── */}

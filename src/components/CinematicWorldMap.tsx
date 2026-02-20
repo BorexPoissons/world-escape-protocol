@@ -125,7 +125,7 @@ const LockedNode = ({ node }: { node: MapCountry }) => {
 
       {/* Dot */}
       <div
-        className="relative w-4 h-4 rounded-full flex items-center justify-center border cursor-default transition-all duration-200"
+        className="relative w-5 h-5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center border cursor-default transition-all duration-200"
         style={{
           background: `hsl(220 15% 8% / ${hovered ? "0.9" : "0.55"})`,
           borderColor: hovered ? cfg.lockColor : "hsl(220 12% 20% / 0.45)",
@@ -201,9 +201,8 @@ const CinematicWorldMap = ({
   return (
     <div
       ref={mapRef}
-      className="relative w-full rounded-2xl overflow-hidden select-none"
+      className="relative w-full rounded-2xl overflow-hidden select-none aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9]"
       style={{
-        aspectRatio: "16 / 9",
         border: "1px solid hsl(40 80% 55% / 0.25)",
         boxShadow: "0 0 60px hsl(40 80% 55% / 0.08)",
       }}
@@ -388,7 +387,7 @@ const CinematicWorldMap = ({
                 </div>
               )}
               <div
-                className="relative w-9 h-9 rounded-full flex items-center justify-center border-2 transition-transform duration-150 group-hover:scale-110"
+                className="relative w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-transform duration-150 group-hover:scale-110"
                 style={{
                   background: bgColor, borderColor,
                   boxShadow: (isFree || isComplete || hasFragment) ? `0 0 12px ${borderColor}, 0 0 3px ${borderColor}` : "none",

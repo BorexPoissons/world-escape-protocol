@@ -363,7 +363,7 @@ const Dashboard = () => {
 
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-1">
               <Home className="h-4 w-4" />
@@ -390,10 +390,13 @@ const Dashboard = () => {
               </Link>
             )}
             {!isDemo && (
-              <div className="text-right hidden sm:block">
-                <p className="text-sm text-foreground font-display">Agent {profile?.display_name}</p>
-                <p className="text-xs text-muted-foreground">Niveau {profile?.level} · {profile?.xp} XP
-                  <span className="ml-2 text-primary font-display">· {tierLabel}</span>
+              <div className="text-right">
+                <p className="text-sm text-foreground font-display hidden sm:block">Agent {profile?.display_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="sm:hidden">Niv.{profile?.level} · {profile?.xp}XP · {tierLabel}</span>
+                  <span className="hidden sm:inline">Niveau {profile?.level} · {profile?.xp} XP
+                    <span className="ml-2 text-primary font-display">· {tierLabel}</span>
+                  </span>
                 </p>
               </div>
             )}
@@ -424,7 +427,7 @@ const Dashboard = () => {
       {/* Demo CTA banner */}
       {isDemo && (
         <div className="bg-card border-b border-dashed border-primary/40 px-4 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto flex items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground font-display tracking-wider">
               MODE DÉCOUVERTE — Progression temporaire. Créez un compte pour sauvegarder votre avancement.
             </p>
@@ -437,7 +440,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* ═══════════════════════════════════════════════════════════
             CINEMATIC GLOBAL PROGRESSION
@@ -483,21 +486,21 @@ const Dashboard = () => {
               </div>
 
               {/* Compact stats row */}
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                 {!isDemo && (
                   <>
-                    <div className="text-right hidden sm:block">
+                    <div className="text-right">
                       <p className="text-[10px] text-muted-foreground font-display tracking-wider">NIVEAU</p>
-                      <p className="text-lg font-display font-bold text-foreground">{playerLevel}</p>
+                      <p className="text-sm sm:text-lg font-display font-bold text-foreground">{playerLevel}</p>
                     </div>
-                    <div className="h-8 w-px bg-border hidden sm:block" />
-                    <div className="text-right hidden sm:block">
+                    <div className="h-6 sm:h-8 w-px bg-border" />
+                    <div className="text-right">
                       <p className="text-[10px] text-muted-foreground font-display tracking-wider">SÉRIE</p>
-                      <p className="text-lg font-display font-bold text-foreground flex items-center gap-1">
+                      <p className="text-sm sm:text-lg font-display font-bold text-foreground flex items-center gap-1">
                         {streak}<span className="text-sm">🔥</span>
                       </p>
                     </div>
-                    <div className="h-8 w-px bg-border hidden sm:block" />
+                    <div className="h-6 sm:h-8 w-px bg-border" />
                   </>
                 )}
                 <Link to="/puzzle">

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Package, X, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Fragment {
   id: string;
@@ -25,6 +26,8 @@ interface FragmentInventoryProps {
   draggingId: string | null;
   onDragStart: (fragmentId: string) => void;
   onDragEnd: () => void;
+  selectedForPlacement?: string | null;
+  onSelectForPlacement?: (fragmentId: string | null) => void;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -272,9 +275,11 @@ const FragmentInventory = ({
   draggingId,
   onDragStart,
   onDragEnd,
+  selectedForPlacement,
+  onSelectForPlacement,
 }: FragmentInventoryProps) => {
   const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null);
-
+  const isMobile = useIsMobile();
   const unplaced = fragments.filter(f => !f.isPlaced);
   const placed = fragments.filter(f => f.isPlaced);
 
@@ -307,7 +312,7 @@ const FragmentInventory = ({
             {unplaced.length > 0 && (
               <div className="flex items-center gap-1 text-xs font-display text-primary/60 tracking-wider">
                 <Sparkles className="h-3 w-3" />
-                GLISSEZ OU CLIQUEZ
+                {isMobile ? "TAPEZ POUR SÉLECTIONNER" : "GLISSEZ OU CLIQUEZ"}
               </div>
             )}
           </div>
@@ -339,18 +344,36 @@ const FragmentInventory = ({
                       <FragmentPiece3D
                         fragment={fragment}
                         isDragging={draggingId === fragment.id}
-                        onDragStart={() => onDragStart(fragment.id)}
-                        onDragEnd={onDragEnd}
-                        onClick={() => setSelectedFragment(fragment)}
+                        onDragStart={() => !isMobile && onDragStart(fragment.id)}
+                        onDragEnd={() => !isMobile && onDragEnd()}
+                        onClick={() => {
+                          if (isMobile && onSelectForPlacement) {
+                            // Toggle selection for tap-to-place
+                            onSelectForPlacement(selectedForPlacement === fragment.id ? null : fragment.id);
+                          } else {
+                            setSelectedFragment(fragment);
+                          }
+                        }}
                         size={56}
                       />
+                      {/* Mobile selection indicator */}
+                      {isMobile && selectedForPlacement === fragment.id && (
+                        <motion.div
+                          className="absolute -inset-1 rounded-lg border-2 pointer-events-none"
+                          style={{ borderColor: "hsl(40 85% 62%)", boxShadow: "0 0 12px hsl(40 85% 62% / 0.5)" }}
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                        />
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
 
               <p className="text-center text-xs text-muted-foreground/40 font-display tracking-wider mt-5">
-                — CLIQUEZ POUR VOIR LE DÉTAIL · GLISSEZ POUR PLACER —
+                {isMobile
+                  ? "— TAPEZ UN FRAGMENT · PUIS TAPEZ LE PAYS SUR LA CARTE —"
+                  : "— CLIQUEZ POUR VOIR LE DÉTAIL · GLISSEZ POUR PLACER —"}
               </p>
             </>
           )}
