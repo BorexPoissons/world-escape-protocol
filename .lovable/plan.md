@@ -1,84 +1,82 @@
-# Fix: Fragment Persistence and Unlock Chain
 
-## Problem Summary
 
-Three issues prevent the Puzzle page from reflecting mission completion:
+# Fix: Dynamic Threshold + Corrected RETURN in complete_country_attempt
 
-1. **Score/threshold mismatch** -- The `complete_country_attempt` database function requires score >= 5 (out of 6) to grant a fragment. But `FreeMission.tsx` always passes `score = 3, total = 3` (3 correct questions out of 3 steps). Since 3 < 5, no fragment is ever inserted into `user_fragments`.
-2. **Broken DB chain** -- `next_country_code` is `null` for CH and FR in the `countries_missions` table. Only EG and US have correct values.
-3. **Existing progress stuck** -- The user has `player_country_progress` for CH with `fragment_granted: false` and `best_score: 3`. This needs to be repaired.
+## What changes
 
-## Fix Plan
+Update the `complete_country_attempt` database function with three fixes:
 
-### Step 1: Fix the RPC threshold logic
+1. **Dynamic threshold**: Replace `v_threshold := 5` with `v_threshold := GREATEST(COALESCE(p_total, 1) - 1, 1)`
+2. **RETURN uses persisted state for fragment_granted**: `'fragment_granted', v_fragment_granted` (reads from the DB row after upsert, not re-computed)
+3. **RETURN uses persisted state for unlocked_next**: `'unlocked_next', v_fragment_granted` (same persisted value, consistent with DB)
 
-Modify the `complete_country_attempt` function to use a dynamic threshold based on `p_total`:
-
-```
-v_threshold := GREATEST(p_total - 1, 1)
-```
-
-This way:
-
-- For `p_total = 6` (classic missions): threshold = 5 (same as before)
-- For `p_total = 3` (free missions): threshold = 2 (need 2/3 correct)
-
-This is done via a SQL migration (ALTER FUNCTION).
-
-### Step 2: Fix the DB unlock chain
-
-Update `countries_missions` to set:
-
-- CH: `next_country_code = "FR"`
-- FR: `next_country_code = "EG"`  
-  
-Important:
-  Ensure the JSON path updated is:
-  [content.completion.unlock.next](http://content.completion.unlock.next)_country_code
-  The frontend reads this JSON path as the source of truth.
-  Do not update a separate SQL column.
-
-(EG->US and US->JP are already correct. JP stays null as end of chain.)
-
-### Step 3: Repair existing player data
-
-Since CH was completed with score 3/3 but fragment was denied:
-
-- Update `player_country_progress` for CH: set `fragment_granted = true`
-- Insert into `user_fragments` for CH (country_id = `05674046-...`)
-
-### Step 4: Code change in FreeMission.tsx
-
-No code change needed -- `FreeMission.tsx` already passes `p_score: 3, p_total: 3` which will work correctly with the new dynamic threshold.
-
-## Technical Details
-
-### Migration SQL (Step 1)
-
-Replace the hardcoded threshold in `complete_country_attempt`:
+## SQL Migration
 
 ```text
-v_threshold := LEAST(
-  COALESCE(p_total, 1),
-  GREATEST(COALESCE(p_total, 1) - 1, 1)
-);
+CREATE OR REPLACE FUNCTION public.complete_country_attempt(
+  p_user_id uuid, p_country_code text, p_score integer, p_total integer DEFAULT 6
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_threshold         integer;
+  v_fragment_inserted  boolean := false;
+  v_best_score         integer;
+  v_fragment_granted   boolean;
+  v_country_id         uuid;
+BEGIN
+  -- Dynamic threshold: 2/3 for free missions, 5/6 for classic
+  v_threshold := GREATEST(COALESCE(p_total, 1) - 1, 1);
+
+  SELECT id INTO v_country_id FROM public.countries WHERE code = p_country_code LIMIT 1;
+
+  INSERT INTO public.player_country_progress
+    (user_id, country_code, best_score, last_score, attempts_count, fragment_granted)
+  VALUES
+    (p_user_id, p_country_code, p_score, p_score, 1, (p_score >= v_threshold))
+  ON CONFLICT (user_id, country_code) DO UPDATE SET
+    last_score       = EXCLUDED.last_score,
+    best_score       = GREATEST(player_country_progress.best_score, EXCLUDED.best_score),
+    attempts_count   = player_country_progress.attempts_count + 1,
+    fragment_granted = player_country_progress.fragment_granted OR (p_score >= v_threshold),
+    updated_at       = now()
+  RETURNING best_score, fragment_granted
+  INTO v_best_score, v_fragment_granted;
+
+  IF p_score >= v_threshold AND v_country_id IS NOT NULL THEN
+    INSERT INTO public.user_fragments
+      (user_id, country_id, fragment_index, is_placed, obtained_at)
+    VALUES
+      (p_user_id, v_country_id, 0, false, now())
+    ON CONFLICT (user_id, country_id) DO NOTHING;
+    GET DIAGNOSTICS v_fragment_inserted = ROW_COUNT;
+    v_fragment_inserted := (v_fragment_inserted > 0);
+  END IF;
+
+  RETURN jsonb_build_object(
+    'best_score',       v_best_score,
+    'fragment_granted', v_fragment_granted,
+    'fragment_new',     v_fragment_inserted,
+    'unlocked_next',    v_fragment_granted
+  );
+END;
+$$;
 ```
 
-Instead of the current:
+Key differences from the current function:
+- Line 1: `v_threshold` is now dynamic instead of hardcoded `5`
+- RETURN: `fragment_granted` uses `v_fragment_granted` (persisted DB state after upsert), not `(p_score >= v_threshold)`
+- RETURN: `unlocked_next` uses `v_fragment_granted` (persisted DB state), not `(v_best_score >= v_threshold)`
 
-```text
-v_threshold := 5;
-```
+## After migration: Data repairs (separate step)
 
-### Data fixes (Steps 2-3)
+Once the function is fixed, we will also:
+- Update `countries_missions` JSON to set `next_country_code` for CH and FR
+- Repair `player_country_progress` for CH: set `fragment_granted = true`
+- Insert missing `user_fragments` row for CH
 
-- UPDATE `countries_missions` SET content = jsonb_set(...) for CH and FR
-- UPDATE `player_country_progress` SET `fragment_granted = true` WHERE country_code = 'CH'
-- INSERT INTO `user_fragments` for CH
+No frontend code changes are needed.
 
-### Expected result after fix
-
-- Puzzle page shows CH fragment in inventory
-- "Prochaine destination" shows FRANCE (reads from DB chain)
-- Gold line glows from CH to FR
-- Future mission completions automatically grant fragments
