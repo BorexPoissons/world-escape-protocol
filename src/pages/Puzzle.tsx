@@ -18,7 +18,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import CinematicWorldMap, { COUNTRY_GEO } from "@/components/CinematicWorldMap";
 import type { MapCountry } from "@/components/CinematicWorldMap";
 import FragmentInventory from "@/components/FragmentInventory";
-import type { Fragment } from "@/components/FragmentInventory";
+import type { Fragment, TokenData } from "@/components/FragmentInventory";
 import MissionDetailModal from "@/components/MissionDetailModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import FinalRevealSequence from "@/components/FinalRevealSequence";
@@ -107,6 +107,7 @@ const Puzzle = () => {
 
   const [puzzleData, setPuzzleData] = useState<CountryPuzzleData[]>([]);
   const [fragments, setFragments] = useState<Fragment[]>([]);
+  const [tokens, setTokens] = useState<TokenData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<CountryPuzzleData | null>(null);
   const [inspireIdx, setInspireIdx] = useState(0);
@@ -141,13 +142,18 @@ const Puzzle = () => {
 
   const fetchFragments = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("user_fragments" as any)
-      .select("*, countries(code, name)")
-      .eq("user_id", user.id);
+    const [fragRes, tokRes] = await Promise.all([
+      supabase
+        .from("user_fragments" as any)
+        .select("*, countries(code, name)")
+        .eq("user_id", user.id),
+      (supabase as any).from("user_tokens")
+        .select("country_code, letter, revealed")
+        .eq("user_id", user.id),
+    ]);
 
-    if (data) {
-      const frags: Fragment[] = (data as any[]).map((f) => ({
+    if (fragRes.data) {
+      const frags: Fragment[] = (fragRes.data as any[]).map((f) => ({
         id: f.id,
         countryId: f.country_id,
         countryCode: f.countries?.code ?? "??",
@@ -157,6 +163,13 @@ const Puzzle = () => {
       }));
       setFragments(frags);
       setPlacedCountryIds(frags.filter(f => f.isPlaced).map(f => f.countryId));
+    }
+    if (tokRes.data) {
+      setTokens((tokRes.data as any[]).map((t: any) => ({
+        countryCode: t.country_code,
+        letter: t.letter,
+        revealed: t.revealed,
+      })));
     }
   }, [user]);
 
@@ -515,6 +528,7 @@ const Puzzle = () => {
         >
           <FragmentInventory
             fragments={fragments}
+            tokens={tokens}
             draggingId={draggingFragmentId}
             onDragStart={(id) => setDraggingFragmentId(id)}
             onDragEnd={() => setDraggingFragmentId(null)}
