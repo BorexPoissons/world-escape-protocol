@@ -128,7 +128,11 @@ const Auth = () => {
                     placeholder="Nom de code"
                     value={displayName}
                     onChange={(e) => handleDisplayNameChange(e.target.value)}
-                    className="pl-10 pr-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                    className={`pl-10 pr-10 bg-secondary text-foreground placeholder:text-muted-foreground ${
+                      nameStatus === "available" ? "border-green-500 focus-visible:ring-green-500/30" :
+                      nameStatus === "taken" || nameStatus === "forbidden" ? "border-red-500 focus-visible:ring-red-500/30" :
+                      "border-border"
+                    }`}
                     required
                   />
                   <div className="absolute right-3 top-3">
