@@ -183,6 +183,7 @@ const Dashboard = () => {
   // Leaderboard visibility toggle
   const [leaderboardVisible, setLeaderboardVisible] = useState(true);
   const [leaderboardTogglingLoading, setLeaderboardTogglingLoading] = useState(false);
+  const [dilemmaValidated, setDilemmaValidated] = useState(false);
   const isDemo = !user;
 
   // Auto-play intro on first visit (per-browser flag)
@@ -210,7 +211,7 @@ const Dashboard = () => {
       return;
     }
 
-    const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes, tokensRes] = await Promise.all([
+    const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes, tokensRes, storyRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("missions").select("country_id").eq("user_id", user.id).eq("completed", true),
@@ -226,6 +227,10 @@ const Dashboard = () => {
       (supabase as any).from("user_tokens")
         .select("country_code, letter, revealed")
         .eq("user_id", user.id),
+      (supabase as any).from("user_story_state")
+        .select("central_word_validated")
+        .eq("user_id", user.id)
+        .single(),
     ]);
 
     if (countriesRes.data) setCountries(countriesRes.data as CountryRow[]);
@@ -254,6 +259,9 @@ const Dashboard = () => {
         letter: t.letter,
         revealed: t.revealed,
       })));
+    }
+    if (storyRes.data) {
+      setDilemmaValidated(!!(storyRes.data as any).central_word_validated);
     }
     setLoading(false);
   }, [user]);
@@ -778,13 +786,53 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Dilemme Central CTA — visible when all 5 free countries are completed */}
+        {/* Dilemme Central / Season 1 CTA — visible when all 5 free countries are completed */}
         {!nextRecommended && tier === "free" && (() => {
           const allFreeCompleted = SIGNAL_INITIAL_SEQUENCE.every(code => {
             const c = countries.find(ct => ct.code === code);
             return c && completedCountries.includes(c.id);
           });
           if (!allFreeCompleted) return null;
+
+          // If dilemma validated → show Season 1 unlock CTA
+          if (dilemmaValidated) {
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7 }}
+                className="mb-8 rounded-xl overflow-hidden border border-primary/40"
+                style={{
+                  background: "linear-gradient(135deg, hsl(220 25% 7%), hsl(220 20% 5%))",
+                  boxShadow: "0 0 40px hsl(40 80% 55% / 0.12)",
+                }}
+              >
+                <div className="p-6 flex flex-col sm:flex-row items-center gap-5">
+                  <motion.div
+                    animate={{ scale: [1, 1.08, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ repeat: Infinity, duration: 3 }}
+                    className="text-5xl text-primary flex-shrink-0"
+                  >
+                    Ω
+                  </motion.div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="text-[10px] font-display tracking-[0.4em] text-primary/60 mb-1">ESSAI GRATUIT COMPLÉTÉ</p>
+                    <h3 className="text-xl font-display font-bold text-primary tracking-wider mb-1">LES OBSERVATEURS</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Saison 1 · 45 pays · Prochaine destination : Brésil 🇧🇷
+                    </p>
+                  </div>
+                  <Link to="/season1" className="flex-shrink-0">
+                    <Button className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                      DÉBLOQUER · 19.90 CHF
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          }
+
           return (
             <motion.div
               initial={{ opacity: 0, y: 16 }}

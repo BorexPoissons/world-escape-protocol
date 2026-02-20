@@ -14,6 +14,7 @@ import Puzzle from "./pages/Puzzle";
 import Admin from "./pages/Admin";
 import CentralDilemma from "./pages/CentralDilemma";
 import Leaderboard from "./pages/Leaderboard";
+import Season1Unlock from "./pages/Season1Unlock";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/dilemme-central" element={<CentralDilemma />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/season1" element={<Season1Unlock />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
