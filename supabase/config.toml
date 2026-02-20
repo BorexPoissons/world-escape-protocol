@@ -2,3 +2,6 @@ project_id = "hatjwbwmnfkvgimfxsnx"
 
 [functions.generate-mission]
 verify_jwt = false
+
+[functions.reset-player-progress]
+verify_jwt = false

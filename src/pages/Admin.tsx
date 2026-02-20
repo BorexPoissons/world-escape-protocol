@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft,
   Home, BarChart3, Search, Eye, EyeOff, Star, FileJson, CheckCircle, XCircle,
-  TrendingUp, Flame, Lock, CreditCard, Upload, Filter, AlertCircle,
+  TrendingUp, Flame, Lock, CreditCard, Upload, Filter, AlertCircle, RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -110,6 +110,12 @@ const Admin = () => {
   const [userFragments, setUserFragments] = useState<any[]>([]);
   const [userTokens, setUserTokens] = useState<any[]>([]);
   const [playerProgress, setPlayerProgress] = useState<any[]>([]);
+  // Score totals per country code (from countries table season_number)
+  const [countrySeasonMap, setCountrySeasonMap] = useState<Record<string, number>>({});
+  // Reset player state
+  const [resetTarget, setResetTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [resetFrom, setResetFrom] = useState<string>("all");
+  const [resetting, setResetting] = useState(false);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   const [countryForm, setCountryForm] = useState({
@@ -134,6 +140,19 @@ const Admin = () => {
     else { setIsAdmin(false); setLoading(false); }
   };
 
+  // Helper: get question total for a country code
+  const getScoreTotal = (countryCode: string): number => {
+    const season = countrySeasonMap[countryCode];
+    // Season 0 (free) missions have 3 questions, others have 6
+    return season === 0 ? 3 : 6;
+  };
+
+  const getScoreTotalByCountryId = (countryId: string): number => {
+    const country = countries.find(c => c.id === countryId);
+    if (!country) return 6;
+    return getScoreTotal(country.code);
+  };
+
   const fetchAllData = async () => {
     const [c, p, m, roles, frags, tokens, progress] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
@@ -144,7 +163,13 @@ const Admin = () => {
       supabase.from("user_tokens" as any).select("*"),
       supabase.from("player_country_progress").select("*"),
     ]);
-    if (c.data) setCountries(c.data as CountryRow[]);
+    if (c.data) {
+      setCountries(c.data as CountryRow[]);
+      // Build season map from countries
+      const sMap: Record<string, number> = {};
+      (c.data as CountryRow[]).forEach(ct => { sMap[ct.code] = ct.season_number ?? 1; });
+      setCountrySeasonMap(sMap);
+    }
     if (p.data) setProfiles(p.data);
     if (m.data) setMissions(m.data);
     if (roles.data) {
@@ -156,6 +181,28 @@ const Admin = () => {
     if (tokens.data) setUserTokens(tokens.data);
     if (progress.data) setPlayerProgress(progress.data);
     setLoading(false);
+  };
+
+  // Reset player progress
+  const handleResetPlayer = async () => {
+    if (!resetTarget) return;
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reset-player-progress", {
+        body: { user_id: resetTarget.userId, reset_from: resetFrom },
+      });
+      if (error) throw error;
+      toast({
+        title: "✓ Progression réinitialisée",
+        description: `${resetTarget.name} — ${resetFrom === "all" ? "tout supprimé" : `depuis ${resetFrom}`}`,
+      });
+      setResetTarget(null);
+      fetchAllData();
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message || "Échec de la réinitialisation", variant: "destructive" });
+    } finally {
+      setResetting(false);
+    }
   };
 
   const handleSaveCountry = async () => {
@@ -472,6 +519,12 @@ const Admin = () => {
   const avgScore = completedMissions.length > 0
     ? (completedMissions.reduce((s, m) => s + (m.score || 0), 0) / completedMissions.length).toFixed(1)
     : "0";
+  const avgTotal = completedMissions.length > 0
+    ? (completedMissions.reduce((s, m) => s + getScoreTotalByCountryId(m.country_id), 0) / completedMissions.length).toFixed(1)
+    : "6";
+  const avgPct = completedMissions.length > 0
+    ? Math.round((completedMissions.reduce((s, m) => s + (m.score || 0) / getScoreTotalByCountryId(m.country_id), 0) / completedMissions.length) * 100)
+    : 0;
   const completionRate = missions.length > 0 ? Math.round((completedMissions.length / missions.length) * 100) : 0;
 
   // Unique missions par country_id (meilleur score)
@@ -567,7 +620,7 @@ const Admin = () => {
               {[
                 { label: "TENTATIVES TOTALES", value: missions.length, icon: Target, sub: `dont ${uniqueMissions.length} pays distincts` },
                 { label: "TAUX COMPLÉTION", value: `${completionRate}%`, icon: TrendingUp, sub: `${completedMissions.length}/${missions.length}` },
-                { label: "SCORE MOYEN", value: `${avgScore}/6`, icon: Star, sub: "sur toutes les tentatives" },
+                { label: "SCORE MOYEN", value: `${avgPct}%`, icon: Star, sub: `${avgScore}/${avgTotal} moy.` },
                 { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${agentUsers.length} Agent · ${directorUsers.length} Director` },
               ].map((card, i) => (
                 <motion.div
@@ -651,7 +704,7 @@ const Admin = () => {
                           : <XCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
                         <span className="text-sm text-foreground truncate max-w-[160px]">{m.mission_title}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground font-display flex-shrink-0">{m.score ?? 0}/6</span>
+                      <span className="text-xs text-muted-foreground font-display flex-shrink-0">{m.score ?? 0}/{getScoreTotalByCountryId(m.country_id)}</span>
                     </div>
                   ))}
                   {missions.length === 0 && <p className="text-muted-foreground text-sm text-center py-4">Aucune mission</p>}
@@ -971,7 +1024,7 @@ const Admin = () => {
                                     {FLAG_EMOJI[pr.country_code] || "🌍"} {country?.name || pr.country_code}
                                   </span>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground">{pr.best_score}/6</span>
+                                    <span className="text-muted-foreground">{pr.best_score}/{getScoreTotal(pr.country_code)}</span>
                                     <span className="text-muted-foreground/60">{pr.attempts_count}×</span>
                                     {pr.fragment_granted && <span style={{ color: "hsl(40 80% 55%)" }}>🧩</span>}
                                   </div>
@@ -1040,6 +1093,19 @@ const Admin = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Reset button */}
+                      <div className="md:col-span-3 pt-3 border-t border-border/30 mt-2">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="font-display tracking-wider text-xs"
+                          onClick={(e) => { e.stopPropagation(); setResetTarget({ userId: uid, name: p.display_name || "Agent" }); setResetFrom("all"); }}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                          RÉINITIALISER LE JEU
+                        </Button>
+                      </div>
                     </motion.div>
                   )}
                 </div>
@@ -1106,7 +1172,7 @@ const Admin = () => {
                     <div className="min-w-0">
                       <span className="font-display text-foreground tracking-wider truncate block text-sm">{m.mission_title}</span>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                        <span>{m.score ?? 0}/6</span>
+                        <span>{m.score ?? 0}/{getScoreTotalByCountryId(m.country_id)}</span>
                         <span>{new Date(m.created_at).toLocaleDateString("fr-FR")}</span>
                         {missionDedup && m.attempts > 1 && (
                           <span className="text-amber-400/80">{m.attempts} tentatives</span>
@@ -1251,6 +1317,62 @@ const Admin = () => {
                   onClick={() => handleSubscriptionChange(confirmChange.userId, confirmChange.name, confirmChange.newType)}
                 >
                   CONFIRMER
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ── Reset player dialog ── */}
+        {resetTarget && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-destructive/30 rounded-xl p-6 max-w-md w-full shadow-xl"
+            >
+              <RotateCcw className="h-8 w-8 text-destructive mx-auto mb-3" />
+              <h3 className="font-display text-foreground tracking-wider text-center mb-2">RÉINITIALISER LE JEU</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Réinitialiser la progression de <strong className="text-foreground">{resetTarget.name}</strong> ?
+              </p>
+              <div className="space-y-2 mb-5">
+                {[
+                  { value: "all", label: "Tout réinitialiser", desc: "Supprime toute la progression" },
+                  { value: "season0", label: "Depuis le jeu gratuit (S0)", desc: "Repart de zéro complet" },
+                  { value: "season1", label: "Depuis Saison 1", desc: "Conserve le jeu gratuit (S0)" },
+                  { value: "season2", label: "Depuis Saison 2", desc: "Conserve S0 et S1" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setResetFrom(opt.value)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-all font-display text-xs tracking-wider ${
+                      resetFrom === opt.value
+                        ? "border-destructive bg-destructive/10 text-foreground"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground hover:border-border"
+                    }`}
+                  >
+                    <div className="font-bold">{opt.label}</div>
+                    <div className="text-muted-foreground font-normal mt-0.5">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 font-display tracking-wider text-xs"
+                  onClick={() => setResetTarget(null)}
+                  disabled={resetting}
+                >
+                  ANNULER
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1 font-display tracking-wider text-xs"
+                  onClick={handleResetPlayer}
+                  disabled={resetting}
+                >
+                  {resetting ? "EN COURS..." : "RÉINITIALISER"}
                 </Button>
               </div>
             </motion.div>
