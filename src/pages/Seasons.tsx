@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Home, ArrowLeft, Lock, ChevronRight, Loader2, Sparkles,
-  Star, Eye, Zap, Globe, Crown
+  Star, Eye, Zap, Globe, Crown, CheckCircle2
 } from "lucide-react";
 
 type SeasonKey = "season_1" | "season_2" | "season_3" | "season_4" | "full_bundle";
@@ -133,6 +133,22 @@ const Seasons = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loadingSeason, setLoadingSeason] = useState<string | null>(null);
+  const [ownedKeys, setOwnedKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchEntitlements = async () => {
+      const { data } = await supabase
+        .from("entitlements")
+        .select("entitlement_key")
+        .eq("user_id", user.id)
+        .eq("active", true);
+      if (data) {
+        setOwnedKeys(new Set(data.map((e) => e.entitlement_key)));
+      }
+    };
+    fetchEntitlements();
+  }, [user]);
 
   const handleCheckout = async (season: SeasonKey) => {
     setLoadingSeason(season);
@@ -214,15 +230,15 @@ const Seasons = () => {
               boxShadow: `0 0 60px hsl(${BUNDLE.accentHsl} / 0.1)`,
             }}
           >
-            {/* Best value badge */}
+            {/* Badge */}
             <div
               className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-xs font-display font-bold tracking-wider"
               style={{
-                background: `hsl(${BUNDLE.accentHsl})`,
+                background: ownedKeys.size >= 4 ? "hsl(142 70% 45%)" : `hsl(${BUNDLE.accentHsl})`,
                 color: "hsl(var(--primary-foreground))",
               }}
             >
-              MEILLEURE OFFRE
+              {ownedKeys.size >= 4 ? "✓ DÉBLOQUÉ" : "MEILLEURE OFFRE"}
             </div>
 
             <div className="p-6 sm:p-8 grid md:grid-cols-2 gap-8 items-center">
@@ -269,20 +285,27 @@ const Seasons = () => {
                     au lieu de 116 CHF · <span className="text-primary font-bold">Économisez 17 CHF</span>
                   </p>
                 </div>
-                <Button
-                  className="w-full font-display tracking-wider text-sm gap-2"
-                  size="lg"
-                  onClick={() => handleCheckout("full_bundle")}
-                  disabled={loadingSeason !== null}
-                >
-                  {loadingSeason === "full_bundle" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Lock className="h-4 w-4" />
-                  )}
-                  {loadingSeason === "full_bundle" ? "CONNEXION SÉCURISÉE..." : "DÉBLOQUER L'ÉDITION INTÉGRALE"}
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                </Button>
+                {ownedKeys.size >= 4 ? (
+                  <div className="flex items-center justify-center gap-2 py-3 rounded-lg border border-green-500/30 bg-green-500/10">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span className="font-display tracking-wider text-sm text-green-400 font-bold">ACCÈS COMPLET DÉBLOQUÉ</span>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full font-display tracking-wider text-sm gap-2"
+                    size="lg"
+                    onClick={() => handleCheckout("full_bundle")}
+                    disabled={loadingSeason !== null}
+                  >
+                    {loadingSeason === "full_bundle" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Lock className="h-4 w-4" />
+                    )}
+                    {loadingSeason === "full_bundle" ? "CONNEXION SÉCURISÉE..." : "DÉBLOQUER L'ÉDITION INTÉGRALE"}
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -300,6 +323,7 @@ const Seasons = () => {
           {SEASONS.map((s, idx) => {
             const Icon = s.icon;
             const isLoading = loadingSeason === s.key;
+            const isOwned = ownedKeys.has(s.key);
 
             return (
               <motion.div
@@ -307,12 +331,20 @@ const Seasons = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 + idx * 0.08 }}
-                className="rounded-xl border overflow-hidden transition-all duration-300 hover:shadow-lg group"
+                className={`relative rounded-xl border overflow-hidden transition-all duration-300 hover:shadow-lg group ${isOwned ? "ring-1 ring-green-500/30" : ""}`}
                 style={{
-                  borderColor: `hsl(${s.accentHsl} / 0.25)`,
-                  background: `linear-gradient(180deg, hsl(var(--card)), hsl(${s.accentHsl} / 0.03))`,
+                  borderColor: isOwned ? "hsl(142 70% 45% / 0.4)" : `hsl(${s.accentHsl} / 0.25)`,
+                  background: `linear-gradient(180deg, hsl(var(--card)), hsl(${isOwned ? "142 70% 45%" : s.accentHsl} / 0.03))`,
                 }}
               >
+                {/* Owned badge */}
+                {isOwned && (
+                  <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-display font-bold tracking-wider"
+                    style={{ background: "hsl(142 70% 45% / 0.15)", color: "hsl(142 70% 45%)", border: "1px solid hsl(142 70% 45% / 0.3)" }}>
+                    <CheckCircle2 className="h-3 w-3" />
+                    DÉBLOQUÉ
+                  </div>
+                )}
                 {/* Season header bar */}
                 <div
                   className="h-1 w-full"
@@ -368,24 +400,41 @@ const Seasons = () => {
 
                   {/* Price + CTA */}
                   <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <span className="text-2xl font-display font-bold text-foreground">{s.price}</span>
-                      <span className="text-sm text-muted-foreground ml-1">CHF</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="font-display tracking-wider text-xs gap-1.5"
-                      onClick={() => handleCheckout(s.key)}
-                      disabled={loadingSeason !== null}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Lock className="h-3.5 w-3.5" />
-                      )}
-                      {isLoading ? "..." : "DÉBLOQUER"}
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
+                    {isOwned ? (
+                      <>
+                        <div className="flex items-center gap-2" style={{ color: "hsl(142 70% 45%)" }}>
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="font-display tracking-wider text-xs font-bold">DÉBLOQUÉ</span>
+                        </div>
+                        <Link to="/dashboard">
+                          <Button size="sm" variant="outline" className="font-display tracking-wider text-xs gap-1.5">
+                            JOUER
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="text-2xl font-display font-bold text-foreground">{s.price}</span>
+                          <span className="text-sm text-muted-foreground ml-1">CHF</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="font-display tracking-wider text-xs gap-1.5"
+                          onClick={() => handleCheckout(s.key)}
+                          disabled={loadingSeason !== null}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Lock className="h-3.5 w-3.5" />
+                          )}
+                          {isLoading ? "..." : "DÉBLOQUER"}
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>
