@@ -224,6 +224,9 @@ const FreeMission = () => {
 
     // Try to build mission data from DB content first
     let json: FreeCountryData | null = null;
+    // Store raw DB content for completion/reward fields
+    const completionBlock = dbContent?.completion;
+    const rewardsBlock = dbContent?.rewards;
 
     if (dbContent?.gameplay?.questions?.length > 0 && dbContent?.story?.intro) {
       // Map DB JSONB → FreeCountryData (question_bank format)
@@ -251,10 +254,21 @@ const FreeMission = () => {
         },
         question_bank: qbank,
         fragment_reward: {
-          id: dbContent.rewards?.puzzle_piece?.piece_id ?? `FRAG-${countryData.code}-001`,
+          id: rewardsBlock?.puzzle_piece?.piece_id ?? `FRAG-${countryData.code}-001`,
           name: `Fragment de ${countryData.name}`,
-          concept: dbContent.rewards?.puzzle_piece?.shape_family ?? "FRAGMENT",
-          unlocked_message: dbContent.story?.lore_reveal?.reveal_text ?? "Un nouveau nœud s'est activé.",
+          concept: rewardsBlock?.puzzle_piece?.shape_family ?? "FRAGMENT",
+          unlocked_message: completionBlock?.jasper_quote ?? dbContent.story?.lore_reveal?.reveal_text ?? "Un nouveau nœud s'est activé.",
+        },
+        reward: {
+          letter_obtained: rewardsBlock?.token?.value ?? COUNTRY_LETTERS[countryData.code] ?? "?",
+          fragment: {
+            id: rewardsBlock?.puzzle_piece?.piece_id ?? `FRAG-${countryData.code}-001`,
+            concept: rewardsBlock?.puzzle_piece?.shape_family ?? "FRAGMENT",
+            name: `Fragment de ${countryData.name}`,
+          },
+          jasper_quote: completionBlock?.jasper_quote,
+          next_country_code: completionBlock?.next_country_code,
+          next_destination_hint: completionBlock?.next_hook,
         },
       };
     }
