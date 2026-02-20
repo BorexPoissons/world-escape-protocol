@@ -419,7 +419,13 @@ const Puzzle = () => {
         return vis === "playable" && d.unlockedPieces === 0;
       });
 
-  // All free countries completed and still on free tier → show upgrade CTA
+  // Check if all 5 Signal Initial countries have fragments
+  const signalInitialComplete = SIGNAL_INITIAL_SEQUENCE.every(code => {
+    const entry = puzzleData.find(d => d.country.code === code);
+    return entry && entry.unlockedPieces > 0;
+  });
+
+  // All free countries completed and still on free tier → show Dilemme Central or upgrade CTA
   const allFreeCompleted =
     tier === "free" &&
     !continueCountry &&
@@ -678,57 +684,94 @@ const Puzzle = () => {
                 </Link>
               </div>
             ) : (
-              /* All free missions done — upgrade CTA */
-              <div
-                className="inline-block bg-card border rounded-xl px-8 py-7 max-w-sm w-full"
-                style={{
-                  borderColor: "hsl(40 80% 55% / 0.4)",
-                  boxShadow: "0 0 60px hsl(40 80% 55% / 0.12)",
-                }}
-              >
-                <motion.div
-                  className="w-12 h-12 rounded-full border border-primary/40 bg-primary/10 flex items-center justify-center mx-auto mb-4"
-                  animate={{ boxShadow: ["0 0 10px hsl(40 80% 55% / 0.3)", "0 0 25px hsl(40 80% 55% / 0.6)", "0 0 10px hsl(40 80% 55% / 0.3)"] }}
-                  transition={{ repeat: Infinity, duration: 2.5 }}
-                >
-                  <Shield className="h-6 w-6 text-primary" />
-                </motion.div>
-
-                <p className="text-xs font-display tracking-[0.3em] text-primary mb-2">
-                  SIGNAL INITIAL — TERMINÉ
-                </p>
-                <h3 className="text-lg font-display font-bold text-foreground tracking-wider mb-2">
-                  ESSAI GRATUIT COMPLÉTÉ
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5 font-body">
-                  Vous avez collecté tous les fragments de l'opération initiale. La suite de l'enquête — 190 pays, 
-                  des révélations classifiées et le Protocole Oméga — requiert une autorisation de niveau supérieur.
-                </p>
-
+              /* All free missions done — Dilemme Central or Upgrade CTA */
+              signalInitialComplete ? (
                 <div
-                  className="rounded-lg px-4 py-3 mb-5 text-center"
-                  style={{ background: "hsl(40 80% 55% / 0.08)", border: "1px solid hsl(40 80% 55% / 0.2)" }}
+                  className="inline-block bg-card border rounded-xl px-8 py-7 max-w-sm w-full"
+                  style={{
+                    borderColor: "hsl(40 80% 55% / 0.4)",
+                    boxShadow: "0 0 60px hsl(40 80% 55% / 0.12)",
+                  }}
                 >
-                  <p className="text-xs text-muted-foreground font-display tracking-wider mb-0.5">PAIEMENT UNIQUE · ACCÈS À VIE</p>
-                  <p className="text-3xl font-display font-bold text-primary">
-                    19.90 <span className="text-base text-muted-foreground">CHF</span>
+                  <motion.div
+                    className="w-12 h-12 rounded-full border border-primary/40 bg-primary/10 flex items-center justify-center mx-auto mb-4"
+                    animate={{ boxShadow: ["0 0 10px hsl(40 80% 55% / 0.3)", "0 0 25px hsl(40 80% 55% / 0.6)", "0 0 10px hsl(40 80% 55% / 0.3)"] }}
+                    transition={{ repeat: Infinity, duration: 2.5 }}
+                  >
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </motion.div>
+
+                  <p className="text-xs font-display tracking-[0.3em] text-primary mb-2">
+                    SIGNAL INITIAL — 5/5 FRAGMENTS
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Sans abonnement · Sans frais cachés</p>
+                  <h3 className="text-lg font-display font-bold text-foreground tracking-wider mb-2">
+                    DILEMME CENTRAL
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 font-body">
+                    Les 5 fragments du Signal Initial sont assemblés. 
+                    Résolvez l'énigme finale pour révéler le mot-clé secret et débloquer la suite de l'enquête.
+                  </p>
+
+                  <Link to="/central-dilemma">
+                    <Button className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                      <Compass className="h-4 w-4" />
+                      ACCÉDER AU DILEMME
+                      <ChevronRight className="h-4 w-4 ml-auto" />
+                    </Button>
+                  </Link>
                 </div>
-
-                <Button
-                  className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2 mb-3"
-                  onClick={() => setShowUpgrade(true)}
+              ) : (
+                <div
+                  className="inline-block bg-card border rounded-xl px-8 py-7 max-w-sm w-full"
+                  style={{
+                    borderColor: "hsl(40 80% 55% / 0.4)",
+                    boxShadow: "0 0 60px hsl(40 80% 55% / 0.12)",
+                  }}
                 >
-                  <Shield className="h-4 w-4" />
-                  ACCÉDER AU MODULE AGENT
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                </Button>
+                  <motion.div
+                    className="w-12 h-12 rounded-full border border-primary/40 bg-primary/10 flex items-center justify-center mx-auto mb-4"
+                    animate={{ boxShadow: ["0 0 10px hsl(40 80% 55% / 0.3)", "0 0 25px hsl(40 80% 55% / 0.6)", "0 0 10px hsl(40 80% 55% / 0.3)"] }}
+                    transition={{ repeat: Infinity, duration: 2.5 }}
+                  >
+                    <Shield className="h-6 w-6 text-primary" />
+                  </motion.div>
 
-                <p className="text-xs text-muted-foreground font-display tracking-wider text-center">
-                  50 PAYS · MISSIONS NARRATIVES ÉTENDUES · BADGES EXCLUSIFS
-                </p>
-              </div>
+                  <p className="text-xs font-display tracking-[0.3em] text-primary mb-2">
+                    SIGNAL INITIAL — TERMINÉ
+                  </p>
+                  <h3 className="text-lg font-display font-bold text-foreground tracking-wider mb-2">
+                    ESSAI GRATUIT COMPLÉTÉ
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 font-body">
+                    Vous avez collecté tous les fragments de l'opération initiale. La suite de l'enquête — 190 pays, 
+                    des révélations classifiées et le Protocole Oméga — requiert une autorisation de niveau supérieur.
+                  </p>
+
+                  <div
+                    className="rounded-lg px-4 py-3 mb-5 text-center"
+                    style={{ background: "hsl(40 80% 55% / 0.08)", border: "1px solid hsl(40 80% 55% / 0.2)" }}
+                  >
+                    <p className="text-xs text-muted-foreground font-display tracking-wider mb-0.5">PAIEMENT UNIQUE · ACCÈS À VIE</p>
+                    <p className="text-3xl font-display font-bold text-primary">
+                      19.90 <span className="text-base text-muted-foreground">CHF</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Sans abonnement · Sans frais cachés</p>
+                  </div>
+
+                  <Button
+                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2 mb-3"
+                    onClick={() => setShowUpgrade(true)}
+                  >
+                    <Shield className="h-4 w-4" />
+                    ACCÉDER AU MODULE AGENT
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground font-display tracking-wider text-center">
+                    50 PAYS · MISSIONS NARRATIVES ÉTENDUES · BADGES EXCLUSIFS
+                  </p>
+                </div>
+              )
             )}
           </motion.div>
         )}
