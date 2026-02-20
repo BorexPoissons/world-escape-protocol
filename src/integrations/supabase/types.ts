@@ -681,6 +681,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_display_name_available: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
       complete_country_attempt: {
         Args: {
           p_country_code: string
