@@ -1,75 +1,71 @@
 
 
-# Fix Plan: Puzzle Counter + Hint Button
+# Fix: Fragments manquants US/JP + Progression linaire + Dilemme Central
 
-## Bug A: Puzzle counter shows 1/195 instead of 3/195
+## Problemes identifies (3 bugs lies)
 
-### Root Cause
-The counter logic in `Puzzle.tsx` is correct -- it counts distinct countries with fragments from `user_fragments`. The real issue is that FR and EG fragment rows are missing from the database. This is a data repair + prevention issue.
+### 1. Fragments US et JP absents de la base de donnees
+La base contient 5 tokens (CH, FR, EG, US, JP) mais seulement 3 fragments (CH, FR, EG). Les lignes `player_country_progress` pour US et JP sont egalement absentes. Le RPC `complete_country_attempt` a probablement echoue silencieusement lors de ces missions.
 
-### Fix
-1. **Data repair** (SQL): Insert missing `user_fragments` for FR and EG for the affected user, and update `player_country_progress` to reflect `fragment_granted = true` where applicable.
-2. **No code change needed** for the counter itself -- it already reads `user_fragments` correctly.
+**Impact** : compteur affiche 3/195 au lieu de 5/195, inventaire montre 3 pieces au lieu de 5, routes sur la carte ne s'allument pas pour EG-US et US-JP.
+
+### 2. "Prochaine destination" affiche France au lieu du Dilemme Central
+La logique (ligne 410 de Puzzle.tsx) cherche le premier pays du Signal Initial sans fragment. Comme US n'a pas de fragment, il affiche US (ou France dans certains cas). Apres les 5 missions, il devrait afficher le Dilemme Central.
+
+### 3. Routes incompletes sur la carte
+Les lignes de connexion s'allument quand `from.unlockedPieces > 0`. Comme US et JP n'ont pas de fragments, les segments EG-US et US-JP restent eteints. Corriger les donnees corrige automatiquement les routes.
 
 ---
 
-## Bug B: Hint button disappeared on questions
+## Plan de correction
 
-### Root Cause
-The DB stores `hint: { text, cost_xp }` per question, but the data mapping in `FreeMission.tsx` (line ~266) only passes `explanation` -- it never maps `hint`. The `QBankItem` type also lacks a `hint` field, and no UI component renders hints.
+### Etape 1 — Reparation des donnees (SQL)
 
-### Fix (3 changes in `FreeMission.tsx`)
+Inserer les fragments et progres manquants pour US et JP :
 
-1. **Add `hint` to the `QBankItem` type** (in the `question_bank` array type):
-   ```
-   hint?: { text: string; cost_xp: number };
-   ```
-
-2. **Map `hint` from DB questions** (line ~273, in the `qbank` mapping):
-   ```
-   hint: q.hint,
-   ```
-
-3. **Add a `HintToggle` inline component** (similar to `ExplanationToggle`) that:
-   - Only renders if `question.hint?.text` exists
-   - Shows BEFORE the answer (while `answerRevealed === false`)
-   - Button label: "💡 Indice ({cost_xp} XP)"
-   - If player XP < cost_xp: button is disabled with tooltip "XP insuffisant"
-   - On click: deduct XP from profile, reveal hint text inline (collapsible)
-   - Once the answer is revealed, the hint stays visible but the button disappears
-
-4. **Insert the HintToggle** in all 6 question phases (scene old/new, logic old/new, strategic old/new), placed between the question text and the answer choices.
-
-5. **Track player XP**: Load current XP from profiles at mission start, store in state, deduct on hint purchase, and persist the deduction to the DB.
-
-### Technical Details
-
-**New state variables:**
-- `playerXP: number` -- loaded from `profiles.xp` at mission start
-- `hintRevealed: boolean` -- reset per question phase transition
-
-**HintToggle component** (inline, like ExplanationToggle):
 ```text
-function HintToggle({ hint, playerXP, revealed, onBuy }) {
-  if (!hint?.text) return null;
-  if revealed: show hint text
-  else: show button (disabled if playerXP < hint.cost_xp)
-}
+INSERT INTO user_fragments (user_id, country_id, fragment_index, is_placed)
+  VALUES ('70ec...', 'fa71...(US)', 0, false),
+         ('70ec...', '4fe4...(JP)', 0, false)
+  ON CONFLICT DO NOTHING;
+
+INSERT INTO player_country_progress (user_id, country_code, best_score, last_score, attempts_count, fragment_granted)
+  VALUES ('70ec...', 'US', 3, 3, 2, true),
+         ('70ec...', 'JP', 3, 3, 1, true)
+  ON CONFLICT DO NOTHING;
 ```
 
-**XP deduction on hint buy:**
-- `setPlayerXP(prev => prev - cost_xp)`
-- `supabase.from("profiles").update({ xp: playerXP - cost_xp }).eq("user_id", user.id)`
+### Etape 2 — Logique "Prochaine destination" (Puzzle.tsx)
 
-**Placement in each question phase:**
-- After the question `<h2>` element
-- Before the choices `<div className="space-y-3">`
+Modifier les lignes 406-426 pour gerer le cas "Signal Initial termine" :
 
-### Files Modified
-- `src/pages/FreeMission.tsx` (type update, mapping, HintToggle component, state, integration in 6 phases)
+- Si les 5 pays CH/FR/EG/US/JP ont tous un fragment --> `nextSequenceCode = null`
+- Si `nextSequenceCode === null` ET `tier === "free"` : afficher un CTA vers le Dilemme Central (`/central-dilemma`) au lieu du bloc upgrade
+- Texte : "DILEMME CENTRAL" / "Resolvez l'enigme finale du Signal Initial"
+- Bouton : "ACCEDER AU DILEMME" redirige vers `/central-dilemma`
+- Le bloc upgrade (19.90 CHF) ne s'affiche qu'apres validation du Dilemme Central (basee sur `user_story_state.central_word_validated`)
 
-### No other files need changes
-- `Puzzle.tsx` counter logic is already correct
-- `HintShopModal.tsx` is unrelated (used for the classic mission format)
-- No DB schema changes needed
+### Etape 3 — Meme logique sur Dashboard.tsx
 
+Verifier que le Dashboard utilise la meme detection "5 pays completes" pour afficher le bon widget de progression.
+
+---
+
+## Details techniques
+
+### Fichiers modifies
+- `src/pages/Puzzle.tsx` : logique "continueCountry" + nouveau bloc CTA Dilemme Central
+- Aucune modification de `CinematicWorldMap.tsx` (les routes se corrigent automatiquement avec les donnees)
+
+### Nouveau flux apres correction
+
+```text
+Puzzle avec 5/5 fragments
+  --> Routes toutes allumees (CH-FR-EG-US-JP)
+  --> Inventaire : 5 pieces disponibles
+  --> Widget bas : "DILEMME CENTRAL" au lieu de "Prochaine destination"
+  --> Clic --> /central-dilemma --> SWISS --> Revelation OPEN --> CTA Saison 1
+```
+
+### Pas de modification de schema
+Toutes les tables necessaires existent deja. Seule une reparation de donnees + un ajustement de logique front-end sont requis.
