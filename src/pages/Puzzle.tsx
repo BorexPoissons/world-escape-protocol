@@ -623,7 +623,7 @@ const Puzzle = () => {
               style={{ transform: "translate(-50%, -50%)" }}
             >
               <div
-                className="px-10 py-5 rounded-2xl border backdrop-blur-md flex items-center gap-5 cursor-pointer pointer-events-auto"
+                className="relative px-12 py-7 rounded-2xl border backdrop-blur-md flex items-center gap-6 cursor-pointer pointer-events-auto"
                 style={{
                   background: "hsl(220 25% 4% / 0.92)",
                   borderColor: "hsl(40 80% 55% / 0.5)",
@@ -631,6 +631,15 @@ const Puzzle = () => {
                 }}
                 onClick={() => setShowJasperModal(true)}
               >
+                {/* Bouton X pour fermer */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMilestoneSignal(false); }}
+                  className="absolute top-3 right-3 rounded-full p-1 transition-opacity opacity-60 hover:opacity-100"
+                  style={{ color: "hsl(40 15% 80%)" }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
                 {/* Jasper portrait with glow */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -639,7 +648,7 @@ const Puzzle = () => {
                   className="relative flex-shrink-0"
                 >
                   <div
-                    className="w-16 h-16 rounded-full overflow-hidden border-2"
+                    className="w-24 h-24 rounded-full overflow-hidden border-2"
                     style={{
                       borderColor: "hsl(40 80% 55% / 0.6)",
                       boxShadow: "0 0 20px hsl(40 80% 55% / 0.4), 0 0 40px hsl(40 80% 55% / 0.15)",
@@ -655,21 +664,21 @@ const Puzzle = () => {
                     <motion.span
                       animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
                       transition={{ repeat: 3, duration: 0.6 }}
-                      className="text-lg"
+                      className="text-xl"
                     >
                       ✦
                     </motion.span>
-                    <p className="text-xs font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
+                    <p className="text-sm font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
                       SIGNAL DÉTECTÉ
                     </p>
                   </div>
-                  <p className="text-[11px] font-display tracking-wider" style={{ color: "hsl(40 80% 55%)" }}>
+                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(40 80% 55%)" }}>
                     JASPER VALCOURT
                   </p>
-                  <p className="text-[10px] font-display tracking-wider mt-0.5 text-muted-foreground italic">
+                  <p className="text-[11px] font-display tracking-wider mt-0.5 italic" style={{ color: "hsl(40 15% 80%)" }}>
                     "Signal confirmé. Le réseau grandit."
                   </p>
-                  <p className="text-[9px] font-display tracking-wider mt-1 text-muted-foreground">
+                  <p className="text-[10px] font-display tracking-wider mt-1" style={{ color: "hsl(40 15% 75%)" }}>
                     {placedCountryIds.length} FRAGMENTS INTÉGRÉS
                   </p>
                 </div>
@@ -906,11 +915,11 @@ const Puzzle = () => {
               </div>
               MESSAGE DE JASPER
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground font-body pt-3 leading-relaxed italic">
+            <DialogDescription className="text-foreground/80 font-body pt-3 leading-relaxed italic">
               "Signal confirmé. Le réseau grandit. Ne t'arrête pas maintenant. Chaque fragment que tu places renforce notre compréhension du Cercle. Ils pensent encore être invisibles — prouvons-leur le contraire."
             </DialogDescription>
           </DialogHeader>
-          <p className="text-[10px] font-display tracking-[0.2em] text-muted-foreground mt-2">
+          <p className="text-[10px] font-display tracking-[0.2em] text-foreground/60 mt-2">
             — JASPER VALCOURT · TRANSMISSION SÉCURISÉE
           </p>
         </DialogContent>
