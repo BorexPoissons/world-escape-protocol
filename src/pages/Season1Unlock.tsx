@@ -20,7 +20,9 @@ const Season1Unlock: React.FC = () => {
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { season: "season_1" },
+      });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
@@ -76,9 +78,9 @@ const Season1Unlock: React.FC = () => {
             >
               Ω
             </motion.div>
-            <p className="text-[10px] font-display tracking-[0.5em] text-primary/50 mb-2">
-              SIGNAL INITIAL — COMPLÉTÉ · MOT-CLÉ VALIDÉ
-            </p>
+              <p className="text-[10px] font-display tracking-[0.5em] text-primary/50 mb-2">
+                SIGNAL INITIAL — COMPLÉTÉ · MOT-CLÉ : OPEN
+              </p>
           </motion.div>
 
           {/* ── Season 1 Title ── */}
@@ -92,7 +94,7 @@ const Season1Unlock: React.FC = () => {
               LES OBSERVATEURS
             </h1>
             <p className="text-sm font-display tracking-widest text-muted-foreground">
-              SAISON 1 · PROTOCOLE OMÉGA · 45 PAYS
+              SAISON I · 45 PAYS · L'INTERFÉRENCE COMMENCE
             </p>
           </motion.div>
 
@@ -176,7 +178,7 @@ const Season1Unlock: React.FC = () => {
                 PAIEMENT UNIQUE — ACCÈS À VIE
               </p>
               <p className="text-5xl font-display font-bold text-primary mb-1">
-                19.90
+                29
                 <span className="text-xl text-muted-foreground ml-2">CHF</span>
               </p>
               <p className="text-xs text-muted-foreground font-display tracking-wider">
@@ -195,7 +197,7 @@ const Season1Unlock: React.FC = () => {
               ) : (
                 <Lock className="h-5 w-5" />
               )}
-              {loading ? "CONNEXION SÉCURISÉE..." : "DÉBLOQUER LA SAISON 1 — 19.90 CHF"}
+              {loading ? "CONNEXION SÉCURISÉE..." : "DÉBLOQUER LA SAISON I — 29 CHF"}
               <ChevronRight className="h-5 w-5 ml-auto" />
             </Button>
 

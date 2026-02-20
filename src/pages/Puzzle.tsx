@@ -885,7 +885,7 @@ const Puzzle = () => {
       <UpgradeModal
         open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
-        type="agent"
+        season="season_1"
       />
 
       {/* ═══ FINAL REVEAL SEQUENCE — 7 ACTES ═══ */}

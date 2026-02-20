@@ -8,6 +8,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Season → Stripe price mapping
+const SEASON_PRICES: Record<string, string> = {
+  season_1: "price_1T2xii5ALrUsu1BYj6DW93lu",
+  season_2: "price_1T2xj85ALrUsu1BYaNMYT3DT",
+  season_3: "price_1T2xjU5ALrUsu1BY4DlojcoL",
+  season_4: "price_1T2xjo5ALrUsu1BY4zylzu73",
+  full_bundle: "price_1T2xkU5ALrUsu1BYbcjwxuZJ",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,11 +34,24 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    // Parse requested season from body (default: season_1)
+    let season = "season_1";
+    try {
+      const body = await req.json();
+      if (body?.season && SEASON_PRICES[body.season]) {
+        season = body.season;
+      }
+    } catch {
+      // default
+    }
+
+    const priceId = SEASON_PRICES[season];
+    if (!priceId) throw new Error(`Invalid season: ${season}`);
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Find or skip existing customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
@@ -41,18 +63,13 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: "price_1T2v9E5ALrUsu1BYi21qLSd8",
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
       success_url: `${origin}/dashboard?payment=success`,
       cancel_url: `${origin}/dashboard?payment=cancelled`,
       metadata: {
         user_id: user.id,
-        tier: "agent",
+        tier: season,
       },
     });
 

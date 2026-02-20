@@ -23,24 +23,25 @@ type CountryRow = Tables<"countries"> & {
 };
 
 // --- Subscription tier helpers ---
-type Tier = "free" | "season1" | "season2" | "season3" | "director";
+type Tier = "free" | "season_1" | "season_2" | "season_3" | "season_4" | "full_bundle";
 
 function getTier(profile: ProfileData | null): Tier {
   const sub = (profile as any)?.subscription_type ?? "free";
-  if (sub === "director") return "director";
-  if (sub === "season3") return "season3";
-  if (sub === "season2") return "season2";
-  // "agent" is legacy = season1
-  if (sub === "agent" || sub === "season1") return "season1";
+  if (sub === "full_bundle" || sub === "director") return "full_bundle";
+  if (sub === "season_4") return "season_4";
+  if (sub === "season_3") return "season_3";
+  if (sub === "season_2") return "season_2";
+  if (sub === "season_1" || sub === "agent" || sub === "season1") return "season_1";
   return "free";
 }
 
 function getMaxPlayableSeason(tier: Tier): number {
-  if (tier === "director") return 99;
-  if (tier === "season3") return 3;
-  if (tier === "season2") return 2;
-  if (tier === "season1") return 1;
-  return 0; // free: only season 0 (5 gratuits)
+  if (tier === "full_bundle") return 99;
+  if (tier === "season_4") return 4;
+  if (tier === "season_3") return 3;
+  if (tier === "season_2") return 2;
+  if (tier === "season_1") return 1;
+  return 0;
 }
 
 type CountryState = "playable" | "locked_upgrade" | "silhouette";
@@ -50,9 +51,7 @@ function getCountryState(country: CountryRow, tier: Tier): CountryState {
   const maxSeason = getMaxPlayableSeason(tier);
 
   if (season <= maxSeason) return "playable";
-  // The very next season = locked upgrade CTA (only first country visible as teaser)
   if (season === maxSeason + 1) return "locked_upgrade";
-  // Everything beyond = silhouette
   return "silhouette";
 }
 
@@ -96,7 +95,7 @@ const SEASON_META: Record<number, {
   reward: string;
   rewardIcon: string;
   price?: string;
-  upgradeType?: "season1" | "season2" | "season3" | "director";
+  upgradeType?: "season_1" | "season_2" | "season_3" | "season_4";
   accentColor: string;
 }> = {
   0: {
@@ -109,47 +108,47 @@ const SEASON_META: Record<number, {
     accentColor: "hsl(40 85% 62%)",
   },
   1: {
-    label: "PROTOCOLE OMÉGA",
-    codename: "OP-01 · OPÉRATION I",
-    subtitle: "43 pays · Fondations du système mondial",
-    theme: "Finance · Ressources · Technologie · Influence",
-    reward: "Clé Oméga + Accès Opération Atlas",
+    label: "LES OBSERVATEURS",
+    codename: "SAISON I",
+    subtitle: "45 pays · L'interférence commence",
+    theme: "Surveillance · Réseaux · Infiltration",
+    reward: "Clé Oméga + Accès Saison II",
     rewardIcon: "🔐",
-    price: "19.90 CHF",
-    upgradeType: "season1",
+    price: "29 CHF",
+    upgradeType: "season_1",
     accentColor: "hsl(220 80% 65%)",
   },
   2: {
-    label: "RÉSEAU ATLAS",
-    codename: "OP-02 · OPÉRATION II",
-    subtitle: "50 pays · Les connexions entre États",
-    theme: "Organisations internationales · Zones économiques stratégiques",
+    label: "LES ARCHITECTES",
+    codename: "SAISON II",
+    subtitle: "50 pays · L'origine du Protocole",
+    theme: "Organisations internationales · Zones stratégiques",
     reward: "Fragment Atlas + Badge Stratège Global",
     rewardIcon: "🗺",
-    price: "À venir",
-    upgradeType: "season2",
+    price: "29 CHF",
+    upgradeType: "season_2",
     accentColor: "hsl(160 60% 52%)",
   },
   3: {
-    label: "DOMINION SHADOW",
-    codename: "OP-03 · OPÉRATION III",
-    subtitle: "50 pays · Manipulation indirecte",
+    label: "LA FAILLE",
+    codename: "SAISON III",
+    subtitle: "50 pays · La réalité se déstabilise",
     theme: "Crises contrôlées · Routes énergétiques · Pouvoir invisible",
     reward: "Fragment Dominion + Badge Architecte du Réseau",
     rewardIcon: "⚡",
-    price: "À venir",
-    upgradeType: "season3",
+    price: "29 CHF",
+    upgradeType: "season_3",
     accentColor: "hsl(280 65% 62%)",
   },
   4: {
-    label: "CONVERGENCE 195",
-    codename: "OP-04 · OPÉRATION IV · FINALE",
-    subtitle: "47 pays · Les nœuds finaux — Tout converge",
-    theme: "Pays Stratégiques · La révélation finale",
+    label: "LE PROTOCOLE FINAL",
+    codename: "SAISON IV",
+    subtitle: "45 pays · Tout converge — Révélation ultime",
+    theme: "Pays Stratégiques · Assemblage final",
     reward: "Carte mondiale révélée + Titre Maître du Protocole",
     rewardIcon: "🧩",
-    price: "À venir",
-    upgradeType: "director",
+    price: "29 CHF",
+    upgradeType: "season_4",
     accentColor: "hsl(0 70% 58%)",
   },
 };
@@ -174,9 +173,9 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   // player_country_progress: map country_code → best_score (for sequential unlock)
   const [signalProgress, setSignalProgress] = useState<Record<string, number>>({});
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; type: "agent" | "director" }>({
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; season: "season_1" | "season_2" | "season_3" | "season_4" | "full_bundle" }>({
     open: false,
-    type: "agent",
+    season: "season_1",
   });
   // Cinematic intro — auto on first visit, replayable
   const [showIntro, setShowIntro] = useState(false);
@@ -339,7 +338,7 @@ const Dashboard = () => {
   const nextRecommended = nextRecommendedCode
     ? allPlayable.find(c => c.code === nextRecommendedCode)
     : allPlayable.find(c => isCountryUnlocked(c, playerLevel) && !completedCountries.includes(c.id));
-  const tierLabel = tier === "director" ? "DIRECTEUR" : tier === "season1" ? "OP-01" : tier === "season2" ? "OP-02" : tier === "season3" ? "OP-03" : "EXPLORATEUR";
+  const tierLabel = tier === "full_bundle" ? "ÉDITION INTÉGRALE" : tier === "season_4" ? "SAISON IV" : tier === "season_3" ? "SAISON III" : tier === "season_2" ? "SAISON II" : tier === "season_1" ? "SAISON I" : "EXPLORATEUR";
 
   // Global progression (out of 195 total countries)
   const globalCompletedCount = completedCountries.length;
@@ -365,7 +364,7 @@ const Dashboard = () => {
       {/* Upgrade modal */}
       <UpgradeModal
         open={upgradeModal.open}
-        type={upgradeModal.type}
+        season={upgradeModal.season}
         onClose={() => setUpgradeModal(u => ({ ...u, open: false }))}
       />
 
@@ -956,7 +955,7 @@ const Dashboard = () => {
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
                     {!isUnlocked && meta.price && meta.upgradeType ? (
                       <button
-                        onClick={() => setUpgradeModal({ open: true, type: meta.upgradeType === "director" ? "director" : "agent" })}
+                        onClick={() => setUpgradeModal({ open: true, season: meta.upgradeType || "season_1" })}
                         className="flex items-center gap-2 text-xs font-display tracking-wider px-4 py-2.5 rounded-lg border transition-all hover:scale-105 active:scale-95"
                         style={{
                           borderColor: meta.accentColor.replace(")", " / 0.5)"),
@@ -1198,7 +1197,11 @@ const Dashboard = () => {
                   {group.locked.map((country, i) => (
                     <motion.div key={country.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.04 * i }}>
                       <button
-                        onClick={() => setUpgradeModal({ open: true, type: tier === "season1" ? "director" : "agent" })}
+                        onClick={() => {
+                          const sNum = (country as any).season_number ?? 1;
+                          const seasonKey = `season_${sNum}` as "season_1" | "season_2" | "season_3" | "season_4";
+                          setUpgradeModal({ open: true, season: seasonKey });
+                        }}
                         className="w-full text-left group relative bg-card border border-primary/20 rounded-xl p-6 cursor-pointer hover:border-primary/50 transition-all duration-300"
                       >
                         <div className="absolute inset-0 rounded-xl bg-primary/5" />
@@ -1229,7 +1232,7 @@ const Dashboard = () => {
                     <motion.div key={country.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.4, delay: 0.03 * i }}>
                       <div
                         className="relative bg-card border border-border/30 rounded-xl p-6 cursor-pointer select-none overflow-hidden"
-                        onClick={() => setUpgradeModal({ open: true, type: "agent" })}
+                        onClick={() => setUpgradeModal({ open: true, season: "season_1" })}
                       >
                         <div className="absolute inset-0 backdrop-blur-[3px] bg-background/70 rounded-xl z-10 flex flex-col items-center justify-center gap-2">
                           <Eye className="h-5 w-5 opacity-20" />
