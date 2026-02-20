@@ -524,7 +524,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background" style={{ backgroundImage: "radial-gradient(hsl(40 80% 55% / 0.03) 1px, transparent 1px)", backgroundSize: "32px 32px" }}>
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-2">
               <Home className="h-4 w-4" />
@@ -540,7 +540,7 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {tabs.map((t) => (
