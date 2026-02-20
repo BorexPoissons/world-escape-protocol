@@ -240,16 +240,22 @@ const Admin = () => {
         let rawQuestions: ParsedQuestion[] = [];
         if (isMasterTemplate && json.gameplay?.questions?.length > 0) {
           // Master template format: gameplay.questions[]
-          rawQuestions = json.gameplay.questions.map((q: any, i: number) => ({
-            id: q.id ?? `${code}_Q${i + 1}`,
-            type: q.type ?? (i < json.gameplay.questions.length - 1 ? (i === 0 ? "A" : "B") : "C"),
-            question: q.prompt ?? q.question ?? "",
-            choices: (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.text ?? ""),
-            answer_index: q.answer?.value
-              ? (q.options ?? []).findIndex((o: any) => (typeof o === "string" ? o : o.id) === q.answer.value)
-              : 0,
-            narrative_unlock: q.narrative_unlock,
-          }));
+          rawQuestions = json.gameplay.questions.map((q: any, i: number) => {
+            const choices = (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.text ?? "");
+            let answerIndex = 0;
+            if (q.answer?.value) {
+              const idx = (q.options ?? []).findIndex((o: any) => (typeof o === "string" ? o : o.id) === q.answer.value);
+              if (idx >= 0) answerIndex = idx;
+            }
+            return {
+              id: q.id ?? `${code}_Q${i + 1}`,
+              type: q.type ?? (i < json.gameplay.questions.length - 1 ? (i === 0 ? "A" : "B") : "C"),
+              question: q.prompt ?? q.question ?? "",
+              choices,
+              answer_index: answerIndex,
+              narrative_unlock: q.narrative_unlock,
+            };
+          });
         } else {
           // Legacy format: question_bank[] or questions[]
           rawQuestions = (json.question_bank || json.questions || []);
