@@ -99,22 +99,24 @@ function isNewFormat(data: FreeCountryData): boolean {
   return !!(data.scene || data.puzzle || data.final_question || data.reward);
 }
 
-const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
-const NEXT_COUNTRY_HINTS: Record<string, string> = {
-  CH: "Le flux a besoin d'un rythme. Cherchez où ce rythme est fixé.",
-  US: "Celui qui construit les routes décide où passent les flux. Cap à l'Est.",
-  CN: "La nature peut peser plus lourd que l'or. Le prochain nœud est dans l'hémisphère sud.",
-  BR: "La masse devient puissance lorsqu'elle se connecte. Une civilisation de 1,4 milliard attend.",
-  IN: "Tous les nœuds sont maintenant actifs. Le signal initial est complet.",
-};
-
+// Derived from DB content (rewards.token.value) — used as fallback
 const COUNTRY_LETTERS: Record<string, string> = {
   CH: "O",
-  US: "N",
-  CN: "F",
-  BR: "J",
-  IN: "I",
+  FR: "M",
+  EG: "E",
+  US: "G",
+  JP: "A",
+};
+
+// Derived from DB content — used as fallback
+const NEXT_COUNTRY_HINTS: Record<string, string> = {
+  CH: "Les lumières cachent autant qu'elles révèlent. Direction la France.",
+  FR: "Les pharaons savaient avant tout le monde. Cap sur l'Égypte.",
+  EG: "Le rythme mondial se fixe dans une capitale. Direction Washington.",
+  US: "L'Orient garde ses secrets les mieux enfouis. Direction le Japon.",
+  JP: "Tous les nœuds sont maintenant actifs. Le signal initial est complet.",
 };
 
 // ── Free mission config ───────────────────────────────────────────────────────
@@ -200,7 +202,17 @@ const FreeMission = () => {
     if (!countryData) { navigate("/dashboard"); return; }
     setCountry(countryData);
 
-    const nextCode = getNextCode(countryData.code);
+    // Load next country from DB (countries_missions completion.next_country_code)
+    const { data: missionRow } = await supabase
+      .from("countries_missions")
+      .select("content")
+      .eq("code", countryData.code)
+      .single();
+
+    const dbContent = missionRow?.content as any;
+    const nextCode = dbContent?.completion?.next_country_code
+      ?? getNextCode(countryData.code);
+
     if (nextCode) {
       const { data: nextData } = await supabase
         .from("countries")
@@ -210,42 +222,91 @@ const FreeMission = () => {
       if (nextData) setNextCountry(nextData);
     }
 
-    try {
-      const res = await fetch(`/content/countries/${countryData.code}.json`);
-      if (!res.ok) throw new Error("no static file");
-      const json: FreeCountryData = await res.json();
-      setData(json);
+    // Try to build mission data from DB content first
+    let json: FreeCountryData | null = null;
 
-      if (isNewFormat(json)) {
-        const letter = json.reward?.letter_obtained
-          ?? COUNTRY_LETTERS[countryData.code]
-          ?? "?";
-        setEarnedLetter(letter);
-        if (json.scene?.choices) setSceneChoices([...json.scene.choices]);
-        if (json.final_question?.choices) setStrategicChoices(shuffle([...json.final_question.choices]));
-      } else {
-        const qbank = json.question_bank ?? [];
-        const typeA = shuffle(qbank.filter(q => q.type === "A"));
-        const typeB = shuffle(qbank.filter(q => q.type === "B"));
-        const typeC = shuffle(qbank.filter(q => q.type === "C"));
+    if (dbContent?.gameplay?.questions?.length > 0 && dbContent?.story?.intro) {
+      // Map DB JSONB → FreeCountryData (question_bank format)
+      const questions = dbContent.gameplay.questions as any[];
+      const qbank = questions.map((q: any, i: number) => ({
+        id: q.id ?? `${countryData.code}_Q${i + 1}`,
+        type: (i < questions.length - 1 ? (i === 0 ? "A" : "B") : "C") as "A" | "B" | "C",
+        question: q.prompt ?? q.question,
+        choices: (q.options ?? []).map((o: any) => o.text ?? o),
+        answer_index: q.answer?.value
+          ? (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.answer.value)
+          : 0,
+        narrative_unlock: q.narrative_unlock,
+      }));
 
-        const sq = typeA[0] ?? null;
-        const lq = typeB[0] ?? null;
-        const stq = typeC[0] ?? null;
-
-        setSceneQuestion(sq);
-        setLogicQuestion(lq);
-        setStrategicQuestion(stq);
-
-        if (sq) setSceneChoices(shuffle([...sq.choices]));
-        if (lq) setLogicChoices(shuffle([...lq.choices]));
-        if (stq) setStrategicChoices(shuffle([...stq.choices]));
-      }
-
-      setPhase("intro");
-    } catch {
-      navigate(`/mission-classic/${countryId}`);
+      json = {
+        country: { code: countryData.code, name_fr: dbContent.meta?.country ?? countryData.name },
+        mission: {
+          mission_id: `${countryData.code}-S0-FREE`,
+          mission_title: dbContent.story?.mission_title ?? `Mission : ${countryData.name}`,
+          phase: "SIGNAL_INITIAL",
+          is_free: true,
+          detective: "Jasper Valcourt",
+          intro: dbContent.story?.intro,
+        },
+        question_bank: qbank,
+        fragment_reward: {
+          id: dbContent.rewards?.puzzle_piece?.piece_id ?? `FRAG-${countryData.code}-001`,
+          name: `Fragment de ${countryData.name}`,
+          concept: dbContent.rewards?.puzzle_piece?.shape_family ?? "FRAGMENT",
+          unlocked_message: dbContent.story?.lore_reveal?.reveal_text ?? "Un nouveau nœud s'est activé.",
+        },
+      };
     }
+
+    // Fallback to static JSON if DB content insufficient
+    if (!json) {
+      try {
+        const res = await fetch(`/content/countries/${countryData.code}.json`);
+        if (!res.ok) throw new Error("no static file");
+        json = await res.json();
+      } catch {
+        navigate(`/mission-classic/${countryId}`);
+        return;
+      }
+    }
+
+    if (!json) return;
+    setData(json);
+
+    if (isNewFormat(json)) {
+      const letter = json.reward?.letter_obtained
+        ?? COUNTRY_LETTERS[countryData.code]
+        ?? "?";
+      setEarnedLetter(letter);
+      if (json.scene?.choices) setSceneChoices([...json.scene.choices]);
+      if (json.final_question?.choices) setStrategicChoices(shuffle([...json.final_question.choices]));
+    } else {
+      const qbank = json.question_bank ?? [];
+      const typeA = shuffle(qbank.filter(q => q.type === "A"));
+      const typeB = shuffle(qbank.filter(q => q.type === "B"));
+      const typeC = shuffle(qbank.filter(q => q.type === "C"));
+
+      const sq = typeA[0] ?? null;
+      const lq = typeB[0] ?? null;
+      const stq = typeC[0] ?? null;
+
+      setSceneQuestion(sq);
+      setLogicQuestion(lq);
+      setStrategicQuestion(stq);
+
+      if (sq) setSceneChoices(shuffle([...sq.choices]));
+      if (lq) setLogicChoices(shuffle([...lq.choices]));
+      if (stq) setStrategicChoices(shuffle([...stq.choices]));
+
+      // Set letter from DB token if available
+      const letter = (dbContent?.rewards?.token?.value as string)
+        ?? COUNTRY_LETTERS[countryData.code]
+        ?? "?";
+      setEarnedLetter(letter);
+    }
+
+    setPhase("intro");
   };
 
   function getNextCode(currentCode: string): string | null {

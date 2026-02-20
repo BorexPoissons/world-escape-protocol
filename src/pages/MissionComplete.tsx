@@ -14,7 +14,7 @@ import missionCompleteCN from "@/assets/mission-complete-cn.png";
 import { WEPPuzzlePiece } from "@/components/WEPPuzzlePiece";
 
 // ── Fixed SIGNAL_INITIAL sequence (free phase — deterministic) ────────────────
-const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
 function getNextSignalInitialCode(currentCode: string): string | null {
   const idx = SIGNAL_INITIAL_SEQUENCE.indexOf(currentCode);
@@ -59,18 +59,35 @@ const MissionComplete = () => {
       if (!countryData) return;
       setCountry(countryData);
 
-      try {
-        const res = await fetch(`/content/countries/${countryData.code}.json`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.fragment_reward) {
-            setFragmentName(json.fragment_reward.name ?? "");
-            setFragmentConcept(json.fragment_reward.concept ?? "");
-          }
-        }
-      } catch { /* no static file */ }
+      // Load fragment info from countries_missions (DB-first), then static JSON fallback
+      const { data: missionRow } = await supabase
+        .from("countries_missions")
+        .select("content")
+        .eq("code", countryData.code)
+        .single();
 
-      const nextCode = getNextSignalInitialCode(countryData.code);
+      const dbContent = missionRow?.content as any;
+
+      if (dbContent?.rewards?.puzzle_piece) {
+        setFragmentName(`Fragment de ${dbContent.meta?.country ?? countryData.name}`);
+        setFragmentConcept(dbContent.rewards?.puzzle_piece?.shape_family ?? "FRAGMENT");
+      } else {
+        try {
+          const res = await fetch(`/content/countries/${countryData.code}.json`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.fragment_reward) {
+              setFragmentName(json.fragment_reward.name ?? "");
+              setFragmentConcept(json.fragment_reward.concept ?? "");
+            }
+          }
+        } catch { /* no static file */ }
+      }
+
+      // Get next country from DB completion chain
+      const nextCode = dbContent?.completion?.next_country_code
+        ?? getNextSignalInitialCode(countryData.code);
+
       if (nextCode) {
         const { data: nextData } = await supabase
           .from("countries").select("*").eq("code", nextCode).single();
