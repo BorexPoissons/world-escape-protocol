@@ -822,8 +822,14 @@ const FreeMission = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -20 }}
-              className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-8"
+              className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-8 relative"
             >
+              {/* Fond stylisé */}
+              <div className="absolute inset-0 -m-6 rounded-lg overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-card bg-grid" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/5" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
+              </div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
