@@ -1,61 +1,51 @@
 
 
-# Blocage des noms de code reserves a l'inscription
+# Verification en temps reel de la disponibilite du nom de code
 
 ## Objectif
 
-Empecher tout nouveau joueur de s'inscrire avec un "Nom de code" (display_name) reserve ou sensible comme "admin", "administrateur", "wep", "jasper", "valcourt", etc. -- dans toutes les langues et variantes de casse.
+Ajouter un indicateur visuel (checkmark vert / croix rouge) a cote du champ "Nom de code" sur la page d'inscription, qui verifie en temps reel si le nom est deja pris dans la base de donnees.
 
-## Liste des mots bloques
+## Comportement
 
-Une liste exhaustive de termes interdits, verifies en minuscules et sans accents :
-
-- **Admin / Systeme** : admin, administrator, administrateur, administrador, amministratore, verwaltung, moderator, moderateur, root, superuser, system, sysadmin, support, helpdesk
-- **Marque / Jeu** : wep, worldexplorerprotocol, world explorer protocol, jasper, valcourt, jasper valcourt, protocole
-- **Roles** : owner, creator, fondateur, founder, staff, team, official, officiel
-
-## Implementation
-
-### 1. Validation cote client (`src/pages/Auth.tsx`)
-
-Avant d'appeler `signUp`, verifier le `displayName` contre la liste noire :
-
-- Normaliser le nom : minuscule, retirer accents, retirer espaces multiples
-- Verifier si le nom normalise correspond exactement ou contient un mot interdit
-- Si match : afficher un toast d'erreur "Ce nom de code est reserve. Choisissez un autre identifiant." et bloquer la soumission
-
-### 2. Validation cote serveur (trigger SQL)
-
-Ajouter un trigger `BEFORE INSERT` sur la table `profiles` qui verifie le `display_name` et rejette l'insertion si le nom est interdit. Cela protege contre toute manipulation directe de l'API.
-
-### 3. Fonction utilitaire
-
-Creer une fonction `isDisplayNameForbidden(name: string): boolean` dans un fichier utilitaire pour centraliser la logique de validation.
+- Le joueur tape son nom de code
+- Apres un debounce de 500ms (pour eviter trop de requetes), une verification est lancee contre la table `profiles` dans la base
+- 3 etats possibles :
+  - **Vide / trop court** (moins de 2 caracteres) : pas d'icone affichee
+  - **Nom interdit** (liste noire existante) : croix rouge + texte "Nom reserve"
+  - **Nom deja pris** (existe dans `profiles.display_name`) : croix rouge + texte "Deja pris"
+  - **Nom disponible** : checkmark vert + texte "Disponible"
+- Un petit spinner s'affiche pendant la verification
 
 ## Details techniques
 
-### Fichiers modifies
+### Fichier modifie : `src/pages/Auth.tsx`
 
-- `src/pages/Auth.tsx` -- ajout de la validation avant `signUp`
-- `src/lib/forbiddenNames.ts` -- nouveau fichier avec la liste noire et la fonction de validation
+- Ajouter des states : `nameStatus` (`idle` | `checking` | `available` | `taken` | `forbidden`), `nameCheckTimeout`
+- Sur chaque changement de `displayName` :
+  1. Verifier d'abord cote client si le nom est dans la liste interdite (`isDisplayNameForbidden`)
+  2. Si OK, lancer un debounce de 500ms puis faire un `select` sur `profiles` via une requete RPC ou directe
+- Requete Supabase : appel a une nouvelle fonction RPC `check_display_name_available(p_name text)` qui retourne `true/false`
+  - Cette fonction compare le `display_name` normalise dans la table `profiles` sans exposer la liste des noms existants
+- Afficher l'icone correspondante a droite du champ Input (CheckCircle vert, XCircle rouge, ou Loader spinner)
 
 ### Migration SQL
 
-- Creer une fonction SQL `check_display_name_allowed()` en `SECURITY DEFINER`
-- Creer un trigger `BEFORE INSERT OR UPDATE` sur `profiles` qui appelle cette fonction
-- Le trigger rejette avec une erreur si le `display_name` normalise contient un mot interdit
-
-### Normalisation
-
-La verification normalise le texte ainsi :
-1. Conversion en minuscules
-2. Suppression des accents (e -> e, a -> a)
-3. Suppression des caracteres speciaux (tirets, underscores, points)
-4. Comparaison exacte ET par inclusion (substring)
+Creer une fonction RPC `check_display_name_available(p_name text)` :
+- Normalise le nom (lowercase, unaccent, trim)
+- Verifie s'il existe un profil avec ce `display_name` normalise
+- Retourne `true` si disponible, `false` si pris
+- `SECURITY DEFINER` pour permettre l'acces sans authentification (le joueur n'est pas encore connecte)
 
 ### UX
 
-- Message d'erreur clair et immersif : "Ce nom de code est deja attribue a un agent actif. Choisissez un autre identifiant."
-- Pas de revelation de la liste exacte des mots interdits (securite par opacite)
-- Validation en temps reel possible (bordure rouge sur le champ si mot interdit detecte)
+- Icone a droite du champ "Nom de code" (dans le meme `relative` container)
+- Couleurs : vert (`text-green-500`) pour disponible, rouge (`text-red-500`) pour pris/reserve
+- Petit texte sous le champ indiquant le statut
+- Spinner discret (`Loader2` avec animation `animate-spin`) pendant la verification
+
+### Fichiers concernes
+
+- `src/pages/Auth.tsx` -- logique debounce + affichage icone/statut
+- Migration SQL -- nouvelle fonction RPC `check_display_name_available`
 
