@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail, User, Home, Radio } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, Home, Radio, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { JasperAuthModal, useJasperAuthModalAutoOpen } from "@/components/JasperAuthModal";
 import { isDisplayNameForbidden } from "@/lib/forbiddenNames";
+import { supabase } from "@/integrations/supabase/client";
+
+type NameStatus = "idle" | "checking" | "available" | "taken" | "forbidden";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,10 +19,45 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [nameStatus, setNameStatus] = useState<NameStatus>("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { open: jasperOpen, close: jasperClose, setOpen: setJasperOpen } = useJasperAuthModalAutoOpen();
+
+  const checkNameAvailability = useCallback(async (name: string) => {
+    setNameStatus("checking");
+    try {
+      const { data, error } = await supabase.rpc("check_display_name_available", { p_name: name });
+      if (error) {
+        setNameStatus("idle");
+        return;
+      }
+      setNameStatus(data ? "available" : "taken");
+    } catch {
+      setNameStatus("idle");
+    }
+  }, []);
+
+  const handleDisplayNameChange = (value: string) => {
+    setDisplayName(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 2) {
+      setNameStatus("idle");
+      return;
+    }
+    if (isDisplayNameForbidden(value)) {
+      setNameStatus("forbidden");
+      return;
+    }
+    debounceRef.current = setTimeout(() => checkNameAvailability(value), 500);
+  };
+
+  useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,16 +120,32 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Nom de code"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                  required
-                />
+              <div>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Nom de code"
+                    value={displayName}
+                    onChange={(e) => handleDisplayNameChange(e.target.value)}
+                    className="pl-10 pr-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                    required
+                  />
+                  <div className="absolute right-3 top-3">
+                    {nameStatus === "checking" && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
+                    {nameStatus === "available" && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    {(nameStatus === "taken" || nameStatus === "forbidden") && <XCircle className="h-4 w-4 text-red-500" />}
+                  </div>
+                </div>
+                {nameStatus === "available" && (
+                  <p className="text-xs text-green-500 mt-1 ml-1">Disponible</p>
+                )}
+                {nameStatus === "taken" && (
+                  <p className="text-xs text-red-500 mt-1 ml-1">Déjà pris</p>
+                )}
+                {nameStatus === "forbidden" && (
+                  <p className="text-xs text-red-500 mt-1 ml-1">Nom réservé</p>
+                )}
               </div>
             )}
 
