@@ -7,57 +7,61 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, ChevronRight, Lock } from "lucide-react";
 
-// ── Calcul steps to derive SWISS ──────────────────────────────────────────────
+// ── Calcul steps to derive OPEN (4 letters) ──────────────────────────────────
 const CALCUL_STEPS = [
   {
-    letter: "S",
-    code: 19,
-    expression: "(4 + 5) × 2 + 1",
-    result: "= 19",
-    explanation: "19 → S",
+    letter: "O",
+    code: 15,
+    expression: "(3 × 5)",
+    result: "= 15",
+    explanation: "15 → O",
   },
   {
-    letter: "W",
-    code: 23,
-    expression: "(6 × 3) + 5",
-    result: "= 23",
-    explanation: "23 → W",
+    letter: "P",
+    code: 16,
+    expression: "(4 × 4)",
+    result: "= 16",
+    explanation: "16 → P",
   },
   {
-    letter: "I",
-    code: 9,
-    expression: "(12 ÷ 3) + 5",
-    result: "= 9",
-    explanation: "9 → I",
+    letter: "E",
+    code: 5,
+    expression: "(10 ÷ 2)",
+    result: "= 5",
+    explanation: "5 → E",
   },
   {
-    letter: "S",
-    code: 19,
-    expression: "(7 + 2) × 2 + 1",
-    result: "= 19",
-    explanation: "19 → S",
-  },
-  {
-    letter: "S",
-    code: 19,
-    expression: "(10 − 1) × 2 + 1",
-    result: "= 19",
-    explanation: "19 → S",
+    letter: "N",
+    code: 14,
+    expression: "(7 × 2)",
+    result: "= 14",
+    explanation: "14 → N",
   },
 ];
 
-// Five free countries and their approximate positions for the convergence animation
-// positions are percentage-based (left, top) within the container
+const ANSWER_WORD = "OPEN";
+const ANSWER_LENGTH = ANSWER_WORD.length;
+
+// Five free-set countries in canonical order with map positions
 const COUNTRY_NODES = [
   { code: "CH", label: "SUISSE",      x: 52,  y: 28 },
+  { code: "FR", label: "FRANCE",      x: 48,  y: 32 },
+  { code: "EG", label: "ÉGYPTE",      x: 56,  y: 48 },
   { code: "US", label: "ÉTATS-UNIS",  x: 20,  y: 35 },
-  { code: "CN", label: "CHINE",       x: 74,  y: 32 },
-  { code: "BR", label: "BRÉSIL",      x: 30,  y: 68 },
-  { code: "IN", label: "INDE",        x: 65,  y: 52 },
+  { code: "JP", label: "JAPON",       x: 82,  y: 34 },
 ];
 
 // CH center (convergence target)
 const CENTER_NODE = COUNTRY_NODES[0]; // CH
+
+// Levier labels derived from the Free Set countries
+const LEVIER_LABELS = [
+  "CH — Précision",
+  "FR — Diplomatie",
+  "EG — Héritage",
+  "US — Innovation",
+  "JP — Harmonie",
+];
 
 type Phase =
   | "intro"
@@ -73,18 +77,32 @@ const CentralDilemma: React.FC = () => {
   const [phase, setPhase] = useState<Phase>("intro");
   const [inputValue, setInputValue] = useState("");
   const [attempts, setAttempts] = useState(0);
-  const [calculStep, setCalculStep] = useState(0); // 0 = not started, 1-5 = reveal steps
+  const [calculStep, setCalculStep] = useState(0);
   const [showError, setShowError] = useState(false);
   const [revealedLetters, setRevealedLetters] = useState<string[]>([]);
-  const [animationStage, setAnimationStage] = useState(0); // 0-5 for post-validation animation
+  const [animationStage, setAnimationStage] = useState(0);
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dbAnswerWord, setDbAnswerWord] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load persisted state
+  // Load persisted state + fetch answer from DB
   useEffect(() => {
     const load = async () => {
       if (!user) { setLoading(false); return; }
+
+      // Fetch set_revealed_word from DB (source of truth)
+      const { data: missionData } = await supabase
+        .from("countries_missions")
+        .select("content")
+        .eq("is_free", true)
+        .limit(1);
+      if (missionData && missionData.length > 0) {
+        const content = missionData[0].content as any;
+        const revealedWord = content?.completion?.set_completion?.set_revealed_word;
+        if (revealedWord) setDbAnswerWord(revealedWord.toUpperCase());
+      }
+
       const { data } = await supabase
         .from("user_story_state")
         .select("*")
@@ -100,9 +118,9 @@ const CentralDilemma: React.FC = () => {
         const step = d.central_calcul_step ?? 0;
         setCalculStep(step);
         if (step > 0) {
-          setRevealedLetters(CALCUL_STEPS.slice(0, step).map(s => s.letter));
-          if (step === 5) {
-            setInputValue("SWISS");
+          setRevealedLetters(CALCUL_STEPS.slice(0, Math.min(step, CALCUL_STEPS.length)).map(s => s.letter));
+          if (step >= CALCUL_STEPS.length) {
+            setInputValue(ANSWER_WORD);
           }
         }
       }
@@ -131,11 +149,13 @@ const CentralDilemma: React.FC = () => {
     }
   };
 
-  // Unlock the dilemma (called when entering the page)
+  // Unlock the dilemma
   useEffect(() => {
     if (!user || loading) return;
     persistState({ central_dilemma_unlocked: true });
   }, [user, loading]);
+
+  const correctAnswer = dbAnswerWord || ANSWER_WORD;
 
   const handleValidate = async () => {
     const clean = inputValue.trim().toUpperCase();
@@ -143,12 +163,10 @@ const CentralDilemma: React.FC = () => {
     setAttempts(newAttempts);
     await persistState({ central_word_attempts: newAttempts });
 
-    if (clean === "SWISS") {
-      // Success — start animation
+    if (clean === correctAnswer) {
       await persistState({ central_word_validated: true, central_word_attempts: newAttempts });
       setValidated(true);
       setPhase("animation");
-      // Drive animation stages
       let stage = 0;
       const interval = setInterval(() => {
         stage++;
@@ -165,15 +183,14 @@ const CentralDilemma: React.FC = () => {
   };
 
   const handleCalculStep = async () => {
-    if (calculStep >= 5) return;
+    if (calculStep >= CALCUL_STEPS.length) return;
     const next = calculStep + 1;
     setCalculStep(next);
     setRevealedLetters(prev => [...prev, CALCUL_STEPS[next - 1].letter]);
     await persistState({ central_calcul_step: next });
-    if (next === 5) {
-      // Auto-fill input
+    if (next === CALCUL_STEPS.length) {
       setTimeout(() => {
-        setInputValue("SWISS");
+        setInputValue(ANSWER_WORD);
         setPhase("input");
         inputRef.current?.focus();
       }, 800);
@@ -198,7 +215,7 @@ const CentralDilemma: React.FC = () => {
             <span className="font-display text-sm text-primary tracking-widest">W.E.P. — DILEMME CENTRAL</span>
           </div>
           <span className="text-xs text-muted-foreground font-display tracking-wider">
-            GLOBAL_REVEAL_S1_STEP1
+            FREE-SET-001
           </span>
         </div>
       </header>
@@ -240,7 +257,7 @@ const CentralDilemma: React.FC = () => {
                     Tu as identifié cinq leviers.
                   </p>
                   <div className="grid grid-cols-1 gap-2">
-                    {["CH — Flux", "US — Rythme", "CN — Réseau", "BR — Ressource", "IN — Masse"].map((item, i) => (
+                    {LEVIER_LABELS.map((item, i) => (
                       <motion.div
                         key={item}
                         initial={{ opacity: 0, x: -10 }}
@@ -255,11 +272,11 @@ const CentralDilemma: React.FC = () => {
                   </div>
                   <div className="border-t border-border pt-4 mt-4">
                     <p className="text-foreground leading-relaxed">
-                      Mais tout système a une origine.
+                      Mais tout système a une clé.
                     </p>
                     <p className="text-foreground leading-relaxed mt-2">
                       Si tu as compris la structure…<br />
-                      <span className="text-primary font-display tracking-wider">Trouve le nom du point central.</span>
+                      <span className="text-primary font-display tracking-wider">Trouve le mot qui ouvre la suite.</span>
                     </p>
                   </div>
                 </div>
@@ -287,9 +304,9 @@ const CentralDilemma: React.FC = () => {
                 <div className="text-center">
                   <p className="text-xs font-display tracking-[0.4em] text-primary/60 mb-2">DILEMME CENTRAL</p>
                   <h2 className="text-2xl font-display font-bold text-primary tracking-wider">
-                    Identifiez le point d'origine
+                    Trouvez le mot-clé
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-2">5 lettres · Insensible à la casse</p>
+                  <p className="text-sm text-muted-foreground mt-2">{ANSWER_LENGTH} lettres · Insensible à la casse</p>
                 </div>
 
                 {/* Revealed letters from calcul mode */}
@@ -311,8 +328,7 @@ const CentralDilemma: React.FC = () => {
                         {letter}
                       </motion.div>
                     ))}
-                    {/* Empty slots */}
-                    {Array.from({ length: 5 - revealedLetters.length }).map((_, i) => (
+                    {Array.from({ length: ANSWER_LENGTH - revealedLetters.length }).map((_, i) => (
                       <div
                         key={`empty-${i}`}
                         className="w-12 h-12 bg-muted/30 border border-border rounded-lg flex items-center justify-center text-muted-foreground/30 font-display text-xl"
@@ -328,10 +344,10 @@ const CentralDilemma: React.FC = () => {
                   <Input
                     ref={inputRef}
                     value={inputValue}
-                    onChange={e => setInputValue(e.target.value.toUpperCase().slice(0, 5))}
+                    onChange={e => setInputValue(e.target.value.toUpperCase().slice(0, ANSWER_LENGTH))}
                     onKeyDown={e => e.key === "Enter" && handleValidate()}
-                    placeholder="_ _ _ _ _"
-                    maxLength={5}
+                    placeholder={"_ ".repeat(ANSWER_LENGTH).trim()}
+                    maxLength={ANSWER_LENGTH}
                     className="text-center text-2xl font-display tracking-[0.5em] h-16 bg-card border-border focus-visible:ring-primary/50 text-primary"
                     style={{ letterSpacing: "0.5em" }}
                     autoFocus
@@ -352,7 +368,7 @@ const CentralDilemma: React.FC = () => {
 
                   <Button
                     onClick={handleValidate}
-                    disabled={inputValue.length !== 5}
+                    disabled={inputValue.length !== ANSWER_LENGTH}
                     className="w-full font-display tracking-wider py-6 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
                   >
                     VALIDER
@@ -392,10 +408,10 @@ const CentralDilemma: React.FC = () => {
                 <div className="text-center">
                   <p className="text-xs font-display tracking-[0.4em] text-primary/60 mb-2">MODE CALCUL</p>
                   <h2 className="text-2xl font-display font-bold text-primary tracking-wider">
-                    Déchiffrez les 5 lettres
+                    Déchiffrez les {ANSWER_LENGTH} lettres
                   </h2>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Chaque résultat correspond à une lettre par sa position dans l'alphabet étendu
+                    Chaque résultat correspond à une lettre par sa position dans l'alphabet
                   </p>
                 </div>
 
@@ -482,9 +498,9 @@ const CentralDilemma: React.FC = () => {
                   >
                     ← SAISIE DIRECTE
                   </Button>
-                  {calculStep === 5 && (
+                  {calculStep === CALCUL_STEPS.length && (
                     <Button
-                      onClick={() => { setInputValue("SWISS"); setPhase("input"); }}
+                      onClick={() => { setInputValue(ANSWER_WORD); setPhase("input"); }}
                       className="flex-1 font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       VALIDER LE MOT →
@@ -510,7 +526,7 @@ const CentralDilemma: React.FC = () => {
                 >
                   <p className="text-primary font-display tracking-[0.4em] text-sm mb-4">MOT VALIDÉ</p>
                   <div className="flex justify-center gap-3 mb-6">
-                    {"SWISS".split("").map((letter, i) => (
+                    {ANSWER_WORD.split("").map((letter, i) => (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, y: -20, scale: 0.5 }}
@@ -632,7 +648,7 @@ const CentralDilemma: React.FC = () => {
                       animate={{ opacity: 1 }}
                       className="text-sm text-muted-foreground font-display tracking-wider"
                     >
-                      Les 5 pays s'illuminent…
+                      Les 5 pays du Signal Initial s'illuminent…
                     </motion.p>
                   )}
                   {animationStage >= 2 && (
@@ -650,7 +666,7 @@ const CentralDilemma: React.FC = () => {
                       animate={{ opacity: 1 }}
                       className="text-sm text-primary font-display tracking-wider text-glow"
                     >
-                      Centre géométrique activé.
+                      Mot-clé révélé : OPEN — La porte est ouverte.
                     </motion.p>
                   )}
                 </AnimatePresence>
@@ -679,10 +695,10 @@ const CentralDilemma: React.FC = () => {
                 <div>
                   <p className="text-xs font-display tracking-[0.4em] text-primary/60 mb-3">DILEMME RÉSOLU</p>
                   <h1 className="text-3xl font-display font-bold text-primary text-glow tracking-wider mb-4">
-                    Tu as compris avant le calcul.
+                    OPEN — La porte est ouverte.
                   </h1>
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    Le système commence là où il semble neutre.
+                    Le mot-clé du Signal Initial a été révélé.
                   </p>
                 </div>
 
@@ -693,10 +709,10 @@ const CentralDilemma: React.FC = () => {
                 >
                   <div className="scanline absolute inset-0 pointer-events-none opacity-10 rounded-xl" />
                   <p className="text-foreground leading-relaxed">
-                    Le système ne commence pas dans la puissance.
+                    Cinq pays. Cinq lettres cachées. Un mot.
                   </p>
                   <p className="text-foreground leading-relaxed">
-                    Il commence dans la <span className="text-primary font-display tracking-wider">neutralité</span>.
+                    Le système s'<span className="text-primary font-display tracking-wider">ouvre</span> à toi.
                   </p>
                   <div className="border-t border-border/50 pt-4">
                     <div className="flex items-center justify-center gap-3">
