@@ -404,7 +404,7 @@ const Puzzle = () => {
     });
 
   // Next country = respects SIGNAL INITIAL sequence (CH→US→CN→BR→EG), then other playable
-  const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "EG"];
+  const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
   // Find the first country in sequence that has no fragment yet
   const nextSequenceCode = SIGNAL_INITIAL_SEQUENCE.find(code => {
@@ -670,7 +670,7 @@ const Puzzle = () => {
                 <p className="text-xs text-muted-foreground font-display mb-4 tracking-wider">
                   OPÉRATION {continueCountry.country.operation_name || continueCountry.country.operation_number}
                 </p>
-                <Link to={`/mission/${continueCountry.country.id}`}>
+                <Link to={continueCountry.country.season_number === 0 ? `/free-mission/${continueCountry.country.code}` : `/mission/${continueCountry.country.id}`}>
                   <Button className="font-display tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-6">
                     CONTINUER L'AVENTURE
                     <ChevronRight className="h-4 w-4" />
