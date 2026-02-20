@@ -365,69 +365,75 @@ const Dashboard = () => {
 
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-1">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
               <Home className="h-4 w-4" />
-              <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
             </Link>
-            <span className="text-border">|</span>
-            <Shield className="h-6 w-6 text-primary ml-1" />
-            <h1 className="font-display text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
+            <span className="text-border hidden sm:inline">|</span>
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+            <h1 className="font-display text-sm sm:text-lg font-bold text-primary tracking-wider">W.E.P.</h1>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Leaderboard button — always visible */}
+          <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
             <Link to="/leaderboard">
-              <Button variant="outline" size="sm" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+              <Button variant="outline" size="icon" className="sm:hidden border-primary/30 text-primary hover:bg-primary/10 h-8 w-8">
                 <Trophy className="h-4 w-4" />
-                <span className="hidden sm:inline">CLASSEMENT</span>
+              </Button>
+              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                <Trophy className="h-4 w-4" />
+                <span>CLASSEMENT</span>
               </Button>
             </Link>
             <Link to="/seasons">
-              <Button variant="outline" size="sm" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+              <Button variant="outline" size="icon" className="sm:hidden border-primary/30 text-primary hover:bg-primary/10 h-8 w-8">
                 <Star className="h-4 w-4" />
-                <span className="hidden sm:inline">SAISONS</span>
+              </Button>
+              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                <Star className="h-4 w-4" />
+                <span>SAISONS</span>
               </Button>
             </Link>
             {isAdmin && (
               <Link to="/admin">
-                <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
+                <Button variant="outline" size="icon" className="sm:hidden border-primary/50 text-primary hover:bg-primary/10 h-8 w-8">
                   <Shield className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin</span>
+                </Button>
+                <Button variant="outline" size="sm" className="hidden sm:flex gap-2 border-primary/50 text-primary hover:bg-primary/10">
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
                 </Button>
               </Link>
             )}
-            {(
-              <div className="text-right">
-                <p className="text-sm text-foreground font-display hidden sm:block">Agent {profile?.display_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="sm:hidden">Niv.{profile?.level} · {profile?.xp}XP · {tierLabel}</span>
-                  <span className="hidden sm:inline">Niveau {profile?.level} · {profile?.xp} XP
-                    <span className="ml-2 text-primary font-display">· {tierLabel}</span>
-                  </span>
-                </p>
-              </div>
-            )}
-            {/* Replay intro — always visible */}
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-foreground font-display">Agent {profile?.display_name}</p>
+              <p className="text-xs text-muted-foreground">
+                Niveau {profile?.level} · {profile?.xp} XP
+                <span className="ml-2 text-primary font-display">· {tierLabel}</span>
+              </p>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleReplayIntro}
               title="Revoir l'introduction"
-              className="text-muted-foreground hover:text-primary transition-colors"
+              className="text-muted-foreground hover:text-primary transition-colors h-8 w-8"
             >
-              <PlayCircle className="h-5 w-5" />
+              <PlayCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-
-            <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
-              <LogOut className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground h-8 w-8">
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
+        </div>
+        {/* Mobile agent info bar */}
+        <div className="sm:hidden border-t border-border/50 px-3 py-1.5 flex items-center justify-between text-[10px] font-display text-muted-foreground">
+          <span>Agent {profile?.display_name}</span>
+          <span>Niv.{profile?.level} · {profile?.xp}XP · <span className="text-primary">{tierLabel}</span></span>
         </div>
       </header>
 
 
-      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
 
         {/* ═══════════════════════════════════════════════════════════
             CINEMATIC GLOBAL PROGRESSION
@@ -445,8 +451,8 @@ const Dashboard = () => {
         >
           <div className="px-6 pt-6 pb-4">
             {/* Title + Agent info row */}
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4 mb-5">
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <motion.div
                     className="w-2 h-2 rounded-full"
@@ -462,7 +468,7 @@ const Dashboard = () => {
                   key={progressTitle.title}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-2xl md:text-3xl font-display font-bold tracking-widest"
+                  className="text-xl sm:text-2xl md:text-3xl font-display font-bold tracking-widest"
                   style={{ color: progressTitle.color }}
                 >
                   {progressTitle.title}
@@ -473,26 +479,22 @@ const Dashboard = () => {
               </div>
 
               {/* Compact stats row */}
-              <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                {(
-                  <>
-                    <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground font-display tracking-wider">NIVEAU</p>
-                      <p className="text-sm sm:text-lg font-display font-bold text-foreground">{playerLevel}</p>
-                    </div>
-                    <div className="h-6 sm:h-8 w-px bg-border" />
-                    <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground font-display tracking-wider">SÉRIE</p>
-                      <p className="text-sm sm:text-lg font-display font-bold text-foreground flex items-center gap-1">
-                        {streak}<span className="text-sm">🔥</span>
-                      </p>
-                    </div>
-                    <div className="h-6 sm:h-8 w-px bg-border" />
-                  </>
-                )}
+              <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground font-display tracking-wider">NIVEAU</p>
+                  <p className="text-sm sm:text-lg font-display font-bold text-foreground">{playerLevel}</p>
+                </div>
+                <div className="h-6 sm:h-8 w-px bg-border" />
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground font-display tracking-wider">SÉRIE</p>
+                  <p className="text-sm sm:text-lg font-display font-bold text-foreground flex items-center gap-1">
+                    {streak}<span className="text-sm">🔥</span>
+                  </p>
+                </div>
+                <div className="h-6 sm:h-8 w-px bg-border" />
                 <Link to="/puzzle">
-                  <Button size="sm" variant="outline" className="font-display tracking-wider text-xs border-primary/40 text-primary hover:bg-primary/10 gap-2">
-                    <Globe className="h-3.5 w-3.5" />
+                  <Button size="sm" variant="outline" className="font-display tracking-wider text-[10px] sm:text-xs border-primary/40 text-primary hover:bg-primary/10 gap-1 sm:gap-2 h-8">
+                    <Globe className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     CARTE
                   </Button>
                 </Link>
@@ -599,28 +601,24 @@ const Dashboard = () => {
 
           {/* Bottom stat strip */}
           <div
-            className="px-6 py-3 flex items-center justify-between gap-4 border-t"
+            className="px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 border-t"
             style={{ borderColor: "hsl(40 80% 55% / 0.12)", background: "hsl(220 25% 4% / 0.4)" }}
           >
-            <div className="flex items-center gap-6 text-[11px] font-display tracking-wider">
+            <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-[11px] font-display tracking-wider flex-wrap">
               <span style={{ color: "hsl(40 80% 60%)" }}>🌍 {globalCompletedCount} pays validés</span>
-              <span className="text-muted-foreground hidden sm:inline">·</span>
               <span className="text-muted-foreground hidden sm:inline">
-                {TOTAL_COUNTRIES - globalCompletedCount} restants
+                · {TOTAL_COUNTRIES - globalCompletedCount} restants
               </span>
               {profile && (
-                <>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground">{profile.xp} XP total</span>
-                </>
+                <span className="text-muted-foreground hidden sm:inline">· {profile.xp} XP total</span>
               )}
             </div>
-            <Link to="/puzzle" className="text-[10px] font-display tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              VOIR LA CARTE
-            </Link>
-            {/* Leaderboard visibility toggle */}
-            {(
+            <div className="flex items-center gap-3">
+              <Link to="/puzzle" className="text-[10px] font-display tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                <span className="hidden sm:inline">VOIR LA CARTE</span>
+                <span className="sm:hidden">CARTE</span>
+              </Link>
               <button
                 onClick={handleLeaderboardToggle}
                 disabled={leaderboardTogglingLoading}
@@ -631,7 +629,7 @@ const Dashboard = () => {
                 <Users className="h-3 w-3" />
                 <span className="hidden sm:inline">{leaderboardVisible ? "CLASSEMENT VISIBLE" : "CLASSEMENT MASQUÉ"}</span>
               </button>
-            )}
+            </div>
           </div>
         </motion.div>
 
@@ -891,7 +889,7 @@ const Dashboard = () => {
                     : "hsl(var(--card))",
                 }}
               >
-                <div className="px-6 py-5 flex items-start justify-between gap-4">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                   <div className="flex items-start gap-4 flex-1 min-w-0">
                     {/* Operation icon */}
                     <div
@@ -936,7 +934,7 @@ const Dashboard = () => {
                     {!isUnlocked && meta.price && meta.upgradeType ? (
                       <button
                         onClick={() => setUpgradeModal({ open: true, season: meta.upgradeType || "season_1" })}
-                        className="flex items-center gap-2 text-xs font-display tracking-wider px-4 py-2.5 rounded-lg border transition-all hover:scale-105 active:scale-95"
+                        className="flex items-center gap-2 text-[10px] sm:text-xs font-display tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border transition-all hover:scale-105 active:scale-95"
                         style={{
                           borderColor: meta.accentColor.replace(")", " / 0.5)"),
                           color: meta.accentColor,

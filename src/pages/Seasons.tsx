@@ -177,19 +177,19 @@ const Seasons = () => {
     <div className="min-h-screen bg-background bg-grid">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
-              <span className="text-xs font-display tracking-wider">DASHBOARD</span>
+              <span className="text-xs font-display tracking-wider hidden sm:inline">DASHBOARD</span>
             </Link>
             <span className="text-border">|</span>
-            <Shield className="h-5 w-5 text-primary" />
-            <h1 className="font-display text-sm font-bold text-primary tracking-wider">
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+            <h1 className="font-display text-xs sm:text-sm font-bold text-primary tracking-wider truncate">
               PROTOCOLE D'ACCÈS
             </h1>
           </div>
-          <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
             <Home className="h-4 w-4" />
             <span className="text-xs font-display tracking-wider hidden sm:inline">ACCUEIL</span>
           </Link>
