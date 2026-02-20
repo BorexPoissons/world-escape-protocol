@@ -270,7 +270,7 @@ const Puzzle = () => {
     // Check milestone signal
     if (newPlaced.length % SIGNAL_EVERY === 0 && newPlaced.length > 0) {
       setMilestoneSignal(true);
-      setTimeout(() => setMilestoneSignal(false), 2500);
+      // Fermeture manuelle uniquement (bouton X)
     }
 
     // Snap glow
@@ -927,7 +927,7 @@ const Puzzle = () => {
 
       {/* DEBUG: bouton temporaire pour tester le toast Signal Jasper */}
       <button
-        onClick={() => { setMilestoneSignal(true); setTimeout(() => setMilestoneSignal(false), 2500); }}
+        onClick={() => setMilestoneSignal(true)}
         className="fixed bottom-4 right-4 z-[200] px-3 py-1.5 text-xs font-mono bg-primary/20 text-primary border border-primary/30 rounded opacity-50 hover:opacity-100 transition-opacity"
       >
         DEBUG: Signal
