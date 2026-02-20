@@ -47,6 +47,19 @@ const MissionComplete = () => {
   const [fragmentName, setFragmentName] = useState<string>("");
   const [fragmentConcept, setFragmentConcept] = useState<string>("");
   const [storyState, setStoryState] = useState({ trust_level: 50, suspicion_level: 0 });
+  // Completion messaging from DB (master template)
+  const [completionData, setCompletionData] = useState<{
+    success_title?: string;
+    success_subtitle?: string;
+    jasper_quote?: string;
+    next_hook?: string;
+  }>({});
+  // Set completion state
+  const [setComplete, setSetComplete] = useState<{
+    triggered: boolean;
+    on_reveal_message?: string;
+    set_revealed_word?: string;
+  }>({ triggered: false });
   const [puzzleProgress, setPuzzleProgress] = useState({ unlocked: 0, total: 195 });
   const [newBadges, setNewBadges] = useState<BadgeKey[]>([]);
 
@@ -82,6 +95,39 @@ const MissionComplete = () => {
             }
           }
         } catch { /* no static file */ }
+      }
+
+      // Read completion messaging from DB (master template)
+      if (dbContent?.completion) {
+        setCompletionData({
+          success_title: dbContent.completion.success_title,
+          success_subtitle: dbContent.completion.success_subtitle,
+          jasper_quote: dbContent.completion.jasper_quote,
+          next_hook: dbContent.completion.next_hook,
+        });
+      }
+
+      // Check set completion (Rule B: tokens hidden until set complete)
+      if (dbContent?.completion?.set_completion && user) {
+        const sc = dbContent.completion.set_completion;
+        const { data: allTokens } = await (supabase as any)
+          .from("user_tokens")
+          .select("country_code")
+          .eq("user_id", user.id);
+        const tokenCount = (allTokens as any[])?.length ?? 0;
+        const expectedCount = sc.set_expected_letters_count ?? 5;
+        if (tokenCount >= expectedCount && sc.reveal_tokens_when_complete) {
+          setSetComplete({
+            triggered: true,
+            on_reveal_message: sc.on_reveal_message,
+            set_revealed_word: sc.set_revealed_word,
+          });
+          // Mark all tokens as revealed in DB
+          await (supabase as any)
+            .from("user_tokens")
+            .update({ revealed: true })
+            .eq("user_id", user.id);
+        }
       }
 
       // Get next country from DB completion chain
@@ -175,13 +221,17 @@ const MissionComplete = () => {
                 </motion.div>
 
                 <div>
-                  <h1 className="text-3xl font-display font-bold text-primary text-glow tracking-wider mb-2">
-                    {isPerfect ? "MISSION PARFAITE !" : "PIÈCE DÉBLOQUÉE"}
+                <h1 className="text-3xl font-display font-bold text-primary text-glow tracking-wider mb-2">
+                    {completionData.success_title
+                      ? completionData.success_title
+                      : isPerfect ? "MISSION PARFAITE !" : "PIÈCE DÉBLOQUÉE"}
                   </h1>
                   <p className="text-muted-foreground">
-                    {isPerfect
-                      ? "Toutes les énigmes résolues sans erreur. Performance exemplaire."
-                      : "Une nouvelle pièce du puzzle mondial a été ajoutée à votre collection."
+                    {completionData.success_subtitle
+                      ? completionData.success_subtitle
+                      : isPerfect
+                        ? "Toutes les énigmes résolues sans erreur. Performance exemplaire."
+                        : "Une nouvelle pièce du puzzle mondial a été ajoutée à votre collection."
                     }
                   </p>
                 </div>
@@ -268,6 +318,39 @@ const MissionComplete = () => {
                   </div>
                 )}
 
+                {/* Set completion reveal (Rule B) */}
+                {setComplete.triggered && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    className="bg-card border border-primary/50 rounded-xl p-6 text-center border-glow space-y-3"
+                    style={{ boxShadow: "0 0 50px hsl(var(--primary) / 0.25)" }}
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="text-4xl"
+                    >
+                      ◈
+                    </motion.div>
+                    <p className="text-primary font-display tracking-wider text-sm font-bold">
+                      {setComplete.on_reveal_message ?? "SET COMPLET — LETTRES RÉVÉLÉES"}
+                    </p>
+                    {setComplete.set_revealed_word && (
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="text-4xl font-display font-bold text-primary tracking-[0.5em]"
+                        style={{ textShadow: "0 0 30px hsl(var(--primary) / 0.5)" }}
+                      >
+                        {setComplete.set_revealed_word}
+                      </motion.p>
+                    )}
+                  </motion.div>
+                )}
+
                 <Button onClick={() => setPhase("hint")} className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-6">
                   CONTINUER L'ENQUÊTE
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -351,6 +434,16 @@ const MissionComplete = () => {
                         TYPE : {fragmentConcept}
                       </p>
                     )}
+                    {completionData.jasper_quote && (
+                      <motion.p
+                        className="text-sm italic text-primary mt-3 relative z-10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.9 }}
+                      >
+                        « {completionData.jasper_quote} »
+                      </motion.p>
+                    )}
                     <motion.p
                       className="text-xs text-muted-foreground mt-3 relative z-10"
                       initial={{ opacity: 0 }}
@@ -378,7 +471,9 @@ const MissionComplete = () => {
                       {nextCountry.name.toUpperCase()}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {nextCountry.description || `Mission ${SIGNAL_INITIAL_SEQUENCE.indexOf(nextCountry.code) + 1} / 5 — Phase gratuite`}
+                      {completionData.next_hook
+                        ?? nextCountry.description
+                        ?? `Mission ${SIGNAL_INITIAL_SEQUENCE.indexOf(nextCountry.code) + 1} / 5 — Phase gratuite`}
                     </p>
                   </motion.div>
                 )}

@@ -222,21 +222,47 @@ const Admin = () => {
     reader.onload = (ev) => {
       try {
         const json = JSON.parse(ev.target?.result as string);
-        // Support multiple JSON formats + alias name_fr / name_en
-        const code = (json.country?.code || json.code || file.name.replace(".json", "")).toUpperCase();
-        const name = json.country?.name || json.country?.name_fr || json.country?.name_en || json.name;
+
+        // Detect format: master template (has meta.code) vs legacy (has country.code)
+        const isMasterTemplate = !!json.meta?.code;
+
+        const code = (
+          json.meta?.code || json.country?.code || json.code || file.name.replace(".json", "")
+        ).toUpperCase();
+        const name = json.meta?.country || json.country?.name || json.country?.name_fr || json.country?.name_en || json.name;
         const description = json.country?.description || json.mission?.description || json.description;
         const monuments = json.country?.monuments || json.monuments || [];
         const historical_events = json.country?.historical_events || json.historical_events || [];
         const symbols = json.country?.symbols || json.symbols || [];
-        const missionTitle = json.mission?.mission_title || json.mission_title;
-        const rawQuestions: ParsedQuestion[] = (json.question_bank || json.questions || []);
+        const missionTitle = json.story?.mission_title || json.mission?.mission_title || json.mission_title;
+
+        // Parse questions from either format
+        let rawQuestions: ParsedQuestion[] = [];
+        if (isMasterTemplate && json.gameplay?.questions?.length > 0) {
+          // Master template format: gameplay.questions[]
+          rawQuestions = json.gameplay.questions.map((q: any, i: number) => ({
+            id: q.id ?? `${code}_Q${i + 1}`,
+            type: q.type ?? (i < json.gameplay.questions.length - 1 ? (i === 0 ? "A" : "B") : "C"),
+            question: q.prompt ?? q.question ?? "",
+            choices: (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.text ?? ""),
+            answer_index: q.answer?.value
+              ? (q.options ?? []).findIndex((o: any) => (typeof o === "string" ? o : o.id) === q.answer.value)
+              : 0,
+            narrative_unlock: q.narrative_unlock,
+          }));
+        } else {
+          // Legacy format: question_bank[] or questions[]
+          rawQuestions = (json.question_bank || json.questions || []);
+        }
         const questionCount = rawQuestions.length;
 
         setJsonImportPreview({
           code, name, description, monuments, historical_events, symbols,
           questionCount, missionTitle, parsedQuestions: rawQuestions,
-        });
+          // Store full JSON for countries_missions upsert
+          _fullJson: json,
+          _isMasterTemplate: isMasterTemplate,
+        } as any);
       } catch {
         toast({ title: "Erreur JSON", description: "Fichier JSON invalide", variant: "destructive" });
       }
@@ -247,9 +273,12 @@ const Admin = () => {
   const handleJsonImport = async () => {
     if (!jsonImportPreview) return;
     setJsonImporting(true);
-    const { code, name, description, monuments, historical_events, symbols, parsedQuestions } = jsonImportPreview;
+    const preview = jsonImportPreview as any;
+    const { code, name, description, monuments, historical_events, symbols, parsedQuestions } = preview;
+    const fullJson = preview._fullJson;
+    const isMasterTemplate = preview._isMasterTemplate;
 
-    // 1. Mettre à jour les métadonnées du pays
+    // 1. Mettre à jour les métadonnées du pays (countries table)
     const payload: any = {};
     if (name) payload.name = name;
     if (description) payload.description = description;
@@ -266,7 +295,7 @@ const Admin = () => {
       }
     }
 
-    // 2. Importer les questions si présentes
+    // 2. Importer les questions si présentes (questions table — legacy support)
     let questionsImported = 0;
     if (parsedQuestions && parsedQuestions.length > 0) {
       const { data: countryData } = await supabase
@@ -296,9 +325,35 @@ const Admin = () => {
       }
     }
 
+    // 3. Upsert full content into countries_missions (master template)
+    let contentSynced = false;
+    if (isMasterTemplate && fullJson) {
+      const isFree = fullJson.meta?.availability?.is_free ?? false;
+      const season = fullJson.meta?.season ?? 0;
+      const difficulty = fullJson.meta?.difficulty ?? 1;
+
+      const { error: cmError } = await (supabase as any)
+        .from("countries_missions")
+        .upsert({
+          code,
+          country: fullJson.meta?.country ?? name ?? code,
+          content: fullJson,
+          is_free: isFree,
+          season,
+          difficulty,
+        }, { onConflict: "code" });
+
+      if (cmError) {
+        toast({ title: "Erreur countries_missions", description: cmError.message, variant: "destructive" });
+      } else {
+        contentSynced = true;
+      }
+    }
+
     const parts: string[] = [];
     if (Object.keys(payload).length > 0) parts.push(`${Object.keys(payload).length} champ(s) métadonnées`);
     if (questionsImported > 0) parts.push(`${questionsImported} question(s) importée(s)`);
+    if (contentSynced) parts.push("✓ countries_missions synchronisé");
 
     toast({
       title: `✓ ${code} importé`,
