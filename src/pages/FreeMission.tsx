@@ -96,7 +96,8 @@ type FreePhase =
   | "failed";
 
 function isNewFormat(data: FreeCountryData): boolean {
-  return !!(data.scene || data.puzzle || data.final_question || data.reward);
+  // Only true if explicit scene/puzzle/final_question steps exist (not just reward)
+  return !!(data.scene || data.puzzle || data.final_question);
 }
 
 const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
@@ -231,16 +232,31 @@ const FreeMission = () => {
     if (dbContent?.gameplay?.questions?.length > 0 && dbContent?.story?.intro) {
       // Map DB JSONB → FreeCountryData (question_bank format)
       const questions = dbContent.gameplay.questions as any[];
-      const qbank = questions.map((q: any, i: number) => ({
-        id: q.id ?? `${countryData.code}_Q${i + 1}`,
-        type: (i < questions.length - 1 ? (i === 0 ? "A" : "B") : "C") as "A" | "B" | "C",
-        question: q.prompt ?? q.question,
-        choices: (q.options ?? []).map((o: any) => o.text ?? o),
-        answer_index: q.answer?.value
-          ? (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.answer.value)
-          : 0,
-        narrative_unlock: q.narrative_unlock,
-      }));
+      const qbank = questions.map((q: any, i: number) => {
+        const opts = (q.options ?? []).map((o: any) => o.text ?? o);
+        let ansIdx = 0;
+        if (q.answer?.value) {
+          const idx = (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.answer.value);
+          ansIdx = idx >= 0 ? idx : 0;
+        }
+        // Map DB question types: mcq/text → A, logic/number → B, strategic → C
+        // Fallback: assign by position
+        const dbType = (q.type ?? "").toLowerCase();
+        let mappedType: "A" | "B" | "C" = "A";
+        if (dbType === "logic" || dbType === "number") mappedType = "B";
+        else if (dbType === "strategic" || dbType === "decision") mappedType = "C";
+        else if (i === questions.length - 1) mappedType = "C";
+        else if (i > 0 && i < questions.length - 1) mappedType = "B";
+
+        return {
+          id: q.id ?? `${countryData.code}_Q${i + 1}`,
+          type: mappedType,
+          question: q.prompt ?? q.question,
+          choices: opts,
+          answer_index: ansIdx,
+          narrative_unlock: q.narrative_unlock,
+        };
+      });
 
       json = {
         country: { code: countryData.code, name_fr: dbContent.meta?.country ?? countryData.name },
@@ -297,9 +313,37 @@ const FreeMission = () => {
       if (json.final_question?.choices) setStrategicChoices(shuffle([...json.final_question.choices]));
     } else {
       const qbank = json.question_bank ?? [];
-      const typeA = shuffle(qbank.filter(q => q.type === "A"));
-      const typeB = shuffle(qbank.filter(q => q.type === "B"));
-      const typeC = shuffle(qbank.filter(q => q.type === "C"));
+
+      if (qbank.length === 0) {
+        console.error("[FreeMission] 0 questions in question_bank — cannot start mission");
+        toast({ title: "Erreur de contenu", description: "Aucune question disponible pour cette mission.", variant: "destructive" });
+        navigate("/dashboard");
+        return;
+      }
+
+      // Try type-based split first, fallback to sequential assignment
+      let typeA = shuffle(qbank.filter(q => q.type === "A"));
+      let typeB = shuffle(qbank.filter(q => q.type === "B"));
+      let typeC = shuffle(qbank.filter(q => q.type === "C"));
+
+      // Fallback: if any bucket is empty, distribute sequentially from pool
+      if (typeA.length === 0 && typeB.length === 0 && typeC.length === 0) {
+        console.warn("[FreeMission] No A/B/C types found, distributing questions sequentially");
+        const shuffled = shuffle([...qbank]);
+        typeA = shuffled.slice(0, 1);
+        typeB = shuffled.slice(1, 2);
+        typeC = shuffled.slice(2, 3);
+      } else {
+        // Fill missing buckets from available questions
+        const used = new Set<string>();
+        if (typeA[0]) used.add(typeA[0].id);
+        if (typeB[0]) used.add(typeB[0].id);
+        if (typeC[0]) used.add(typeC[0].id);
+        const remaining = shuffle(qbank.filter(q => !used.has(q.id)));
+        if (typeA.length === 0 && remaining.length > 0) typeA = [remaining.shift()!];
+        if (typeB.length === 0 && remaining.length > 0) typeB = [remaining.shift()!];
+        if (typeC.length === 0 && remaining.length > 0) typeC = [remaining.shift()!];
+      }
 
       const sq = typeA[0] ?? null;
       const lq = typeB[0] ?? null;
