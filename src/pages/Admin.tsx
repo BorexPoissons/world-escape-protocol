@@ -242,17 +242,33 @@ const Admin = () => {
           // Master template format: gameplay.questions[]
           rawQuestions = json.gameplay.questions.map((q: any, i: number) => {
             const choices = (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.text ?? "");
-            let answerIndex = 0;
-            if (q.answer?.value) {
-              const idx = (q.options ?? []).findIndex((o: any) => (typeof o === "string" ? o : o.id) === q.answer.value);
-              if (idx >= 0) answerIndex = idx;
+            
+            // Resolve correct_answer cleanly
+            let correctAnswer: string;
+            if (q.correct_answer) {
+              correctAnswer = String(q.correct_answer);
+            } else if (q.answer?.type === "option_id") {
+              // Map option_id (e.g. "B") to the text of that option
+              const matched = (q.options ?? []).find((o: any) => (typeof o === "string" ? false : o.id === q.answer.value));
+              correctAnswer = matched ? (typeof matched === "string" ? matched : matched.text ?? String(q.answer.value)) : String(q.answer.value);
+            } else if (q.answer?.type === "number") {
+              correctAnswer = String(q.answer.value);
+            } else if (q.answer?.value) {
+              correctAnswer = String(q.answer.value);
+            } else {
+              correctAnswer = choices[0] ?? "A";
+              console.warn(`[Admin Import] Question ${q.id ?? i}: no answer found, fallback to first choice`);
             }
+
+            const answerIndex = choices.indexOf(correctAnswer);
+
             return {
               id: q.id ?? `${code}_Q${i + 1}`,
               type: q.type ?? (i < json.gameplay.questions.length - 1 ? (i === 0 ? "A" : "B") : "C"),
               question: q.prompt ?? q.question ?? "",
               choices,
-              answer_index: answerIndex,
+              answer_index: answerIndex >= 0 ? answerIndex : 0,
+              correct_answer: correctAnswer,
               narrative_unlock: q.narrative_unlock,
             };
           });
@@ -312,11 +328,11 @@ const Admin = () => {
         await supabase.from("questions").delete().eq("country_id", countryData.id);
 
         const difficultyMap: Record<string, number> = { A: 1, B: 2, C: 3 };
-        const questionsToInsert = parsedQuestions.map((q: ParsedQuestion) => ({
+        const questionsToInsert = parsedQuestions.map((q: ParsedQuestion & { correct_answer?: string }) => ({
           country_id: countryData.id,
           question_text: q.question,
           answer_options: q.choices as any,
-          correct_answer: q.choices[q.answer_index] ?? q.choices[0],
+          correct_answer: q.correct_answer ?? q.choices[q.answer_index] ?? q.choices[0] ?? "A",
           category: q.type || "A",
           difficulty_level: difficultyMap[q.type] ?? 1,
         }));
