@@ -205,13 +205,25 @@ const Mission = () => {
       setCurrentXP((profileData as any).xp);
     }
 
-    // ── 0. PRIORITY: Try to load static JSON from /public/content/countries/ ──
+    // ── 0. Check if this is a free mission via countries_missions DB ──
+    const { data: cmRow } = await supabase
+      .from("countries_missions")
+      .select("is_free")
+      .eq("code", countryData.code)
+      .single();
+
+    if (cmRow?.is_free) {
+      navigate(`/free-mission/${countryId}`, { replace: true });
+      return;
+    }
+
+    // ── 1. Try to load static JSON from /public/content/countries/ ──
     try {
       const res = await fetch(`/content/countries/${countryData.code}.json`);
       if (res.ok) {
         const staticData = await res.json();
 
-        // ── FREE mission: redirect to new immersive format ─────────────────
+        // ── FREE mission fallback check (static JSON) ─────────────────
         if (staticData.mission?.is_free === true) {
           navigate(`/free-mission/${countryId}`, { replace: true });
           return;

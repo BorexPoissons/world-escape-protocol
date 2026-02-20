@@ -158,7 +158,7 @@ const SEASON_META: Record<number, {
 const INTRO_SEEN_KEY = "wep_intro_seen";
 
 // Fixed SIGNAL_INITIAL sequence for free sequential unlock
-const SIGNAL_INITIAL_SEQUENCE = ["CH", "US", "CN", "BR", "IN"];
+const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
 const Dashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
