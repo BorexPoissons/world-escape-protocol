@@ -730,17 +730,18 @@ const CentralDilemma: React.FC = () => {
                 {/* CTA */}
                 <div className="flex flex-col gap-3">
                   <Button
-                    onClick={() => navigate("/dashboard")}
-                    className="w-full font-display tracking-wider py-6 bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => navigate("/season1")}
+                    className="w-full font-display tracking-wider py-6 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
                   >
-                    RETOUR AU QG
+                    CONTINUER L'ENQUÊTE
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/puzzle")}
+                    onClick={() => navigate("/dashboard")}
                     className="w-full font-display tracking-wider border-primary/30 text-primary hover:bg-primary/10"
                   >
-                    PUZZLE MONDIAL
+                    RETOUR AU QG
                   </Button>
                 </div>
               </motion.div>
