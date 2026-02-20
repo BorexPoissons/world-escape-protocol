@@ -682,37 +682,69 @@ const Dashboard = () => {
             transition={{ duration: 0.5 }}
             className="mb-8"
           >
-            <h2 className="text-sm font-display text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
-              <Puzzle className="h-4 w-4" />
-              TOKENS COLLECTÉS ({userTokens.length}/{SIGNAL_INITIAL_SEQUENCE.length})
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {SIGNAL_INITIAL_SEQUENCE.map(code => {
-                const token = userTokens.find(t => t.country_code === code);
-                const countryName = countries.find(c => c.code === code)?.name ?? code;
-                return (
-                  <div
-                    key={code}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border px-4 py-3 min-w-[70px]"
-                    style={{
-                      borderColor: token ? "hsl(40 80% 55% / 0.4)" : "hsl(var(--border) / 0.3)",
-                      background: token ? "hsl(40 80% 55% / 0.06)" : "hsl(var(--card))",
-                      boxShadow: token ? "0 0 12px hsl(40 80% 55% / 0.1)" : "none",
-                    }}
-                  >
-                    <span
-                      className="text-2xl font-display font-bold"
-                      style={{ color: token ? "hsl(40 85% 62%)" : "hsl(var(--muted-foreground) / 0.25)" }}
-                    >
-                      {token ? token.letter : "?"}
-                    </span>
-                    <span className="text-[9px] font-display tracking-wider text-muted-foreground">
-                      {countryName.toUpperCase().slice(0, 6)}
-                    </span>
+            {(() => {
+              const allSignalCollected = SIGNAL_INITIAL_SEQUENCE.every(code =>
+                userTokens.some(t => t.country_code === code)
+              );
+              return (
+                <>
+                  <h2 className="text-sm font-display text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
+                    <Puzzle className="h-4 w-4" />
+                    TOKENS COLLECTÉS ({userTokens.length}/{SIGNAL_INITIAL_SEQUENCE.length})
+                    {!allSignalCollected && userTokens.length > 0 && (
+                      <span className="text-[9px] tracking-wider ml-2" style={{ color: "hsl(40 60% 50%)" }}>
+                        — COMPLÉTEZ LES 5 POUR RÉVÉLER
+                      </span>
+                    )}
+                  </h2>
+                  <div className="flex flex-wrap gap-3">
+                    {SIGNAL_INITIAL_SEQUENCE.map(code => {
+                      const token = userTokens.find(t => t.country_code === code);
+                      const countryName = countries.find(c => c.code === code)?.name ?? code;
+                      const isRevealed = allSignalCollected && !!token;
+                      return (
+                        <motion.div
+                          key={code}
+                          className="flex flex-col items-center gap-1.5 rounded-xl border px-4 py-3 min-w-[70px]"
+                          style={{
+                            borderColor: token
+                              ? isRevealed ? "hsl(40 80% 55% / 0.6)" : "hsl(40 80% 55% / 0.25)"
+                              : "hsl(var(--border) / 0.3)",
+                            background: token
+                              ? isRevealed ? "hsl(40 80% 55% / 0.1)" : "hsl(40 80% 55% / 0.04)"
+                              : "hsl(var(--card))",
+                            boxShadow: isRevealed ? "0 0 16px hsl(40 80% 55% / 0.2)" : "none",
+                          }}
+                          animate={isRevealed ? { scale: [1, 1.08, 1] } : {}}
+                          transition={{ duration: 0.6, delay: SIGNAL_INITIAL_SEQUENCE.indexOf(code) * 0.15 }}
+                        >
+                          <span
+                            className="text-2xl font-display font-bold"
+                            style={{
+                              color: isRevealed
+                                ? "hsl(40 85% 62%)"
+                                : token ? "hsl(40 60% 40%)" : "hsl(var(--muted-foreground) / 0.25)",
+                              filter: token && !isRevealed ? "blur(6px)" : "none",
+                              userSelect: "none",
+                            }}
+                          >
+                            {token ? token.letter : "?"}
+                          </span>
+                          <span className="text-[9px] font-display tracking-wider text-muted-foreground">
+                            {countryName.toUpperCase().slice(0, 6)}
+                          </span>
+                          {token && !isRevealed && (
+                            <span className="text-[7px] font-display tracking-wider" style={{ color: "hsl(40 60% 50%)" }}>
+                              MASQUÉ
+                            </span>
+                          )}
+                        </motion.div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </>
+              );
+            })()}
           </motion.div>
         )}
 

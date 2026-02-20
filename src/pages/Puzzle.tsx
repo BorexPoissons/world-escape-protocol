@@ -241,6 +241,10 @@ const Puzzle = () => {
   // Tolerance in % — how close the drop must be to a country node
   const DROP_TOLERANCE = 8; // 8% of map width/height
 
+  // Milestone signal: every N placements triggers a luminous pulse
+  const SIGNAL_EVERY = 5; // every 5 placements
+  const [milestoneSignal, setMilestoneSignal] = useState(false);
+
   const placeFragment = async (fragmentId: string, countryId: string, countryName: string) => {
     if (!user) return;
 
@@ -250,8 +254,15 @@ const Puzzle = () => {
       .update({ is_placed: true, placed_at: new Date().toISOString() })
       .eq("id", fragmentId);
 
+    const newPlaced = [...placedCountryIds, countryId];
     setFragments(prev => prev.map(f => f.id === fragmentId ? { ...f, isPlaced: true } : f));
-    setPlacedCountryIds(prev => [...prev, countryId]);
+    setPlacedCountryIds(newPlaced);
+
+    // Check milestone signal
+    if (newPlaced.length % SIGNAL_EVERY === 0 && newPlaced.length > 0) {
+      setMilestoneSignal(true);
+      setTimeout(() => setMilestoneSignal(false), 2500);
+    }
 
     // Snap glow
     setSnapTargetId(countryId);
@@ -259,7 +270,10 @@ const Puzzle = () => {
 
     // Snap notification
     const notifId = crypto.randomUUID();
-    setSnapNotifs(prev => [...prev, { id: notifId, countryName, success: true }]);
+    const milestoneMsg = newPlaced.length % SIGNAL_EVERY === 0
+      ? ` · SIGNAL ${newPlaced.length} FRAGMENTS`
+      : "";
+    setSnapNotifs(prev => [...prev, { id: notifId, countryName: countryName + milestoneMsg, success: true }]);
     setTimeout(() => setSnapNotifs(prev => prev.filter(n => n.id !== notifId)), 3000);
   };
 
@@ -579,10 +593,45 @@ const Puzzle = () => {
             collectedCountryCodes={fragments.map(f => f.countryCode)}
             forceFullReveal={forceFullReveal}
             snapTargetId={snapTargetId}
+            milestoneSignal={milestoneSignal}
           />
         </motion.div>
 
-        {/* ═══ FRAGMENT INVENTORY ═══ */}
+        {/* ═══ MILESTONE SIGNAL NOTIFICATION ═══ */}
+        <AnimatePresence>
+          {milestoneSignal && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              className="fixed top-1/2 left-1/2 z-[55] pointer-events-none"
+              style={{ transform: "translate(-50%, -50%)" }}
+            >
+              <div
+                className="px-8 py-4 rounded-2xl border text-center backdrop-blur-md"
+                style={{
+                  background: "hsl(220 25% 4% / 0.92)",
+                  borderColor: "hsl(40 80% 55% / 0.5)",
+                  boxShadow: "0 0 60px hsl(40 80% 55% / 0.3), 0 0 120px hsl(40 80% 55% / 0.1)",
+                }}
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                  transition={{ repeat: 3, duration: 0.6 }}
+                  className="text-3xl mb-2"
+                >
+                  ✦
+                </motion.div>
+                <p className="text-xs font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
+                  SIGNAL DÉTECTÉ
+                </p>
+                <p className="text-[10px] font-display tracking-wider mt-1 text-muted-foreground">
+                  {placedCountryIds.length} FRAGMENTS INTÉGRÉS — LE RÉSEAU GRANDIT
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
