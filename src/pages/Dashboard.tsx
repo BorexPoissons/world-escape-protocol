@@ -383,6 +383,12 @@ const Dashboard = () => {
                 <span className="hidden sm:inline">CLASSEMENT</span>
               </Button>
             </Link>
+            <Link to="/seasons">
+              <Button variant="outline" size="sm" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                <Star className="h-4 w-4" />
+                <span className="hidden sm:inline">SAISONS</span>
+              </Button>
+            </Link>
             {isAdmin && (
               <Link to="/admin">
                 <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">

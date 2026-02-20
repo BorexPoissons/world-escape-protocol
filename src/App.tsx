@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import CentralDilemma from "./pages/CentralDilemma";
 import Leaderboard from "./pages/Leaderboard";
 import Season1Unlock from "./pages/Season1Unlock";
+import Seasons from "./pages/Seasons";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/dilemme-central" element={<ProtectedRoute><CentralDilemma /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/season1" element={<ProtectedRoute><Season1Unlock /></ProtectedRoute>} />
+            <Route path="/seasons" element={<ProtectedRoute><Seasons /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
