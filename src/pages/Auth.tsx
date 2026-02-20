@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail, User, Home } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, Home, Radio } from "lucide-react";
+import { JasperAuthModal, useJasperAuthModalAutoOpen } from "@/components/JasperAuthModal";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +18,7 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { open: jasperOpen, close: jasperClose, setOpen: setJasperOpen } = useJasperAuthModalAutoOpen();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +136,19 @@ const Auth = () => {
           </div>
 
         </div>
+
+        {/* Jasper message button */}
+        <div className="fixed bottom-5 right-5 z-40">
+          <button
+            onClick={() => setJasperOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border bg-card/80 backdrop-blur-sm px-4 py-2 text-xs font-display tracking-wider text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+          >
+            <Radio className="h-3 w-3" />
+            MESSAGE DE JASPER
+          </button>
+        </div>
+
+        <JasperAuthModal open={jasperOpen} onClose={jasperClose} />
       </motion.div>
     </div>
   );
