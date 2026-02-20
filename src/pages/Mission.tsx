@@ -66,7 +66,7 @@ interface FragmentReward {
 
 type Phase = "loading" | "intro" | "enigme" | "narrative_unlock" | "moral" | "finale" | "failed" | "rescue_offer";
 
-const DEMO_USER_ID = "demo-user-local";
+// Demo mode removed — user is guaranteed by ProtectedRoute
 
 // ── OFFICIAL QUIZ SPEC ─────────────────────────────────────────────────────
 // 6 questions per run · 5 correct to win · 2 lives · 120s per question
@@ -90,23 +90,14 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function getDemoStoryState() {
-  try {
-    const raw = localStorage.getItem("wep_demo_story");
-    return raw ? JSON.parse(raw) : { trust_level: 50, suspicion_level: 0, secrets_unlocked: 0 };
-  } catch { return { trust_level: 50, suspicion_level: 0, secrets_unlocked: 0 }; }
-}
-
-function saveDemoStoryState(state: { trust_level: number; suspicion_level: number }) {
-  localStorage.setItem("wep_demo_story", JSON.stringify(state));
-}
+// Demo story state functions removed — user is guaranteed by ProtectedRoute
 
 const Mission = () => {
   const { countryId } = useParams<{ countryId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isDemo = !user;
+  // user is guaranteed by ProtectedRoute
 
   const [country, setCountry] = useState<Tables<"countries"> | null>(null);
   const [mission, setMission] = useState<MissionData | null>(null);
@@ -188,8 +179,6 @@ const Mission = () => {
         .eq("user_id", user.id)
         .single();
       if (stateData) story = { trust_level: stateData.trust_level, suspicion_level: stateData.suspicion_level, secrets_unlocked: stateData.secrets_unlocked };
-    } else {
-      story = getDemoStoryState();
     }
     setStoryState(story);
 
@@ -586,12 +575,8 @@ const Mission = () => {
       }
       setStoryState(s => ({ ...s, trust_level: newTrust, suspicion_level: newSuspicion }));
     } else {
-      const newState = {
-        trust_level: Math.max(0, Math.min(100, storyState.trust_level + (impact.trust || 0))),
-        suspicion_level: Math.max(0, Math.min(100, storyState.suspicion_level + (impact.suspicion || 0))),
-      };
-      saveDemoStoryState(newState);
-      setStoryState(s => ({ ...s, ...newState }));
+      // user is guaranteed — this branch should not be reached
+      setStoryState(s => ({ ...s }));
     }
 
     setPhase("finale");
@@ -606,25 +591,7 @@ const Mission = () => {
     // ─── FRAGMENT THRESHOLD: uses SCORE_THRESHOLD from missionConfig (5/6) ───
     const fragmentEarned = score >= SCORE_THRESHOLD;
 
-    // Demo mode — no DB
-    if (!user) {
-      const prev = JSON.parse(localStorage.getItem("wep_demo_progress") || "{}");
-      prev[countryId] = { score, total, time: timeElapsed };
-      localStorage.setItem("wep_demo_progress", JSON.stringify(prev));
-      if (!fragmentEarned) {
-        toast({
-          title: `Score: ${score}/${total}`,
-          description: `Il faut ${SCORE_THRESHOLD}/${TOTAL_QUESTIONS} pour obtenir la pièce. Rejouer ?`,
-          variant: "destructive",
-        });
-        setPhase("failed");
-        return;
-      }
-      const xp = 50 + score * 25;
-      toast({ title: "Mission accomplie! (Mode Démo)", description: `+${xp} XP — Créez un compte pour sauvegarder.` });
-      navigate(`/mission/${countryId}/complete?score=${score}&total=${total}&xp=${xp}&demo=1`);
-      return;
-    }
+    // user is guaranteed by ProtectedRoute
 
     // ─── ATOMIC SERVER CALL ─────────────────────────────────────────────
     // complete_country_attempt handles: progress upsert + fragment insert (ON CONFLICT DO NOTHING)
@@ -912,23 +879,6 @@ const Mission = () => {
       </header>
 
       <main className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Demo mode CTA */}
-        {isDemo && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-card border border-dashed border-primary/40 rounded-lg px-5 py-3 flex items-center justify-between gap-3"
-          >
-            <p className="text-xs text-muted-foreground font-display tracking-wider">
-              MODE DÉMO — Progression non sauvegardée
-            </p>
-            <Link to="/auth">
-              <Button size="sm" variant="outline" className="text-xs font-display tracking-wider border-primary/50 text-primary hover:bg-primary/10">
-                CRÉER UN COMPTE
-              </Button>
-            </Link>
-          </motion.div>
-        )}
 
         <AnimatePresence mode="wait">
 

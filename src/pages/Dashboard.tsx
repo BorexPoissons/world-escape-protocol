@@ -183,7 +183,7 @@ const Dashboard = () => {
   const [leaderboardVisible, setLeaderboardVisible] = useState(true);
   const [leaderboardTogglingLoading, setLeaderboardTogglingLoading] = useState(false);
   const [dilemmaValidated, setDilemmaValidated] = useState(false);
-  const isDemo = !user;
+  // user is guaranteed by ProtectedRoute
 
   // Auto-play intro on first visit (per-browser flag)
   useEffect(() => {
@@ -203,12 +203,7 @@ const Dashboard = () => {
   };
 
   const fetchData = useCallback(async () => {
-    if (!user) {
-      const { data } = await supabase.from("countries").select("*").order("release_order");
-      if (data) setCountries(data as CountryRow[]);
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     const [countriesRes, profileRes, missionsRes, rolesRes, badgesRes, signalProgressRes, fragmentsRes, tokensRes, storyRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
@@ -396,7 +391,7 @@ const Dashboard = () => {
                 </Button>
               </Link>
             )}
-            {!isDemo && (
+            {(
               <div className="text-right">
                 <p className="text-sm text-foreground font-display hidden sm:block">Agent {profile?.display_name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -418,34 +413,13 @@ const Dashboard = () => {
               <PlayCircle className="h-5 w-5" />
             </Button>
 
-            {isDemo ? (
-              <Link to="/auth">
-                <Button size="sm" className="font-display tracking-wider text-xs">CRÉER UN COMPTE</Button>
-              </Link>
-            ) : (
-              <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
-                <LogOut className="h-5 w-5" />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
 
-      {/* Demo CTA banner */}
-      {isDemo && (
-        <div className="bg-card border-b border-dashed border-primary/40 px-4 py-3">
-          <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto flex items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground font-display tracking-wider">
-              MODE DÉCOUVERTE — Progression temporaire. Créez un compte pour sauvegarder votre avancement.
-            </p>
-            <Link to="/auth">
-              <Button size="sm" variant="outline" className="text-xs font-display tracking-wider border-primary/50 text-primary hover:bg-primary/10 flex-shrink-0">
-                S'ENREGISTRER
-              </Button>
-            </Link>
-          </div>
-        </div>
-      )}
 
       <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -494,7 +468,7 @@ const Dashboard = () => {
 
               {/* Compact stats row */}
               <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                {!isDemo && (
+                {(
                   <>
                     <div className="text-right">
                       <p className="text-[10px] text-muted-foreground font-display tracking-wider">NIVEAU</p>
@@ -628,7 +602,7 @@ const Dashboard = () => {
               <span className="text-muted-foreground hidden sm:inline">
                 {TOTAL_COUNTRIES - globalCompletedCount} restants
               </span>
-              {!isDemo && profile && (
+              {profile && (
                 <>
                   <span className="text-muted-foreground">·</span>
                   <span className="text-muted-foreground">{profile.xp} XP total</span>
@@ -640,7 +614,7 @@ const Dashboard = () => {
               VOIR LA CARTE
             </Link>
             {/* Leaderboard visibility toggle */}
-            {!isDemo && (
+            {(
               <button
                 onClick={handleLeaderboardToggle}
                 disabled={leaderboardTogglingLoading}

@@ -36,7 +36,7 @@ const MissionComplete = () => {
   const total = parseInt(searchParams.get("total") || "4");
   const xpGained = parseInt(searchParams.get("xp") || "0");
   const streak = parseInt(searchParams.get("streak") || "0");
-  const isDemo = searchParams.get("demo") === "1";
+  // demo param removed — user guaranteed by ProtectedRoute
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -160,13 +160,8 @@ const MissionComplete = () => {
         setPuzzleProgress({ unlocked: fragmentCount, total: 195 });
 
         if (badgesRes.data) setNewBadges(badgesRes.data.map((b: any) => b.badge_key));
-      } else {
-        try {
-          const raw = localStorage.getItem("wep_demo_story");
-          if (raw) setStoryState(JSON.parse(raw));
-        } catch {}
-        setPuzzleProgress({ unlocked: 1, total: 195 });
       }
+      // user is guaranteed by ProtectedRoute — no demo fallback needed
     };
 
     load();
@@ -306,17 +301,6 @@ const MissionComplete = () => {
                   </div>
                 </div>
 
-                {/* Demo CTA */}
-                {isDemo && (
-                  <div className="bg-card border border-dashed border-primary/40 rounded-lg p-5 text-center">
-                    <p className="text-sm text-muted-foreground mb-3">Créez un compte pour sauvegarder votre progression</p>
-                    <Link to="/auth">
-                      <Button className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90">
-                        CRÉER UN COMPTE GRATUIT
-                      </Button>
-                    </Link>
-                  </div>
-                )}
 
                 {/* Set completion reveal (Rule B) */}
                 {setComplete.triggered && (
