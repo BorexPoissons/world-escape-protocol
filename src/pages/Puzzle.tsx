@@ -22,6 +22,7 @@ import type { Fragment, TokenData } from "@/components/FragmentInventory";
 import MissionDetailModal from "@/components/MissionDetailModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import FinalRevealSequence from "@/components/FinalRevealSequence";
+import PuzzleFirstVisitOverlay from "@/components/PuzzleFirstVisitOverlay";
 import jasperSignalImg from "@/assets/jasper-signal.png";
 import {
   Dialog,
@@ -129,6 +130,31 @@ const Puzzle = () => {
   const [showFinalReveal, setShowFinalReveal] = useState(false);
   const [forceFullReveal, setForceFullReveal] = useState(false);
   const [hasCompletedPuzzle, setHasCompletedPuzzle] = useState(false);
+
+  // ─── First-visit cinematic intro ──────────────────────────────────────────
+  const FIRST_VISIT_KEY = "wep_puzzle_first_visit_done";
+  const [introPhase, setIntroPhase] = useState<"full_reveal" | "fading" | "normal" | "overlay">(() => {
+    try {
+      return localStorage.getItem(FIRST_VISIT_KEY) ? "normal" : "full_reveal";
+    } catch { return "normal"; }
+  });
+
+  useEffect(() => {
+    if (introPhase !== "full_reveal") return;
+    const t = setTimeout(() => setIntroPhase("fading"), 10000);
+    return () => clearTimeout(t);
+  }, [introPhase]);
+
+  useEffect(() => {
+    if (introPhase !== "fading") return;
+    const t = setTimeout(() => setIntroPhase("overlay"), 2000);
+    return () => clearTimeout(t);
+  }, [introPhase]);
+
+  const handleIntroDismiss = () => {
+    try { localStorage.setItem(FIRST_VISIT_KEY, "true"); } catch {}
+    setIntroPhase("normal");
+  };
   const prevProgressRef = useRef<number>(0);
 
   // Rotate inspiring messages
@@ -620,9 +646,10 @@ const Puzzle = () => {
             onCountryClick={handleCountryClick}
             globalProgress={globalProgressOn195}
             collectedCountryCodes={fragments.map(f => f.countryCode)}
-            forceFullReveal={forceFullReveal}
+            forceFullReveal={forceFullReveal || introPhase === "full_reveal"}
             snapTargetId={snapTargetId}
             milestoneSignal={milestoneSignal}
+            introPhase={introPhase === "overlay" ? "normal" : introPhase === "full_reveal" ? "full_reveal" : introPhase === "fading" ? "fading" : "normal"}
           />
         </motion.div>
 
@@ -906,6 +933,13 @@ const Puzzle = () => {
             lastCountryX={50}
             lastCountryY={28}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ═══ FIRST VISIT OVERLAY ═══ */}
+      <AnimatePresence>
+        {introPhase === "overlay" && (
+          <PuzzleFirstVisitOverlay onDismiss={handleIntroDismiss} />
         )}
       </AnimatePresence>
 

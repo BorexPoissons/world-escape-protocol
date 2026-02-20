@@ -27,7 +27,8 @@ interface CinematicWorldMapProps {
   collectedCountryCodes?: string[];
   forceFullReveal?: boolean;
   snapTargetId?: string | null;
-  milestoneSignal?: boolean; // triggers a luminous pulse on map
+  milestoneSignal?: boolean;
+  introPhase?: "full_reveal" | "fading" | "normal";
 }
 
 // Fallback geo positions
@@ -163,23 +164,25 @@ const CinematicWorldMap = ({
   forceFullReveal = false,
   snapTargetId = null,
   milestoneSignal = false,
+  introPhase = "normal",
 }: CinematicWorldMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const isIntroReveal = introPhase === "full_reveal" || introPhase === "fading";
   const playableNodes = countries.filter(c => c.visibility === "playable");
   const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
 
   const freeCount   = playableNodes.filter(n => FREE_COUNTRY_CODES.has(n.code)).length;
   const lockedCount = lockedNodes.length;
 
-  // Map brightness evolves with global progress (forceFullReveal overrides)
-  const mapBrightness = forceFullReveal ? 1.0 :
+  // Map brightness evolves with global progress (forceFullReveal or introPhase overrides)
+  const mapBrightness = (forceFullReveal || isIntroReveal) ? 1.0 :
     globalProgress >= 100 ? 1.0 :
     globalProgress >= 75  ? 0.88 :
     globalProgress >= 50  ? 0.78 :
     globalProgress >= 25  ? 0.65 :
     globalProgress >= 10  ? 0.55 : 0.42;
 
-  const mapSaturate = forceFullReveal ? 1.8 : 0.7 + globalProgress * 0.003;
+  const mapSaturate = (forceFullReveal || isIntroReveal) ? 1.8 : 0.7 + globalProgress * 0.003;
 
   // Connection intensity (more connections glow at higher %)
   const connectionOpacity = Math.min(0.88, 0.18 + globalProgress * 0.007);
@@ -303,9 +306,43 @@ const CinematicWorldMap = ({
         })}
       </svg>
 
-      {/* ── Locked nodes (190 countries, dimmed) ── */}
-      {lockedNodes.map(node => (
-        <LockedNode key={node.id} node={node} />
+      {/* ── Locked nodes (190 countries, dimmed — or illuminated during intro) ── */}
+      {lockedNodes.map((node, i) => (
+        isIntroReveal ? (
+          <motion.div
+            key={node.id}
+            className="absolute z-10"
+            style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%,-50%)" }}
+            initial={introPhase === "full_reveal" ? { scale: 0, opacity: 0 } : {}}
+            animate={introPhase === "fading"
+              ? { scale: 0, opacity: 0 }
+              : { scale: 1, opacity: 1 }
+            }
+            transition={introPhase === "fading"
+              ? { duration: 0.6, delay: i * 0.008, ease: "easeIn" }
+              : { delay: i * 0.006, type: "spring", stiffness: 260, damping: 22 }
+            }
+          >
+            <div
+              className="relative w-8 h-8 sm:w-7 sm:h-7 rounded-full flex items-center justify-center border-2"
+              style={{
+                background: "hsl(40 50% 13%)",
+                borderColor: "hsl(40 85% 65%)",
+                boxShadow: "0 0 12px hsl(40 80% 55% / 0.5), 0 0 3px hsl(40 80% 55% / 0.8)",
+              }}
+            >
+              <span className="text-sm leading-none">{FLAG_EMOJI[node.code] || "🌍"}</span>
+            </div>
+            <span
+              className="absolute top-full left-1/2 mt-0.5 text-[7px] font-display tracking-wider whitespace-nowrap"
+              style={{ transform: "translateX(-50%)", color: "hsl(40 85% 70%)" }}
+            >
+              {node.name.length > 8 ? node.name.substring(0, 7).toUpperCase() + "." : node.name.toUpperCase()}
+            </span>
+          </motion.div>
+        ) : (
+          <LockedNode key={node.id} node={node} />
+        )
       ))}
 
       {/* ── Playable nodes ── */}
