@@ -233,6 +233,7 @@ export type Database = {
           leaderboard_visible: boolean
           level: number
           longest_streak: number
+          season_1_unlocked: boolean
           streak: number
           subscription_type: string
           updated_at: string
@@ -248,6 +249,7 @@ export type Database = {
           leaderboard_visible?: boolean
           level?: number
           longest_streak?: number
+          season_1_unlocked?: boolean
           streak?: number
           subscription_type?: string
           updated_at?: string
@@ -263,11 +265,54 @@ export type Database = {
           leaderboard_visible?: boolean
           level?: number
           longest_streak?: number
+          season_1_unlocked?: boolean
           streak?: number
           subscription_type?: string
           updated_at?: string
           user_id?: string
           xp?: number
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
