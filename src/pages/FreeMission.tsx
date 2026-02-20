@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Home, CheckCircle, XCircle, RotateCcw, Puzzle,
-  MapPin, ArrowRight, Zap, Shield, Heart, Clock, AlertTriangle
+  MapPin, ArrowRight, Zap, Shield, Heart, Clock, AlertTriangle, Search
 } from "lucide-react";
 import TypewriterText from "@/components/TypewriterText";
 import { checkAndAwardBadges } from "@/lib/badges";
@@ -37,6 +37,7 @@ interface FreeCountryData {
     success_text?: string;
     correct_feedback?: string;
     wrong_feedback?: string;
+    explanation?: { is_enabled: boolean; correct: string; wrong: string };
   };
   clue?: {
     title?: string;
@@ -50,14 +51,16 @@ interface FreeCountryData {
     solution_number?: number;
     solution_letter?: string;
     explain_if_failed?: string;
-    explanation?: string;
+    explanation_text?: string;
     letter_choices?: string[];
+    explanation?: { is_enabled: boolean; correct: string; wrong: string };
   };
   final_question?: {
     question: string;
     choices: string[];
     answer_index: number;
     narrative_unlock?: string;
+    explanation?: { is_enabled: boolean; correct: string; wrong: string };
   };
   reward?: {
     letter_obtained: string;
@@ -74,6 +77,7 @@ interface FreeCountryData {
     answer_index: number;
     narrative_unlock?: string;
     hint_image?: { url: string; caption: string };
+    explanation?: { is_enabled: boolean; correct: string; wrong: string };
   }>;
   fragment_reward?: {
     id: string;
@@ -172,6 +176,7 @@ const FreeMission = () => {
 
   // Narrative unlock text (from strategic answer)
   const [narrativeText, setNarrativeText] = useState<string>("");
+  const [explanationOpen, setExplanationOpen] = useState(false);
 
   // Next country info
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
@@ -265,6 +270,7 @@ const FreeMission = () => {
           choices: opts,
           answer_index: ansIdx,
           narrative_unlock: q.narrative_unlock,
+          explanation: q.explanation,
         };
       });
 
@@ -979,8 +985,14 @@ const FreeMission = () => {
                   }`}>
                     {sceneFeedback}
                   </div>
+                  <ExplanationToggle
+                    explanation={data.scene?.explanation}
+                    isCorrect={sceneCorrect}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("logic_puzzle"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("logic_puzzle"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER L'ENQUÊTE →
@@ -1048,8 +1060,14 @@ const FreeMission = () => {
                   }`}>
                     {sceneCorrect ? "✓ ANALYSE CORRECTE — Jasper confirme votre évaluation." : "✗ ANALYSE INCORRECTE — Jasper note l'erreur mais continue la mission."}
                   </div>
+                  <ExplanationToggle
+                    explanation={sceneQuestion?.explanation}
+                    isCorrect={sceneCorrect}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("logic_puzzle"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("logic_puzzle"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     PASSER À L'ÉNIGME LOGIQUE →
@@ -1140,10 +1158,16 @@ const FreeMission = () => {
               {answerRevealed && selectedAnswer === data.puzzle.solution_letter && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                   <div className="rounded-lg px-5 py-4 border border-primary/40 bg-primary/8 text-primary text-sm font-display tracking-wider">
-                    ✓ LETTRE IDENTIFIÉE — {data.puzzle.explanation ?? `La lettre ${data.puzzle.solution_letter} a été décodée.`}
+                    ✓ LETTRE IDENTIFIÉE — {data.puzzle.explanation_text ?? `La lettre ${data.puzzle.solution_letter} a été décodée.`}
                   </div>
+                  <ExplanationToggle
+                    explanation={data.puzzle?.explanation}
+                    isCorrect={true}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("strategic"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     DÉCISION FINALE →
@@ -1157,8 +1181,14 @@ const FreeMission = () => {
                   <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
                     ✗ MAUVAISE LETTRE — {data.puzzle.explain_if_failed ?? "Ce n'est pas la bonne lettre."} Vous continuez avec {lives} vie{lives > 1 ? "s" : ""}.
                   </div>
+                  <ExplanationToggle
+                    explanation={data.puzzle?.explanation}
+                    isCorrect={false}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => continueAfterWrong("strategic")}
+                    onClick={() => { setExplanationOpen(false); continueAfterWrong("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER → DÉCISION FINALE
@@ -1228,9 +1258,15 @@ const FreeMission = () => {
 
               {/* Correct — continue */}
               {answerRevealed && selectedAnswer === logicQuestion.choices[logicQuestion.answer_index] && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <ExplanationToggle
+                    explanation={logicQuestion?.explanation}
+                    isCorrect={true}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setPhase("strategic"); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setPhase("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     DÉCISION FINALE →
@@ -1244,8 +1280,14 @@ const FreeMission = () => {
                   <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
                     ✗ MAUVAISE RÉPONSE — Vous continuez avec {lives} vie{lives > 1 ? "s" : ""}.
                   </div>
+                  <ExplanationToggle
+                    explanation={logicQuestion?.explanation}
+                    isCorrect={false}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => continueAfterWrong("strategic")}
+                    onClick={() => { setExplanationOpen(false); continueAfterWrong("strategic"); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     CONTINUER → DÉCISION FINALE
@@ -1318,8 +1360,14 @@ const FreeMission = () => {
                   <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
                     ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau la question.
                   </div>
+                  <ExplanationToggle
+                    explanation={data.final_question?.explanation}
+                    isCorrect={false}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     RÉESSAYER LA QUESTION →
@@ -1392,8 +1440,14 @@ const FreeMission = () => {
                   <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
                     ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau.
                   </div>
+                  <ExplanationToggle
+                    explanation={strategicQuestion?.explanation}
+                    isCorrect={false}
+                    isOpen={explanationOpen}
+                    onToggle={() => setExplanationOpen(o => !o)}
+                  />
                   <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); }}
+                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); }}
                     className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     RÉESSAYER LA QUESTION →
@@ -1814,6 +1868,51 @@ function StepIndicator({ step, label, isCritical }: { step: 1 | 2 | 3; label: st
         {isCritical && <span className="ml-2 text-[10px] tracking-widest">⚡ CRITIQUE</span>}
       </p>
       <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+// ── Explanation Toggle component ─────────────────────────────────────────────
+
+function ExplanationToggle({
+  explanation,
+  isCorrect,
+  isOpen,
+  onToggle,
+}: {
+  explanation?: { is_enabled: boolean; correct: string; wrong: string };
+  isCorrect: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  if (!explanation || !explanation.is_enabled) return null;
+
+  const label = isCorrect ? "🔎 Pourquoi ?" : "🔎 Comprendre l'erreur";
+  const text = isCorrect ? explanation.correct : explanation.wrong;
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={onToggle}
+        className="text-xs font-display tracking-wider text-muted-foreground hover:text-foreground transition-colors px-1 py-1"
+      >
+        {label}
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-lg px-4 py-3 border border-border bg-muted/30 text-sm text-muted-foreground leading-relaxed">
+              {text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
