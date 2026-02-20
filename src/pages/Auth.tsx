@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail, User, Home, ChevronRight } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, Home } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -133,20 +133,6 @@ const Auth = () => {
             </button>
           </div>
 
-          {/* Demo access */}
-          <div className="mt-6 pt-5 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground mb-3 font-display tracking-wider">MODE DÉCOUVERTE</p>
-            <Link to="/dashboard">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-muted-foreground hover:text-primary font-display tracking-wider text-sm border border-dashed border-border hover:border-primary/50"
-              >
-                EXPLORER SANS COMPTE
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
         </div>
       </motion.div>
     </div>
