@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Star, Lock, ChevronRight, X, Loader2 } from "lucide-react";
+import { Shield, Star, Lock, ChevronRight, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -8,38 +8,119 @@ import { useToast } from "@/hooks/use-toast";
 interface UpgradeModalProps {
   open: boolean;
   onClose?: () => void;
-  type?: "agent" | "director";
+  /** Which season to purchase — defaults to season_1 */
+  season?: "season_1" | "season_2" | "season_3" | "season_4" | "full_bundle";
 }
 
-const PLAN = {
-  label: "AGENT",
-  color: "hsl(var(--primary))",
-  price: "19.90",
-  currency: "CHF",
-  tagline: "AUTORISATION DE NIVEAU 2",
-  headline: "Accès Agents — Confidentiel",
-  description:
-    "Vous avez prouvé votre valeur lors des missions initiales. Le Bureau estime que vous méritez un accès étendu à nos opérations mondiales.",
-  features: [
-    "50 pays débloqués — opérations sur 5 continents",
-    "Missions narratives étendues avec fins multiples",
-    "Accès aux archives classifiées de Niveau 2",
-    "Badges exclusifs Agents",
-    "Classement mondial des agents",
-  ],
-  cta: "Demander l'Autorisation Agent",
-  icon: Shield,
+const SEASON_INFO: Record<string, {
+  label: string;
+  tagline: string;
+  headline: string;
+  description: string;
+  price: string;
+  features: string[];
+  cta: string;
+  icon: typeof Shield;
+}> = {
+  season_1: {
+    label: "SAISON I",
+    tagline: "LES OBSERVATEURS",
+    headline: "Saison I — Les Observateurs",
+    description:
+      "Vous avez prouvé que vous saviez regarder. Mais derrière la porte, un réseau vous surveille. 45 pays. L'interférence commence.",
+    price: "29",
+    features: [
+      "45 pays débloqués — opérations sur 5 continents",
+      "Missions narratives avec fins multiples",
+      "Archives classifiées de Niveau 2",
+      "Badges exclusifs Saison I",
+      "Classement mondial des agents",
+    ],
+    cta: "Débloquer la Saison I — 29 CHF",
+    icon: Shield,
+  },
+  season_2: {
+    label: "SAISON II",
+    tagline: "LES ARCHITECTES",
+    headline: "Saison II — Les Architectes",
+    description:
+      "Les connexions se dessinent. Vous remontez aux origines du Protocole. 50 pays. La vérité a un prix.",
+    price: "29",
+    features: [
+      "50 nouveaux pays débloqués",
+      "Découverte de l'origine du Protocole",
+      "Fragment Atlas + Badge Stratège Global",
+      "Missions de niveau Architecte",
+      "Zones économiques stratégiques",
+    ],
+    cta: "Débloquer la Saison II — 29 CHF",
+    icon: Shield,
+  },
+  season_3: {
+    label: "SAISON III",
+    tagline: "LA FAILLE",
+    headline: "Saison III — La Faille",
+    description:
+      "La réalité commence à se déstabiliser. Les certitudes s'effondrent. 50 pays. Rien n'est ce qu'il paraît.",
+    price: "29",
+    features: [
+      "50 nouveaux pays débloqués",
+      "La réalité se déstabilise",
+      "Fragment Dominion + Badge Architecte du Réseau",
+      "Crises contrôlées et routes énergétiques",
+      "Pouvoir invisible révélé",
+    ],
+    cta: "Débloquer la Saison III — 29 CHF",
+    icon: Shield,
+  },
+  season_4: {
+    label: "SAISON IV",
+    tagline: "LE PROTOCOLE FINAL",
+    headline: "Saison IV — Le Protocole Final",
+    description:
+      "Tout converge. L'assemblage final commence. 45 pays. La révélation ultime vous attend.",
+    price: "29",
+    features: [
+      "45 derniers pays débloqués",
+      "Assemblage final du Protocole",
+      "Carte mondiale révélée",
+      "Titre Maître du Protocole",
+      "Révélation totale Ω",
+    ],
+    cta: "Débloquer la Saison IV — 29 CHF",
+    icon: Shield,
+  },
+  full_bundle: {
+    label: "ÉDITION INTÉGRALE",
+    tagline: "WORLD ESCAPE PROTOCOL",
+    headline: "Édition Intégrale",
+    description:
+      "Les 4 saisons. 190 pays. Du Signal Initial au Protocole Final. L'intégralité de l'aventure en un seul accès.",
+    price: "99",
+    features: [
+      "Les 4 saisons débloquées — 190 pays",
+      "Économisez 17 CHF vs achat séparé",
+      "Accès immédiat à tout le contenu",
+      "Tous les badges et titres",
+      "Révélation totale Ω garantie",
+    ],
+    cta: "Débloquer l'Édition Intégrale — 99 CHF",
+    icon: Sparkles,
+  },
 };
 
-const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
+const UpgradeModal = ({ open, onClose, season = "season_1" }: UpgradeModalProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const Icon = PLAN.icon;
+  const info = SEASON_INFO[season] || SEASON_INFO.season_1;
+  const Icon = info.icon;
 
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { season },
+      });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
@@ -93,18 +174,18 @@ const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
                   <Icon className="h-8 w-8 text-primary" />
                 </div>
                 <p className="text-xs font-display text-primary tracking-[0.3em] mb-2 animate-pulse-gold">
-                  {PLAN.tagline}
+                  {info.tagline}
                 </p>
                 <h2 className="font-display text-2xl font-bold text-foreground tracking-wider mb-3">
-                  {PLAN.headline}
+                  {info.headline}
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                  {PLAN.description}
+                  {info.description}
                 </p>
               </div>
 
               <ul className="space-y-2.5 mb-8">
-                {PLAN.features.map((f, i) => (
+                {info.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
                     <Star className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
                     {f}
@@ -117,8 +198,8 @@ const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
                   PAIEMENT UNIQUE — ACCÈS À VIE
                 </p>
                 <p className="text-4xl font-display font-bold text-primary mb-1">
-                  {PLAN.price}
-                  <span className="text-lg text-muted-foreground ml-1">{PLAN.currency}</span>
+                  {info.price}
+                  <span className="text-lg text-muted-foreground ml-1">CHF</span>
                 </p>
                 <p className="text-xs text-muted-foreground">Sans abonnement. Sans frais cachés.</p>
               </div>
@@ -134,7 +215,7 @@ const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
                 ) : (
                   <Lock className="h-4 w-4" />
                 )}
-                {loading ? "CONNEXION SÉCURISÉE..." : PLAN.cta}
+                {loading ? "CONNEXION SÉCURISÉE..." : info.cta}
                 <ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
 
