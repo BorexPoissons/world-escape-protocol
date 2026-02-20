@@ -86,6 +86,7 @@ interface FreeCountryData {
 
 type FreePhase =
   | "loading"
+  | "cold_open"
   | "intro"
   | "scene_choice"
   | "logic_puzzle"
@@ -175,6 +176,10 @@ const FreeMission = () => {
   // Next country info
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
 
+  // DB-first narrative texts (no hardcode)
+  const [coldOpenText, setColdOpenText] = useState<string | null>(null);
+  const [introText, setIntroText] = useState<string | null>(null);
+
   // ── Lives, Timer, Bonus ─────────────────────────────────────────────────────
   const [lives, setLives] = useState(FREE_MISSION_CONFIG.lives);
   const [firstMistakeWarning, setFirstMistakeWarning] = useState(false);
@@ -229,8 +234,13 @@ const FreeMission = () => {
     const completionBlock = dbContent?.completion;
     const rewardsBlock = dbContent?.rewards;
 
-    if (dbContent?.gameplay?.questions?.length > 0 && dbContent?.story?.intro) {
-      // Map DB JSONB → FreeCountryData (question_bank format)
+    // ── DB-first narrative texts ──────────────────────────────────────────────
+    const dbColdOpen = (dbContent?.story?.cold_open as string) ?? null;
+    const dbIntro = (dbContent?.story?.intro as string) ?? null;
+    setColdOpenText(dbColdOpen);
+    setIntroText(dbIntro);
+
+    if (dbContent?.gameplay?.questions?.length > 0 && dbIntro) {
       const questions = dbContent.gameplay.questions as any[];
       const qbank = questions.map((q: any, i: number) => {
         const opts = (q.options ?? []).map((o: any) => o.text ?? o);
@@ -364,7 +374,13 @@ const FreeMission = () => {
       setEarnedLetter(letter);
     }
 
-    setPhase("intro");
+    // Start phase: cold_open if available, else intro, else error
+    if (!dbIntro && !dbColdOpen) {
+      toast({ title: "Erreur de contenu", description: "Aucun texte d'introduction trouvé pour cette mission.", variant: "destructive" });
+      navigate("/dashboard");
+      return;
+    }
+    setPhase(dbColdOpen ? "cold_open" : "intro");
   };
 
   function getNextCode(currentCode: string): string | null {
@@ -728,7 +744,7 @@ const FreeMission = () => {
           {/* Lives + Progression */}
           <div className="flex items-center gap-3">
             {/* Lives hearts */}
-            {phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && (
+            {phase !== "cold_open" && phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && (
               <div className="flex items-center gap-1" title="Vies restantes">
                 {Array.from({ length: FREE_MISSION_CONFIG.lives }).map((_, i) => (
                   <motion.div
@@ -777,7 +793,7 @@ const FreeMission = () => {
         </AnimatePresence>
 
         {/* Bonus pool bar */}
-        {phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && phase !== "failed" && (
+        {phase !== "cold_open" && phase !== "intro" && phase !== "letter_reveal" && phase !== "reward" && phase !== "failed" && (
           <div className="border-t px-4 py-1.5" style={{ borderColor: "hsl(var(--gold-glow) / 0.25)" }}>
             <div className="max-w-3xl mx-auto flex items-center gap-3">
               <span className="text-xs font-display tracking-wider flex-shrink-0" style={{ color: "hsl(var(--gold-glow))" }}>⚡ BONUS</span>
@@ -799,8 +815,51 @@ const FreeMission = () => {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
 
-          {/* ── INTRO ── */}
-          {phase === "intro" && data && (
+          {/* ── COLD OPEN (Écran 1) ── */}
+          {phase === "cold_open" && coldOpenText && (
+            <motion.div
+              key="cold-open"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-8"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 1 }}
+                className="max-w-xl"
+              >
+                <TypewriterText
+                  text={coldOpenText}
+                  speed={22}
+                  className="text-xl md:text-2xl font-body text-foreground/80 leading-relaxed whitespace-pre-line"
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2, duration: 0.8 }}
+              >
+                <Button
+                  onClick={() => {
+                    if (introText) {
+                      setPhase("intro");
+                    } else {
+                      setPhase("scene_choice");
+                    }
+                  }}
+                  className="font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 py-5 px-8 text-sm"
+                >
+                  📡 RECEVOIR LA TRANSMISSION
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ── INTRO (Écran 2 — Briefing Jasper) ── */}
+          {phase === "intro" && data && introText && (
             <motion.div
               key="intro"
               initial={{ opacity: 0, y: 20 }}
@@ -837,11 +896,11 @@ const FreeMission = () => {
                 </div>
               </div>
 
-              {/* Intro narrative */}
+              {/* Intro narrative — DB-first, no hardcode */}
               <div className="bg-card border border-border rounded-lg p-6 border-glow relative overflow-hidden">
                 <div className="scanline absolute inset-0 pointer-events-none opacity-10" />
                 <TypewriterText
-                  text={data.mission.intro_text ?? data.mission.intro ?? ""}
+                  text={introText}
                   speed={18}
                   className="text-foreground leading-relaxed whitespace-pre-line relative z-10"
                 />
