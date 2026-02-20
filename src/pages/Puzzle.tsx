@@ -712,7 +712,7 @@ const Puzzle = () => {
                     Résolvez l'énigme finale pour révéler le mot-clé secret et débloquer la suite de l'enquête.
                   </p>
 
-                  <Link to="/central-dilemma">
+                  <Link to="/dilemme-central">
                     <Button className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
                       <Compass className="h-4 w-4" />
                       ACCÉDER AU DILEMME
