@@ -113,6 +113,39 @@ export type Database = {
         }
         Relationships: []
       }
+      countries_missions: {
+        Row: {
+          code: string
+          content: Json
+          country: string
+          difficulty: number
+          id: string
+          is_free: boolean
+          season: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          content?: Json
+          country: string
+          difficulty?: number
+          id?: string
+          is_free?: boolean
+          season?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          content?: Json
+          country?: string
+          difficulty?: number
+          id?: string
+          is_free?: boolean
+          season?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       missions: {
         Row: {
           completed: boolean
