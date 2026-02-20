@@ -181,7 +181,7 @@ const MissionComplete = () => {
     <div className="min-h-screen bg-background bg-grid flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
               <Home className="h-4 w-4" />
@@ -200,7 +200,7 @@ const MissionComplete = () => {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="max-w-2xl w-full">
+        <div className="max-w-3xl lg:max-w-4xl w-full">
           <AnimatePresence mode="wait">
 
             {/* ── Phase 1: Result Reveal ── */}

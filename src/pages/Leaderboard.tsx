@@ -94,7 +94,7 @@ export default function Leaderboard() {
     <div className="min-h-screen bg-background bg-grid">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mr-1">
               <Home className="h-4 w-4" />
@@ -127,7 +127,7 @@ export default function Leaderboard() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-10">
+      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

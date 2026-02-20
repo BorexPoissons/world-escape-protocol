@@ -775,7 +775,7 @@ const Mission = () => {
     <div className="min-h-screen bg-background bg-grid">
       {/* Top bar */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
               <Home className="h-4 w-4" />
@@ -865,7 +865,7 @@ const Mission = () => {
         {/* Bonus pool bar — always visible during enigme phase, shows accumulated bonus seconds */}
         {(phase === "enigme" || phase === "moral" || phase === "finale") && (
           <div className="border-t px-4 py-1.5" style={{ borderColor: "hsl(var(--gold-glow) / 0.25)" }}>
-            <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <div className="max-w-4xl lg:max-w-5xl mx-auto flex items-center gap-3">
               <span className="text-xs font-display tracking-wider flex-shrink-0" style={{ color: "hsl(var(--gold-glow))" }}>⚡ BONUS</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <motion.div
@@ -911,7 +911,7 @@ const Mission = () => {
         )}
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Demo mode CTA */}
         {isDemo && (
           <motion.div
@@ -938,7 +938,7 @@ const Mission = () => {
               <h1 className="text-3xl font-display font-bold text-primary text-glow tracking-wider">{mission.mission_title}</h1>
 
               {/* Mission rules card */}
-              <div className="bg-card border border-border rounded-lg p-4 grid grid-cols-3 gap-4 text-center">
+              <div className="bg-card border border-border rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="flex justify-center gap-0.5 mb-1">
                     {Array.from({ length: maxLives }).map((_, i) => <Heart key={i} className="h-4 w-4 text-destructive fill-destructive" />)}

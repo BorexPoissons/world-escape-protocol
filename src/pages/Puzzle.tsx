@@ -121,6 +121,7 @@ const Puzzle = () => {
   const [inspireIdx, setInspireIdx] = useState(0);
   const [tier, setTier] = useState<Tier>("free");
   const [draggingFragmentId, setDraggingFragmentId] = useState<string | null>(null);
+  const [tapSelectedFragmentId, setTapSelectedFragmentId] = useState<string | null>(null);
   const [placedCountryIds, setPlacedCountryIds] = useState<string[]>([]);
   const [snapNotifs, setSnapNotifs] = useState<SnapNotif[]>([]);
   const [snapTargetId, setSnapTargetId] = useState<string | null>(null);
@@ -441,6 +442,19 @@ const Puzzle = () => {
     puzzleData.some(d => d.unlockedPieces > 0);
 
   const handleCountryClick = (mapCountry: MapCountry) => {
+    // Tap-to-place: if a fragment is selected for placement, attempt placement
+    if (tapSelectedFragmentId) {
+      const fragment = fragments.find(f => f.id === tapSelectedFragmentId);
+      if (fragment) {
+        if (fragment.countryId === mapCountry.id) {
+          placeFragment(fragment.id, mapCountry.id, fragment.countryName);
+        } else {
+          showWrongNotif(fragment.countryName);
+        }
+        setTapSelectedFragmentId(null);
+        return;
+      }
+    }
     const data = puzzleData.find(d => d.country.id === mapCountry.id);
     if (data) setSelectedCountry(data);
   };
@@ -480,7 +494,7 @@ const Puzzle = () => {
 
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
               <Globe className="h-4 w-4" />
@@ -535,7 +549,7 @@ const Puzzle = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-[1600px] xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -623,7 +637,7 @@ const Puzzle = () => {
               style={{ transform: "translate(-50%, -50%)" }}
             >
               <div
-                className="relative px-12 py-7 rounded-2xl border backdrop-blur-md flex items-center gap-6 cursor-pointer pointer-events-auto"
+                 className="relative px-6 py-4 sm:px-12 sm:py-7 rounded-2xl border backdrop-blur-md flex items-center gap-4 sm:gap-6 cursor-pointer pointer-events-auto max-w-[92vw] sm:max-w-none"
                 style={{
                   background: "hsl(220 25% 4% / 0.92)",
                   borderColor: "hsl(40 80% 55% / 0.5)",
@@ -648,7 +662,7 @@ const Puzzle = () => {
                   className="relative flex-shrink-0"
                 >
                   <div
-                    className="w-24 h-24 rounded-full overflow-hidden border-2"
+                    className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2"
                     style={{
                       borderColor: "hsl(40 80% 55% / 0.6)",
                       boxShadow: "0 0 20px hsl(40 80% 55% / 0.4), 0 0 40px hsl(40 80% 55% / 0.15)",
@@ -664,21 +678,21 @@ const Puzzle = () => {
                     <motion.span
                       animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
                       transition={{ repeat: 3, duration: 0.6 }}
-                      className="text-xl"
+                      className="text-lg sm:text-xl"
                     >
                       ✦
                     </motion.span>
-                    <p className="text-sm font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
+                    <p className="text-xs sm:text-sm font-display tracking-[0.2em] sm:tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
                       SIGNAL DÉTECTÉ
                     </p>
                   </div>
-                  <p className="text-xs font-display tracking-wider" style={{ color: "hsl(40 80% 55%)" }}>
+                  <p className="text-[10px] sm:text-xs font-display tracking-wider" style={{ color: "hsl(40 80% 55%)" }}>
                     JASPER VALCOURT
                   </p>
-                  <p className="text-[11px] font-display tracking-wider mt-0.5 italic" style={{ color: "hsl(40 15% 80%)" }}>
+                  <p className="text-[10px] sm:text-[11px] font-display tracking-wider mt-0.5 italic" style={{ color: "hsl(40 15% 80%)" }}>
                     "Signal confirmé. Le réseau grandit."
                   </p>
-                  <p className="text-[10px] font-display tracking-wider mt-1" style={{ color: "hsl(40 15% 75%)" }}>
+                  <p className="text-[9px] sm:text-[10px] font-display tracking-wider mt-1" style={{ color: "hsl(40 15% 75%)" }}>
                     {placedCountryIds.length} FRAGMENTS INTÉGRÉS
                   </p>
                 </div>
@@ -697,6 +711,8 @@ const Puzzle = () => {
             draggingId={draggingFragmentId}
             onDragStart={(id) => setDraggingFragmentId(id)}
             onDragEnd={() => setDraggingFragmentId(null)}
+            selectedForPlacement={tapSelectedFragmentId}
+            onSelectForPlacement={setTapSelectedFragmentId}
           />
         </motion.div>
 
