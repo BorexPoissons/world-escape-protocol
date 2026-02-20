@@ -8,6 +8,7 @@ import {
   Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft,
   Home, BarChart3, Search, Eye, EyeOff, Star, FileJson, CheckCircle, XCircle,
   TrendingUp, Flame, Lock, CreditCard, Upload, Filter, AlertCircle, RotateCcw,
+  Download, ShieldAlert, KeyRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -84,7 +85,7 @@ const Admin = () => {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions" | "purchases">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions" | "purchases" | "security">("overview");
 
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<"profiles">[]>([]);
@@ -105,6 +106,10 @@ const Admin = () => {
   // Purchases tab state
   const [confirmChange, setConfirmChange] = useState<{ userId: string; name: string; newType: string } | null>(null);
   const [subscriptionLogs, setSubscriptionLogs] = useState<{ userId: string; name: string; oldType: string; newType: string; at: string }[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [entitlements, setEntitlements] = useState<any[]>([]);
+  const [securityLogs, setSecurityLogs] = useState<any[]>([]);
+  const [salesSearch, setSalesSearch] = useState("");
 
   // Phase data for agents tab
   const [userFragments, setUserFragments] = useState<any[]>([]);
@@ -154,7 +159,7 @@ const Admin = () => {
   };
 
   const fetchAllData = async () => {
-    const [c, p, m, roles, frags, tokens, progress] = await Promise.all([
+    const [c, p, m, roles, frags, tokens, progress, purchasesRes, entitlementsRes, secLogsRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("profiles").select("*").order("xp", { ascending: false }),
       supabase.from("missions").select("*").order("created_at", { ascending: false }).limit(500),
@@ -162,6 +167,9 @@ const Admin = () => {
       supabase.from("user_fragments" as any).select("*"),
       supabase.from("user_tokens" as any).select("*"),
       supabase.from("player_country_progress").select("*"),
+      supabase.from("purchases").select("*").order("created_at", { ascending: false }),
+      supabase.from("entitlements").select("*"),
+      supabase.from("security_logs" as any).select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     if (c.data) {
       setCountries(c.data as CountryRow[]);
@@ -180,6 +188,9 @@ const Admin = () => {
     if (frags.data) setUserFragments(frags.data);
     if (tokens.data) setUserTokens(tokens.data);
     if (progress.data) setPlayerProgress(progress.data);
+    if (purchasesRes.data) setPurchases(purchasesRes.data);
+    if (entitlementsRes.data) setEntitlements(entitlementsRes.data);
+    if (secLogsRes.data) setSecurityLogs(secLogsRes.data);
     setLoading(false);
   };
 
@@ -570,7 +581,8 @@ const Admin = () => {
     { key: "countries" as const, label: "PAYS", icon: Globe, count: countries.length },
     { key: "users" as const, label: "AGENTS", icon: Users, count: profiles.length },
     { key: "missions" as const, label: "MISSIONS", icon: Target, count: missions.length },
-    { key: "purchases" as const, label: "ACHATS", icon: CreditCard },
+    { key: "purchases" as const, label: "VENTES", icon: CreditCard, count: purchases.length },
+    { key: "security" as const, label: "SÉCURITÉ", icon: ShieldAlert, count: securityLogs.length },
   ];
 
   return (
@@ -1195,96 +1207,132 @@ const Admin = () => {
           </div>
         )}
 
-        {/* ══ ACHATS ═════════════════════════════════════════════════════ */}
+        {/* ══ VENTES ═════════════════════════════════════════════════════ */}
         {activeTab === "purchases" && (
           <div className="space-y-6">
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "FREE", count: freeUsers.length, color: "hsl(40 80% 55%)", icon: "🔓", desc: "Accès gratuit (5 pays)" },
-                { label: "AGENT", count: agentUsers.length, color: "hsl(220 80% 65%)", icon: "🕵️", desc: "Season 1 · 19.90 CHF" },
-                { label: "DIRECTOR", count: directorUsers.length, color: "hsl(280 60% 65%)", icon: "👁", desc: "Accès total · 119 CHF" },
-              ].map((tier) => (
-                <div key={tier.label} className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl">{tier.icon}</span>
-                    <span className="text-xs font-display tracking-wider px-2 py-0.5 rounded"
-                      style={{ color: tier.color, border: `1px solid ${tier.color}40`, background: `${tier.color}10` }}>
-                      {tier.label}
-                    </span>
-                  </div>
-                  <p className="text-3xl font-display font-bold text-foreground">{tier.count}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{tier.desc}</p>
-                </div>
+                { label: "VENTES", value: purchases.filter((p: any) => p.status === "completed").length, icon: CreditCard, sub: `${purchases.length} transactions` },
+                { label: "REVENUS", value: `${(purchases.filter((p: any) => p.status === "completed").reduce((s: number, p: any) => s + (p.amount || 0), 0) / 100).toFixed(2)} CHF`, icon: TrendingUp, sub: "Total brut" },
+                { label: "PAYANTS", value: agentUsers.length + directorUsers.length, icon: Users, sub: `${agentUsers.length} Agent · ${directorUsers.length} Director` },
+                { label: "ENTITLEMENTS", value: entitlements.filter((e: any) => e.active).length, icon: KeyRound, sub: `${entitlements.length} total` },
+              ].map((card, i) => (
+                <motion.div key={card.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card border border-border rounded-xl p-5">
+                  <div className="flex items-center gap-2 mb-3"><card.icon className="h-4 w-4 text-primary" /><span className="text-xs font-display text-muted-foreground tracking-wider">{card.label}</span></div>
+                  <p className="text-3xl font-display font-bold text-foreground">{card.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
+                </motion.div>
               ))}
             </div>
 
-            {/* Log des changements récents */}
-            {subscriptionLogs.length > 0 && (
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-3 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />MODIFICATIONS RÉCENTES
-                </h3>
-                <div className="space-y-1.5">
-                  {subscriptionLogs.map((log, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs font-display py-1 border-b border-border/30 last:border-0">
-                      <span className="text-foreground">{log.name}</span>
-                      <span className="text-muted-foreground">{log.oldType.toUpperCase()} → {log.newType.toUpperCase()}</span>
-                      <span className="text-muted-foreground/60">{log.at}</span>
-                    </div>
-                  ))}
-                </div>
+            {/* Search + CSV */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Rechercher par nom, ID..." value={salesSearch} onChange={e => setSalesSearch(e.target.value)} className="pl-9 font-display text-sm" />
               </div>
-            )}
+              <Button variant="outline" size="sm" className="font-display tracking-wider text-xs gap-1.5" onClick={() => {
+                const rows = purchases.map((p: any) => { const pr = profiles.find(x => x.user_id === p.user_id); return [new Date(p.created_at).toISOString(),`"${pr?.display_name||"—"}"`,p.user_id,p.tier,(p.amount/100).toFixed(2),p.currency?.toUpperCase(),p.stripe_payment_intent_id||"—",p.stripe_customer_id||"—",p.status].join(","); });
+                const csv = ["Date,Player,UserID,Product,Amount,Currency,PaymentIntent,CustomerID,Status",...rows].join("\n");
+                const blob = new Blob([csv],{type:"text/csv"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href=url; a.download=`sales_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+              }}><Download className="h-3.5 w-3.5" />CSV</Button>
+            </div>
 
-            {/* Liste des utilisateurs avec gestion subscription */}
+            {/* Sales table */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs font-display">
+                  <thead><tr className="border-b border-border bg-secondary/30">
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">DATE</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">JOUEUR</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">PRODUIT</th>
+                    <th className="text-right px-4 py-3 text-muted-foreground tracking-wider">MONTANT</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">STRIPE</th>
+                    <th className="text-center px-4 py-3 text-muted-foreground tracking-wider">STATUT</th>
+                  </tr></thead>
+                  <tbody>
+                    {purchases.filter((p: any) => { if (!salesSearch) return true; const q = salesSearch.toLowerCase(); const pr = profiles.find(x => x.user_id === p.user_id); return (pr?.display_name||"").toLowerCase().includes(q) || p.user_id.toLowerCase().includes(q) || (p.stripe_payment_intent_id||"").toLowerCase().includes(q) || (p.stripe_customer_id||"").toLowerCase().includes(q); }).map((p: any) => {
+                      const profile = profiles.find(pr => pr.user_id === p.user_id);
+                      const tb = getSubscriptionBadge(p.tier);
+                      return (
+                        <tr key={p.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(p.created_at).toLocaleDateString("fr-FR")}<br/><span className="text-muted-foreground/60">{new Date(p.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span></td>
+                          <td className="px-4 py-3"><div className="text-foreground font-bold">{profile?.display_name||"Agent"}</div><div className="text-muted-foreground/60 text-[10px] font-mono">{p.user_id.slice(0,12)}…</div></td>
+                          <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[10px] tracking-wider" style={{color:tb.color,border:`1px solid ${tb.color}30`,background:`${tb.color}10`}}>{p.tier==="agent"?"SEASON 1":p.tier==="director"?"FULL ACCESS":p.tier.toUpperCase()}</span></td>
+                          <td className="px-4 py-3 text-right text-foreground font-bold whitespace-nowrap">{(p.amount/100).toFixed(2)} {(p.currency||"chf").toUpperCase()}</td>
+                          <td className="px-4 py-3">{p.stripe_payment_intent_id&&<div className="text-muted-foreground/80 text-[10px] font-mono">PI: {p.stripe_payment_intent_id.slice(0,18)}…</div>}{p.stripe_customer_id&&<div className="text-muted-foreground/60 text-[10px] font-mono">CUS: {p.stripe_customer_id.slice(0,16)}…</div>}</td>
+                          <td className="px-4 py-3 text-center"><span className={`px-2 py-0.5 rounded text-[10px] tracking-wider ${p.status==="completed"?"text-primary bg-primary/10 border border-primary/30":p.status==="refunded"?"text-destructive bg-destructive/10 border border-destructive/30":"text-muted-foreground bg-secondary border border-border"}`}>{p.status==="completed"?"PAYÉ":p.status==="refunded"?"REMBOURSÉ":p.status.toUpperCase()}</span></td>
+                        </tr>);
+                    })}
+                  </tbody>
+                </table>
+                {purchases.length===0&&<div className="text-center py-12"><CreditCard className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3"/><p className="text-muted-foreground font-display tracking-wider">AUCUNE VENTE</p></div>}
+              </div>
+            </div>
+
+            {/* Entitlements */}
             <div className="bg-card border border-border rounded-xl p-5">
-              <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-4 flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-primary" />GESTION DES ACCÈS
-              </h3>
+              <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-4 flex items-center gap-2"><KeyRound className="h-4 w-4 text-primary" />ENTITLEMENTS ACTIFS</h3>
+              <div className="space-y-2">
+                {entitlements.filter((e:any)=>e.active).map((e:any)=>{const pr=profiles.find(p=>p.user_id===e.user_id);return(
+                  <div key={e.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
+                    <div className="flex items-center gap-3"><span className="font-display text-foreground text-sm">{pr?.display_name||"Agent"}</span><span className="text-xs font-display px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30">{e.entitlement_key.toUpperCase()}</span></div>
+                    <span className="text-xs text-muted-foreground font-display">{new Date(e.created_at).toLocaleDateString("fr-FR")}</span>
+                  </div>);})}
+                {entitlements.filter((e:any)=>e.active).length===0&&<p className="text-muted-foreground text-sm text-center py-4">Aucun entitlement actif</p>}
+              </div>
+            </div>
+
+            {/* Manual access management */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="font-display text-sm text-muted-foreground tracking-wider mb-4 flex items-center gap-2"><Lock className="h-4 w-4 text-primary" />GESTION MANUELLE DES ACCÈS</h3>
+              {subscriptionLogs.length>0&&<div className="mb-4 p-3 rounded-lg bg-secondary/30 border border-border/50"><p className="text-[10px] font-display tracking-wider text-muted-foreground mb-2">MODIFICATIONS RÉCENTES</p>{subscriptionLogs.map((log,i)=>(<div key={i} className="flex items-center justify-between text-xs font-display py-1 border-b border-border/30 last:border-0"><span className="text-foreground">{log.name}</span><span className="text-muted-foreground">{log.oldType.toUpperCase()} → {log.newType.toUpperCase()}</span><span className="text-muted-foreground/60">{log.at}</span></div>))}</div>}
               <div className="space-y-3">
-                {profiles.map((p) => {
-                  const subType = (p as any).subscription_type || "free";
-                  const badge = getSubscriptionBadge(subType);
-                  return (
-                    <div key={p.id} className="flex items-center justify-between gap-4 py-3 border-b border-border/50 last:border-0">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-display text-foreground text-sm">{p.display_name || "Agent sans nom"}</span>
-                          <span className="text-xs font-display px-1.5 py-0.5 rounded"
-                            style={{ color: badge.color, border: `1px solid ${badge.color}30`, background: `${badge.color}10` }}>
-                            {badge.label}
-                          </span>
-                          {userRoles[p.user_id] === "admin" && (
-                            <span className="text-xs font-display text-primary px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10">ADMIN</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-display">
-                          Niv.{p.level} · {p.xp} XP · Créé {new Date(p.created_at).toLocaleDateString("fr-FR")}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        {["free", "agent", "director"].map((tier) => (
-                          <button
-                            key={tier}
-                            disabled={subType === tier}
-                            onClick={() => setConfirmChange({ userId: p.user_id, name: p.display_name || "Agent", newType: tier })}
-                            className={`px-2.5 py-1 rounded text-xs font-display tracking-wider transition-all border ${
-                              subType === tier
-                                ? "opacity-40 cursor-not-allowed border-border bg-secondary text-muted-foreground"
-                                : "border-border hover:border-primary/50 bg-card text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            {tier === "free" ? "FREE" : tier === "agent" ? "AGENT" : "DIRECTOR"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                {profiles.length === 0 && (
-                  <p className="text-center text-muted-foreground py-6 font-display tracking-wider">AUCUN UTILISATEUR</p>
-                )}
+                {profiles.map((p)=>{const subType=(p as any).subscription_type||"free";const badge=getSubscriptionBadge(subType);return(
+                  <div key={p.id} className="flex items-center justify-between gap-4 py-2 border-b border-border/50 last:border-0">
+                    <div className="flex items-center gap-2"><span className="font-display text-foreground text-sm">{p.display_name||"Agent"}</span><span className="text-xs font-display px-1.5 py-0.5 rounded" style={{color:badge.color,border:`1px solid ${badge.color}30`,background:`${badge.color}10`}}>{badge.label}</span></div>
+                    <div className="flex gap-2 flex-shrink-0">{["free","agent","director"].map((tier)=>(<button key={tier} disabled={subType===tier} onClick={()=>setConfirmChange({userId:p.user_id,name:p.display_name||"Agent",newType:tier})} className={`px-2.5 py-1 rounded text-xs font-display tracking-wider transition-all border ${subType===tier?"opacity-40 cursor-not-allowed border-border bg-secondary text-muted-foreground":"border-border hover:border-primary/50 bg-card text-muted-foreground hover:text-foreground"}`}>{tier==="free"?"FREE":tier==="agent"?"AGENT":"DIRECTOR"}</button>))}</div>
+                  </div>);})}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ══ SÉCURITÉ ═══════════════════════════════════════════════════ */}
+        {activeTab === "security" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { label: "ÉVÉNEMENTS", value: securityLogs.length, icon: ShieldAlert },
+                { label: "ALERTES", value: securityLogs.filter((l:any)=>l.event_type.includes("different_user")||l.event_type.includes("bound_to_other")||l.event_type.includes("mismatch")).length, icon: AlertCircle },
+                { label: "ACHATS OK", value: securityLogs.filter((l:any)=>l.event_type==="purchase_completed").length, icon: CheckCircle },
+              ].map((card,i)=>(
+                <motion.div key={card.label} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.08}} className="bg-card border border-border rounded-xl p-5">
+                  <div className="flex items-center gap-2 mb-3"><card.icon className="h-4 w-4 text-primary"/><span className="text-xs font-display text-muted-foreground tracking-wider">{card.label}</span></div>
+                  <p className="text-3xl font-display font-bold text-foreground">{card.value}</p>
+                </motion.div>
+              ))}
+            </div>
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs font-display">
+                  <thead><tr className="border-b border-border bg-secondary/30">
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">DATE</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">TYPE</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">UTILISATEUR</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground tracking-wider">DÉTAILS</th>
+                  </tr></thead>
+                  <tbody>
+                    {securityLogs.map((log:any)=>{const pr=profiles.find(p=>p.user_id===log.user_id);const isAlert=log.event_type.includes("different_user")||log.event_type.includes("bound_to_other")||log.event_type.includes("mismatch");return(
+                      <tr key={log.id} className={`border-b border-border/30 ${isAlert?"bg-destructive/5":"hover:bg-secondary/20"} transition-colors`}>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(log.created_at).toLocaleDateString("fr-FR")}<br/><span className="text-muted-foreground/60">{new Date(log.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span></td>
+                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] tracking-wider ${isAlert?"text-destructive bg-destructive/10 border border-destructive/30":"text-primary bg-primary/10 border border-primary/30"}`}>{log.event_type.replace(/_/g," ").toUpperCase()}</span></td>
+                        <td className="px-4 py-3"><div className="text-foreground">{pr?.display_name||"—"}</div><div className="text-muted-foreground/60 text-[10px] font-mono">{(log.user_id||"").slice(0,12)}…</div></td>
+                        <td className="px-4 py-3 text-muted-foreground/80 text-[10px] font-mono max-w-xs truncate">{log.details?JSON.stringify(log.details).slice(0,80):"—"}</td>
+                      </tr>);})}
+                  </tbody>
+                </table>
+                {securityLogs.length===0&&<div className="text-center py-12"><ShieldAlert className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3"/><p className="text-muted-foreground font-display tracking-wider">AUCUN ÉVÉNEMENT</p></div>}
               </div>
             </div>
           </div>
