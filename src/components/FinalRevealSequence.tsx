@@ -566,28 +566,116 @@ export default function FinalRevealSequence({
         )}
       </AnimatePresence>
 
-      {/* ── ACTE 7: Final permanent HUD ── */}
+      {/* ── ACTE 7: JV Triangular Network + Final permanent HUD ── */}
       <AnimatePresence>
         {step >= 7 && (
-          <motion.div
-            className="absolute bottom-6 left-1/2 z-[96] pointer-events-none"
-            style={{ transform: "translateX(-50%)" }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div
-              className="text-xs font-mono tracking-[0.25em] px-8 py-3 rounded-full border text-center"
-              style={{
-                background: "hsl(220 25% 4% / 0.92)",
-                borderColor: "hsl(40 80% 55% / 0.5)",
-                color: "hsl(40 85% 72%)",
-                boxShadow: "0 0 30px hsl(40 80% 55% / 0.25)",
-              }}
+          <>
+            {/* Triangular network SVG revealing JV silhouette */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none z-[88]"
+              viewBox="0 0 100 56.25"
+              preserveAspectRatio="none"
             >
-              ✦ RÉVÉLATION TOTALE · LE PLAN EST COMPLET
-            </div>
-          </motion.div>
+              <defs>
+                <filter id="jvGlow" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur stdDeviation="0.6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Triangular mesh converging to center */}
+              {[
+                // Outer triangle
+                [20, 12, 80, 12], [80, 12, 50, 48], [50, 48, 20, 12],
+                // Inner triangle (inverted)
+                [35, 12, 65, 12], [65, 12, 50, 35], [50, 35, 35, 12],
+                // Radial lines from center
+                [50, 28, 20, 12], [50, 28, 80, 12], [50, 28, 50, 48],
+                [50, 28, 35, 12], [50, 28, 65, 12], [50, 28, 50, 35],
+                // Cross lines
+                [20, 12, 65, 12], [80, 12, 35, 12],
+                [35, 12, 50, 48], [65, 12, 50, 48],
+              ].map(([x1, y1, x2, y2], i) => (
+                <motion.line
+                  key={`tri-${i}`}
+                  x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke="hsl(40 80% 60%)"
+                  strokeWidth={0.12}
+                  strokeOpacity={0.35}
+                  filter="url(#jvGlow)"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 2, delay: i * 0.08, ease: "easeOut" }}
+                />
+              ))}
+
+              {/* JV initials at center */}
+              <motion.text
+                x={46} y={30}
+                textAnchor="middle"
+                fontSize="4"
+                fontFamily="serif"
+                fontWeight="bold"
+                fill="hsl(40 85% 68%)"
+                filter="url(#jvGlow)"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.7, 0.5] }}
+                transition={{ duration: 3, delay: 1.5 }}
+              >
+                J
+              </motion.text>
+              <motion.text
+                x={54} y={30}
+                textAnchor="middle"
+                fontSize="4"
+                fontFamily="serif"
+                fontWeight="bold"
+                fill="hsl(40 85% 68%)"
+                filter="url(#jvGlow)"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.7, 0.5] }}
+                transition={{ duration: 3, delay: 1.8 }}
+              >
+                V
+              </motion.text>
+
+              {/* Triangle vertices pulsing dots */}
+              {[[20, 12], [80, 12], [50, 48], [35, 12], [65, 12], [50, 35]].map(([x, y], i) => (
+                <motion.circle
+                  key={`vx-${i}`}
+                  cx={x} cy={y} r={0.5}
+                  fill="hsl(40 90% 72%)"
+                  filter="url(#jvGlow)"
+                  animate={{ opacity: [0.3, 1, 0.3], r: [0.4, 0.8, 0.4] }}
+                  transition={{ repeat: Infinity, duration: 2.5, delay: i * 0.3 }}
+                />
+              ))}
+            </svg>
+
+            {/* Final HUD */}
+            <motion.div
+              className="absolute bottom-6 left-1/2 z-[96] pointer-events-none"
+              style={{ transform: "translateX(-50%)" }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 2 }}
+            >
+              <div
+                className="text-xs font-mono tracking-[0.25em] px-8 py-3 rounded-full border text-center"
+                style={{
+                  background: "hsl(220 25% 4% / 0.92)",
+                  borderColor: "hsl(40 80% 55% / 0.5)",
+                  color: "hsl(40 85% 72%)",
+                  boxShadow: "0 0 30px hsl(40 80% 55% / 0.25)",
+                }}
+              >
+                ✦ RÉVÉLATION TOTALE · LE PLAN EST COMPLET · J.V.
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </motion.div>

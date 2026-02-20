@@ -26,7 +26,8 @@ interface CinematicWorldMapProps {
   globalProgress?: number;
   collectedCountryCodes?: string[];
   forceFullReveal?: boolean;
-  snapTargetId?: string | null; // country id that just got snapped — triggers glow
+  snapTargetId?: string | null;
+  milestoneSignal?: boolean; // triggers a luminous pulse on map
 }
 
 // Fallback geo positions
@@ -161,6 +162,7 @@ const CinematicWorldMap = ({
   collectedCountryCodes = [],
   forceFullReveal = false,
   snapTargetId = null,
+  milestoneSignal = false,
 }: CinematicWorldMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const playableNodes = countries.filter(c => c.visibility === "playable");
@@ -226,6 +228,22 @@ const CinematicWorldMap = ({
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 35%, hsl(220 25% 4% / 0.55) 100%)" }}
       />
+
+      {/* Milestone signal pulse overlay */}
+      <AnimatePresence>
+        {milestoneSignal && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none z-[6]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.5, 0.3, 0.6, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.2, ease: "easeInOut" }}
+            style={{
+              background: "radial-gradient(ellipse at 50% 50%, hsl(40 80% 55% / 0.25) 0%, hsl(40 80% 55% / 0.08) 40%, transparent 70%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Scanlines */}
       <div

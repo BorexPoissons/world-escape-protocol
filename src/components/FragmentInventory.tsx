@@ -380,33 +380,51 @@ const FragmentInventory = ({
           </div>
         )}
 
-        {/* Collected tokens (letters) */}
-        {tokens.length > 0 && (
-          <div className="border-t border-border/50 px-5 py-3">
-            <p className="text-xs font-display text-muted-foreground tracking-wider mb-2">
-              TOKENS COLLECTÉS ({tokens.length})
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {tokens.map(t => (
-                <div
-                  key={t.countryCode}
-                  className="flex items-center gap-1.5 text-xs font-display px-2.5 py-1 rounded"
-                  style={{
-                    background: "hsl(40 80% 55% / 0.08)",
-                    border: "1px solid hsl(40 80% 55% / 0.25)",
-                  }}
-                >
-                  <span className="text-sm font-bold" style={{ color: "hsl(40 85% 62%)" }}>
-                    {t.letter}
+        {/* Collected tokens (letters) — masked until set complete */}
+        {tokens.length > 0 && (() => {
+          const SIGNAL_CODES = ["CH", "FR", "EG", "US", "JP"];
+          const allSignalCollected = SIGNAL_CODES.every(code =>
+            tokens.some(t => t.countryCode === code)
+          );
+          return (
+            <div className="border-t border-border/50 px-5 py-3">
+              <p className="text-xs font-display text-muted-foreground tracking-wider mb-2">
+                TOKENS COLLECTÉS ({tokens.length})
+                {!allSignalCollected && (
+                  <span className="ml-2 text-[9px]" style={{ color: "hsl(40 60% 50%)" }}>
+                    — {5 - tokens.length} RESTANTS POUR RÉVÉLER
                   </span>
-                  <span style={{ color: "hsl(40 80% 65% / 0.6)" }}>
-                    {t.countryCode}
-                  </span>
-                </div>
-              ))}
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {tokens.map(t => (
+                  <div
+                    key={t.countryCode}
+                    className="flex items-center gap-1.5 text-xs font-display px-2.5 py-1 rounded"
+                    style={{
+                      background: "hsl(40 80% 55% / 0.08)",
+                      border: `1px solid hsl(40 80% 55% / ${allSignalCollected ? "0.4" : "0.15"})`,
+                    }}
+                  >
+                    <span
+                      className="text-sm font-bold"
+                      style={{
+                        color: allSignalCollected ? "hsl(40 85% 62%)" : "hsl(40 60% 40%)",
+                        filter: allSignalCollected ? "none" : "blur(5px)",
+                        userSelect: "none",
+                      }}
+                    >
+                      {t.letter}
+                    </span>
+                    <span style={{ color: "hsl(40 80% 65% / 0.6)" }}>
+                      {t.countryCode}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Detail modal */}
