@@ -93,6 +93,12 @@ const Admin = () => {
   const [confirmChange, setConfirmChange] = useState<{ userId: string; name: string; newType: string } | null>(null);
   const [subscriptionLogs, setSubscriptionLogs] = useState<{ userId: string; name: string; oldType: string; newType: string; at: string }[]>([]);
 
+  // Phase data for agents tab
+  const [userFragments, setUserFragments] = useState<any[]>([]);
+  const [userTokens, setUserTokens] = useState<any[]>([]);
+  const [playerProgress, setPlayerProgress] = useState<any[]>([]);
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+
   const [countryForm, setCountryForm] = useState({
     name: "", code: "", description: "", difficulty_base: 1,
     monuments: "", historical_events: "", symbols: "",
@@ -116,11 +122,14 @@ const Admin = () => {
   };
 
   const fetchAllData = async () => {
-    const [c, p, m, roles] = await Promise.all([
+    const [c, p, m, roles, frags, tokens, progress] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("profiles").select("*").order("xp", { ascending: false }),
       supabase.from("missions").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_roles").select("*"),
+      supabase.from("user_fragments" as any).select("*"),
+      supabase.from("user_tokens" as any).select("*"),
+      supabase.from("player_country_progress").select("*"),
     ]);
     if (c.data) setCountries(c.data as CountryRow[]);
     if (p.data) setProfiles(p.data);
@@ -130,6 +139,9 @@ const Admin = () => {
       roles.data.forEach(r => { map[r.user_id] = r.role; });
       setUserRoles(map);
     }
+    if (frags.data) setUserFragments(frags.data);
+    if (tokens.data) setUserTokens(tokens.data);
+    if (progress.data) setPlayerProgress(progress.data);
     setLoading(false);
   };
 
@@ -738,36 +750,153 @@ const Admin = () => {
         {/* ══ USERS ══════════════════════════════════════════════════════ */}
         {activeTab === "users" && (
           <div className="space-y-2">
-            {profiles.map((p) => (
-              <div key={p.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-display text-foreground tracking-wider">{p.display_name || "Sans nom"}</span>
-                    {userRoles[p.user_id] && (
-                      <span className={`text-xs font-display px-2 py-0.5 rounded border ${userRoles[p.user_id] === "admin" ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border"}`}>
-                        {userRoles[p.user_id].toUpperCase()}
-                      </span>
-                    )}
+            {profiles.map((p) => {
+              const uid = p.user_id;
+              const uFrags = userFragments.filter((f: any) => f.user_id === uid);
+              const uTokens = userTokens.filter((t: any) => t.user_id === uid);
+              const uProgress = playerProgress.filter((pr: any) => pr.user_id === uid);
+              const placedCount = uFrags.filter((f: any) => f.is_placed).length;
+              const isExpanded = expandedUser === uid;
+
+              return (
+                <div key={p.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                  <div
+                    className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-secondary/30 transition-colors"
+                    onClick={() => setExpandedUser(isExpanded ? null : uid)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-display text-foreground tracking-wider">{p.display_name || "Sans nom"}</span>
+                        {userRoles[uid] && (
+                          <span className={`text-xs font-display px-2 py-0.5 rounded border ${userRoles[uid] === "admin" ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border"}`}>
+                            {userRoles[uid].toUpperCase()}
+                          </span>
+                        )}
+                        <span className="text-xs font-display px-1.5 py-0.5 rounded border border-border bg-secondary text-muted-foreground">
+                          {((p as any).subscription_type || "free").toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground font-display">
+                        <span>Niv.{p.level}</span>
+                        <span>{p.xp} XP</span>
+                        <span>Série: {p.streak}</span>
+                        <span>🧩 {uFrags.length} frag ({placedCount} placés)</span>
+                        <span>🔤 {uTokens.length} tokens</span>
+                        <span className="hidden sm:inline">🎯 {uProgress.length} pays joués</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={userRoles[uid] || "user"}
+                        onChange={(e) => { e.stopPropagation(); handleRoleChange(uid, e.target.value as any); }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs bg-secondary border border-border rounded px-2 py-1.5 text-foreground font-display flex-shrink-0"
+                      >
+                        <option value="user">USER</option>
+                        <option value="moderator">MODERATOR</option>
+                        <option value="admin">ADMIN</option>
+                      </select>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground font-display">
-                    <span>Niveau {p.level}</span>
-                    <span>{p.xp} XP</span>
-                    <span>Série: {p.streak}</span>
-                    <span className="hidden sm:inline">{(p as any).subscription_type?.toUpperCase() || "FREE"}</span>
-                    <span className="hidden md:inline text-xs">{new Date(p.created_at).toLocaleDateString("fr-FR")}</span>
-                  </div>
+
+                  {/* Expanded detail panel */}
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="border-t border-border bg-secondary/20 px-4 py-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-display">
+                        {/* Progression pays */}
+                        <div>
+                          <h4 className="tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                            <Globe className="h-3.5 w-3.5" />PROGRESSION PAYS ({uProgress.length})
+                          </h4>
+                          {uProgress.length === 0 && <p className="text-muted-foreground/50">Aucun pays joué</p>}
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {uProgress.map((pr: any) => {
+                              const country = countries.find(c => c.code === pr.country_code);
+                              return (
+                                <div key={pr.id} className="flex items-center justify-between py-1 border-b border-border/30">
+                                  <span className="text-foreground">
+                                    {FLAG_EMOJI[pr.country_code] || "🌍"} {country?.name || pr.country_code}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground">{pr.best_score}/6</span>
+                                    <span className="text-muted-foreground/60">{pr.attempts_count}×</span>
+                                    {pr.fragment_granted && <span style={{ color: "hsl(40 80% 55%)" }}>🧩</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Fragments & Placement */}
+                        <div>
+                          <h4 className="tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                            🧩 FRAGMENTS ({uFrags.length}) · {placedCount} PLACÉS
+                          </h4>
+                          {uFrags.length === 0 && <p className="text-muted-foreground/50">Aucun fragment</p>}
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {uFrags.map((f: any) => {
+                              const country = countries.find(c => c.id === f.country_id);
+                              return (
+                                <div key={f.id} className="flex items-center justify-between py-1 border-b border-border/30">
+                                  <span className="text-foreground">
+                                    {country ? `${FLAG_EMOJI[country.code] || "🌍"} ${country.name}` : f.country_id.slice(0, 8)}
+                                  </span>
+                                  <span
+                                    className="px-1.5 py-0.5 rounded text-[10px] tracking-wider"
+                                    style={{
+                                      color: f.is_placed ? "hsl(140 60% 50%)" : "hsl(40 80% 55%)",
+                                      background: f.is_placed ? "hsl(140 60% 50% / 0.1)" : "hsl(40 80% 55% / 0.1)",
+                                      border: `1px solid ${f.is_placed ? "hsl(140 60% 50% / 0.3)" : "hsl(40 80% 55% / 0.3)"}`,
+                                    }}
+                                  >
+                                    {f.is_placed ? "PLACÉ ✓" : "EN COFFRE"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Tokens (Letters) */}
+                        <div>
+                          <h4 className="tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                            🔤 TOKENS ({uTokens.length})
+                          </h4>
+                          {uTokens.length === 0 && <p className="text-muted-foreground/50">Aucun token</p>}
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {uTokens.map((t: any) => (
+                              <div
+                                key={t.id}
+                                className="flex items-center gap-1 px-2 py-1 rounded"
+                                style={{
+                                  background: "hsl(40 80% 55% / 0.08)",
+                                  border: "1px solid hsl(40 80% 55% / 0.25)",
+                                }}
+                              >
+                                <span className="font-bold" style={{ color: "hsl(40 85% 62%)" }}>{t.letter}</span>
+                                <span className="text-muted-foreground text-[10px]">{t.country_code}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {uTokens.length >= 5 && (
+                            <div className="px-2 py-1 rounded text-[10px] tracking-wider text-center"
+                              style={{ color: "hsl(140 60% 55%)", background: "hsl(140 60% 55% / 0.08)", border: "1px solid hsl(140 60% 55% / 0.2)" }}>
+                              SET COMPLET — LETTRES RÉVÉLÉES
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-                <select
-                  value={userRoles[p.user_id] || "user"}
-                  onChange={(e) => handleRoleChange(p.user_id, e.target.value as "admin" | "moderator" | "user")}
-                  className="text-xs bg-secondary border border-border rounded px-2 py-1.5 text-foreground font-display flex-shrink-0"
-                >
-                  <option value="user">USER</option>
-                  <option value="moderator">MODERATOR</option>
-                  <option value="admin">ADMIN</option>
-                </select>
-              </div>
-            ))}
+              );
+            })}
             {profiles.length === 0 && (
               <p className="text-center text-muted-foreground py-10 font-display tracking-wider">AUCUN UTILISATEUR</p>
             )}
