@@ -22,6 +22,14 @@ import type { Fragment, TokenData } from "@/components/FragmentInventory";
 import MissionDetailModal from "@/components/MissionDetailModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import FinalRevealSequence from "@/components/FinalRevealSequence";
+import jasperSignalImg from "@/assets/jasper-signal.png";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -244,6 +252,7 @@ const Puzzle = () => {
   // Milestone signal: every N placements triggers a luminous pulse
   const SIGNAL_EVERY = 5; // every 5 placements
   const [milestoneSignal, setMilestoneSignal] = useState(false);
+  const [showJasperModal, setShowJasperModal] = useState(false);
 
   const placeFragment = async (fragmentId: string, countryId: string, countryName: string) => {
     if (!user) return;
@@ -614,26 +623,56 @@ const Puzzle = () => {
               style={{ transform: "translate(-50%, -50%)" }}
             >
               <div
-                className="px-8 py-4 rounded-2xl border text-center backdrop-blur-md"
+                className="px-10 py-5 rounded-2xl border backdrop-blur-md flex items-center gap-5 cursor-pointer pointer-events-auto"
                 style={{
                   background: "hsl(220 25% 4% / 0.92)",
                   borderColor: "hsl(40 80% 55% / 0.5)",
                   boxShadow: "0 0 60px hsl(40 80% 55% / 0.3), 0 0 120px hsl(40 80% 55% / 0.1)",
                 }}
+                onClick={() => setShowJasperModal(true)}
               >
+                {/* Jasper portrait with glow */}
                 <motion.div
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-                  transition={{ repeat: 3, duration: 0.6 }}
-                  className="text-3xl mb-2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, duration: 0.3 }}
+                  className="relative flex-shrink-0"
                 >
-                  ✦
+                  <div
+                    className="w-16 h-16 rounded-full overflow-hidden border-2"
+                    style={{
+                      borderColor: "hsl(40 80% 55% / 0.6)",
+                      boxShadow: "0 0 20px hsl(40 80% 55% / 0.4), 0 0 40px hsl(40 80% 55% / 0.15)",
+                    }}
+                  >
+                    <img src={jasperSignalImg} alt="Jasper Valcourt" className="w-full h-full object-cover" />
+                  </div>
                 </motion.div>
-                <p className="text-xs font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
-                  SIGNAL DÉTECTÉ
-                </p>
-                <p className="text-[10px] font-display tracking-wider mt-1 text-muted-foreground">
-                  {placedCountryIds.length} FRAGMENTS INTÉGRÉS — LE RÉSEAU GRANDIT
-                </p>
+
+                {/* Text content */}
+                <div className="text-left">
+                  <div className="flex items-center gap-2 mb-1">
+                    <motion.span
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                      transition={{ repeat: 3, duration: 0.6 }}
+                      className="text-lg"
+                    >
+                      ✦
+                    </motion.span>
+                    <p className="text-xs font-display tracking-[0.3em]" style={{ color: "hsl(40 85% 62%)" }}>
+                      SIGNAL DÉTECTÉ
+                    </p>
+                  </div>
+                  <p className="text-[11px] font-display tracking-wider" style={{ color: "hsl(40 80% 55%)" }}>
+                    JASPER VALCOURT
+                  </p>
+                  <p className="text-[10px] font-display tracking-wider mt-0.5 text-muted-foreground italic">
+                    "Signal confirmé. Le réseau grandit."
+                  </p>
+                  <p className="text-[9px] font-display tracking-wider mt-1 text-muted-foreground">
+                    {placedCountryIds.length} FRAGMENTS INTÉGRÉS
+                  </p>
+                </div>
               </div>
             </motion.div>
           )}
@@ -844,6 +883,38 @@ const Puzzle = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* ═══ JASPER MESSAGE MODAL ═══ */}
+      <Dialog open={showJasperModal} onOpenChange={setShowJasperModal}>
+        <DialogContent
+          className="max-w-md border"
+          style={{
+            background: "hsl(220 25% 6%)",
+            borderColor: "hsl(40 80% 55% / 0.4)",
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle className="font-display tracking-wider text-primary flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0"
+                style={{
+                  borderColor: "hsl(40 80% 55% / 0.6)",
+                  boxShadow: "0 0 15px hsl(40 80% 55% / 0.3)",
+                }}
+              >
+                <img src={jasperSignalImg} alt="Jasper Valcourt" className="w-full h-full object-cover" />
+              </div>
+              MESSAGE DE JASPER
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground font-body pt-3 leading-relaxed italic">
+              "Signal confirmé. Le réseau grandit. Ne t'arrête pas maintenant. Chaque fragment que tu places renforce notre compréhension du Cercle. Ils pensent encore être invisibles — prouvons-leur le contraire."
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-[10px] font-display tracking-[0.2em] text-muted-foreground mt-2">
+            — JASPER VALCOURT · TRANSMISSION SÉCURISÉE
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
