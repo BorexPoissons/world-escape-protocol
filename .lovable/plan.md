@@ -1,51 +1,70 @@
 
 
-# Verification en temps reel de la disponibilite du nom de code
+# Carte du Puzzle par Saison -- Navigation par Slides
 
-## Objectif
+## Concept
 
-Ajouter un indicateur visuel (checkmark vert / croix rouge) a cote du champ "Nom de code" sur la page d'inscription, qui verifie en temps reel si le nom est deja pris dans la base de donnees.
+Remplacer la carte unique affichant tous les 195 pays par un systeme de 5 cartes separees, une par saison. Le joueur navigue entre les cartes comme des slides (swipe ou onglets). Seules les cartes des saisons deverrouillees sont accessibles ; les autres affichent un ecran verrouille avec teaser.
+
+## Structure des 5 cartes
+
+| Slide | Saison | Pays | Acces |
+|-------|--------|------|-------|
+| 1 | Signal Initial (Gratuit) | CH, US, CN, BR, IN | Toujours visible |
+| 2 | Les Observateurs (S1) | Pays 6-50 | Apres achat S1 |
+| 3 | Les Architectes (S2) | Pays 51-100 | Apres achat S2 |
+| 4 | La Faille (S3) | Pays 101-150 | Apres achat S3 |
+| 5 | Le Protocole Final (S4) | Pays 151-195 | Apres achat S4 |
 
 ## Comportement
 
-- Le joueur tape son nom de code
-- Apres un debounce de 500ms (pour eviter trop de requetes), une verification est lancee contre la table `profiles` dans la base
-- 3 etats possibles :
-  - **Vide / trop court** (moins de 2 caracteres) : pas d'icone affichee
-  - **Nom interdit** (liste noire existante) : croix rouge + texte "Nom reserve"
-  - **Nom deja pris** (existe dans `profiles.display_name`) : croix rouge + texte "Deja pris"
-  - **Nom disponible** : checkmark vert + texte "Disponible"
-- Un petit spinner s'affiche pendant la verification
+- Par defaut, le joueur voit la carte gratuite (Slide 1)
+- Des indicateurs de navigation (dots ou onglets) en bas/haut de la carte permettent de passer d'une saison a l'autre
+- Cliquer sur une saison non achetee affiche un overlay verrouille avec le nom de la saison, le nombre de pays, et un bouton "Debloquer"
+- Une saison achetee affiche sa carte avec uniquement les pays de cette saison
+- Le joueur peut revenir librement entre les cartes deverrouillees (swipe ou boutons precedent/suivant)
+- La carte de fond (`carte-wep.png`) reste identique sur toutes les slides, seuls les noeuds de pays changes
+- La barre de progression globale en haut reste visible et aggrege toutes les saisons
 
 ## Details techniques
 
-### Fichier modifie : `src/pages/Auth.tsx`
+### Nouveau composant : `src/components/SeasonMapNavigator.tsx`
 
-- Ajouter des states : `nameStatus` (`idle` | `checking` | `available` | `taken` | `forbidden`), `nameCheckTimeout`
-- Sur chaque changement de `displayName` :
-  1. Verifier d'abord cote client si le nom est dans la liste interdite (`isDisplayNameForbidden`)
-  2. Si OK, lancer un debounce de 500ms puis faire un `select` sur `profiles` via une requete RPC ou directe
-- Requete Supabase : appel a une nouvelle fonction RPC `check_display_name_available(p_name text)` qui retourne `true/false`
-  - Cette fonction compare le `display_name` normalise dans la table `profiles` sans exposer la liste des noms existants
-- Afficher l'icone correspondante a droite du champ Input (CheckCircle vert, XCircle rouge, ou Loader spinner)
+- Wrapper autour de `CinematicWorldMap` qui gere l'etat de la saison active
+- Props : `puzzleData`, `tier`, `entitlements`, `fragments`, etc.
+- State : `activeSeason` (0-4)
+- Filtre les pays par `season_number` avant de les passer a `CinematicWorldMap`
+- Affiche les indicateurs de navigation (dots colores par saison)
+- Gere le swipe tactile (touch events) et les fleches clavier
 
-### Migration SQL
+### Modification : `src/components/CinematicWorldMap.tsx`
 
-Creer une fonction RPC `check_display_name_available(p_name text)` :
-- Normalise le nom (lowercase, unaccent, trim)
-- Verifie s'il existe un profil avec ce `display_name` normalise
-- Retourne `true` si disponible, `false` si pris
-- `SECURITY DEFINER` pour permettre l'acces sans authentification (le joueur n'est pas encore connecte)
+- Accepte une nouvelle prop optionnelle `seasonFilter?: number` pour ne rendre que les pays de cette saison
+- Si `seasonFilter` est defini, filtrer `playableNodes` et `lockedNodes` par `seasonNumber`
+- Les connexions SVG (FREE_CONNECTIONS) ne s'affichent que sur la slide de la saison 0
 
-### UX
+### Modification : `src/pages/Puzzle.tsx`
 
-- Icone a droite du champ "Nom de code" (dans le meme `relative` container)
-- Couleurs : vert (`text-green-500`) pour disponible, rouge (`text-red-500`) pour pris/reserve
-- Petit texte sous le champ indiquant le statut
-- Spinner discret (`Loader2` avec animation `animate-spin`) pendant la verification
+- Remplacer l'appel direct a `CinematicWorldMap` par `SeasonMapNavigator`
+- Passer les entitlements du joueur pour determiner quelles saisons sont deverrouillees
+- Recuperer les entitlements depuis la table `entitlements` (cles : `season_1`, `season_2`, `season_3`, `season_4`)
+
+### Overlay saison verrouillee
+
+- Quand le joueur navigue vers une saison non achetee, un overlay semi-transparent s'affiche par-dessus la carte (fond sombre)
+- Contenu : icone cadenas, nom de l'operation (ex: "LES OBSERVATEURS"), nombre de pays, prix, et bouton "Debloquer cette saison" qui ouvre le `UpgradeModal`
+
+### Navigation visuelle
+
+- 5 dots en bas de la carte, colores selon la palette de chaque saison (`SEASON_CONFIG`)
+- Le dot actif est plus grand et lumineux
+- Fleches gauche/droite sur les cotes de la carte (style cinematique, semi-transparentes)
+- Animation de transition : fade + leger slide horizontal entre les cartes
+- Sur mobile : support du swipe gauche/droite via touch events
 
 ### Fichiers concernes
 
-- `src/pages/Auth.tsx` -- logique debounce + affichage icone/statut
-- Migration SQL -- nouvelle fonction RPC `check_display_name_available`
+1. **Creer** `src/components/SeasonMapNavigator.tsx` -- composant wrapper avec navigation
+2. **Modifier** `src/components/CinematicWorldMap.tsx` -- ajouter prop `seasonFilter`
+3. **Modifier** `src/pages/Puzzle.tsx` -- integrer `SeasonMapNavigator`, charger les entitlements
 
