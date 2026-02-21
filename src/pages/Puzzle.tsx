@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import SeasonMapNavigator from "@/components/SeasonMapNavigator";
 import CinematicWorldMap, { COUNTRY_GEO } from "@/components/CinematicWorldMap";
 import type { MapCountry } from "@/components/CinematicWorldMap";
 import FragmentInventory from "@/components/FragmentInventory";
@@ -130,7 +131,7 @@ const Puzzle = () => {
   const [showFinalReveal, setShowFinalReveal] = useState(false);
   const [forceFullReveal, setForceFullReveal] = useState(false);
   const [hasCompletedPuzzle, setHasCompletedPuzzle] = useState(false);
-
+  const [entitlements, setEntitlements] = useState<Set<string>>(new Set());
   // ─── First-visit cinematic intro ──────────────────────────────────────────
   const FIRST_VISIT_KEY = "wep_puzzle_first_visit_done";
   const [introPhase, setIntroPhase] = useState<"full_reveal" | "fading" | "normal" | "overlay">(() => {
@@ -225,11 +226,12 @@ const Puzzle = () => {
       return;
     }
 
-    const [countriesRes, fragmentsRes, missionsRes, profileRes] = await Promise.all([
+    const [countriesRes, fragmentsRes, missionsRes, profileRes, entitlementsRes] = await Promise.all([
       supabase.from("countries").select("*").order("release_order"),
       supabase.from("user_fragments" as any).select("id, country_id, fragment_index, is_placed").eq("user_id", user.id),
       supabase.from("missions").select("id, mission_title, score, completed_at, mission_data, country_id").eq("user_id", user.id).eq("completed", true).order("completed_at"),
       supabase.from("profiles").select("subscription_type, has_completed_puzzle").eq("user_id", user.id).single(),
+      supabase.from("entitlements").select("entitlement_key").eq("user_id", user.id).eq("active", true),
     ]);
 
     const countries = countriesRes.data || [];
@@ -242,6 +244,11 @@ const Puzzle = () => {
     setTier(getTier(subType));
     setHasCompletedPuzzle(completedFlag);
     if (completedFlag) setForceFullReveal(true);
+
+    // Set entitlements
+    if (entitlementsRes.data) {
+      setEntitlements(new Set(entitlementsRes.data.map((e: any) => e.entitlement_key)));
+    }
 
     const data: CountryPuzzleData[] = countries.map((country) => {
       // 1 fragment per country max (has fragment or not)
@@ -637,8 +644,9 @@ const Puzzle = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <CinematicWorldMap
+          <SeasonMapNavigator
             countries={mapCountries}
+            entitlements={entitlements}
             draggingFragmentId={draggingFragmentId}
             placedCountryIds={placedCountryIds}
             onDropOnCountry={handleDropOnCountry}
