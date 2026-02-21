@@ -29,6 +29,8 @@ interface CinematicWorldMapProps {
   snapTargetId?: string | null;
   milestoneSignal?: boolean;
   introPhase?: "full_reveal" | "fading" | "normal";
+  /** Filter nodes to only show countries from this season_number */
+  seasonFilter?: number;
 }
 
 // Fallback geo positions
@@ -165,11 +167,18 @@ const CinematicWorldMap = ({
   snapTargetId = null,
   milestoneSignal = false,
   introPhase = "normal",
+  seasonFilter,
 }: CinematicWorldMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const isIntroReveal = introPhase === "full_reveal" || introPhase === "fading";
-  const playableNodes = countries.filter(c => c.visibility === "playable");
-  const lockedNodes   = countries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
+
+  // Apply season filter if provided
+  const filteredCountries = seasonFilter !== undefined
+    ? countries.filter(c => c.seasonNumber === seasonFilter)
+    : countries;
+
+  const playableNodes = filteredCountries.filter(c => c.visibility === "playable");
+  const lockedNodes   = filteredCountries.filter(c => c.visibility !== "playable" && c.visibility !== "hidden");
 
   const freeCount   = playableNodes.filter(n => FREE_COUNTRY_CODES.has(n.code)).length;
   const lockedCount = lockedNodes.length;
@@ -271,7 +280,7 @@ const CinematicWorldMap = ({
             <stop offset="100%" stopColor="hsl(40 90% 65%)" stopOpacity="0.04" />
           </linearGradient>
         </defs>
-        {FREE_CONNECTIONS.map(([fromCode, toCode], idx) => {
+        {(seasonFilter === undefined || seasonFilter === 0) && FREE_CONNECTIONS.map(([fromCode, toCode], idx) => {
           const from = countries.find(c => c.code === fromCode);
           const to   = countries.find(c => c.code === toCode);
           if (!from || !to) return null;
@@ -477,17 +486,19 @@ const CinematicWorldMap = ({
         );
       })}
 
-      {/* Omega */}
-      <div
-        className="absolute flex flex-col items-center gap-[3px] pointer-events-none z-10"
-        style={{ left: "50%", top: "85%", transform: "translate(-50%,-50%)" }}
-      >
+      {/* Omega — only show when no season filter */}
+      {seasonFilter === undefined && (
         <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-sm border"
-          style={{ background: "hsl(280 40% 6%)", borderColor: "hsl(280 50% 25%)", boxShadow: "0 0 10px hsl(280 50% 25% / 0.35)" }}
-        >Ω</div>
-        <span className="text-[7px] font-display tracking-widest" style={{ color: "hsl(280 40% 42%)" }}>OMÉGA</span>
-      </div>
+          className="absolute flex flex-col items-center gap-[3px] pointer-events-none z-10"
+          style={{ left: "50%", top: "85%", transform: "translate(-50%,-50%)" }}
+        >
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-sm border"
+            style={{ background: "hsl(280 40% 6%)", borderColor: "hsl(280 50% 25%)", boxShadow: "0 0 10px hsl(280 50% 25% / 0.35)" }}
+          >Ω</div>
+          <span className="text-[7px] font-display tracking-widest" style={{ color: "hsl(280 40% 42%)" }}>OMÉGA</span>
+        </div>
+      )}
 
       {/* HUD top-left */}
       <div className="absolute top-3 left-3 pointer-events-none z-30">
@@ -505,36 +516,40 @@ const CinematicWorldMap = ({
         <span className="text-[10px] font-display tracking-wider" style={{ color: "hsl(40 70% 60%)" }}>EN DIRECT</span>
       </div>
 
-      {/* HUD bottom-left */}
-      <div className="absolute bottom-3 left-3 pointer-events-none z-30 flex flex-col gap-1">
-        <div
-          className="flex items-center gap-1.5 text-[9px] font-display tracking-wider px-2 py-[3px] rounded border backdrop-blur-sm"
-          style={{ background: "hsl(40 80% 55% / 0.08)", borderColor: "hsl(40 80% 55% / 0.22)", color: "hsl(40 80% 65%)" }}
-        >
-          <span>✦</span>
-          <span>{freeCount} PAYS GRATUITS ACTIFS</span>
+      {/* HUD bottom-left — hidden when season filter active */}
+      {seasonFilter === undefined && (
+        <div className="absolute bottom-3 left-3 pointer-events-none z-30 flex flex-col gap-1">
+          <div
+            className="flex items-center gap-1.5 text-[9px] font-display tracking-wider px-2 py-[3px] rounded border backdrop-blur-sm"
+            style={{ background: "hsl(40 80% 55% / 0.08)", borderColor: "hsl(40 80% 55% / 0.22)", color: "hsl(40 80% 65%)" }}
+          >
+            <span>✦</span>
+            <span>{freeCount} PAYS GRATUITS ACTIFS</span>
+          </div>
+          <div
+            className="flex items-center gap-1.5 text-[9px] font-display tracking-wider px-2 py-[3px] rounded border backdrop-blur-sm"
+            style={{ background: "hsl(220 18% 6% / 0.75)", borderColor: "hsl(220 15% 18% / 0.5)", color: "hsl(220 10% 45%)" }}
+          >
+            <span>🔒</span>
+            <span>{lockedCount} PAYS VERROUILLÉS — SURVOLE POUR DÉCOUVRIR</span>
+          </div>
         </div>
-        <div
-          className="flex items-center gap-1.5 text-[9px] font-display tracking-wider px-2 py-[3px] rounded border backdrop-blur-sm"
-          style={{ background: "hsl(220 18% 6% / 0.75)", borderColor: "hsl(220 15% 18% / 0.5)", color: "hsl(220 10% 45%)" }}
-        >
-          <span>🔒</span>
-          <span>{lockedCount} PAYS VERROUILLÉS — SURVOLE POUR DÉCOUVRIR</span>
-        </div>
-      </div>
+      )}
 
-      {/* Operation legend bottom-right */}
-      <div className="absolute bottom-3 right-3 pointer-events-none z-30 flex flex-col items-end gap-[3px]">
-        {([1, 2, 3, 4] as const).map(s => {
-          const cfg = SEASON_CONFIG[s];
-          return (
-            <div key={s} className="flex items-center gap-1.5 text-[7px] font-display tracking-wider opacity-65">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
-              <span style={{ color: cfg.color }}>{cfg.codename} · {cfg.label}</span>
-            </div>
-          );
-        })}
-      </div>
+      {/* Operation legend bottom-right — hidden when season filter active */}
+      {seasonFilter === undefined && (
+        <div className="absolute bottom-3 right-3 pointer-events-none z-30 flex flex-col items-end gap-[3px]">
+          {([1, 2, 3, 4] as const).map(s => {
+            const cfg = SEASON_CONFIG[s];
+            return (
+              <div key={s} className="flex items-center gap-1.5 text-[7px] font-display tracking-wider opacity-65">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
+                <span style={{ color: cfg.color }}>{cfg.codename} · {cfg.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Drop hint */}
       <AnimatePresence>
