@@ -1,70 +1,44 @@
 
 
-# Carte du Puzzle par Saison -- Navigation par Slides
+# Correction de la distribution des saisons dans la base de donnees
 
-## Concept
+## Probleme
 
-Remplacer la carte unique affichant tous les 195 pays par un systeme de 5 cartes separees, une par saison. Le joueur navigue entre les cartes comme des slides (swipe ou onglets). Seules les cartes des saisons deverrouillees sont accessibles ; les autres affichent un ecran verrouille avec teaser.
+Le champ `season_number` de la table `countries` ne correspond pas aux tranches de `release_order` definies dans le modele tarifaire :
+- Saison 0 : release_order 1-5 (5 pays) -- OK
+- Saison 1 : release_order 6-50 (45 pays) -- DB dit 43
+- Saison 2 : release_order 51-100 (50 pays) -- DB dit 72
+- Saison 3 : release_order 101-150 (50 pays) -- DB dit 40
+- Saison 4 : release_order 151-195 (45 pays) -- DB dit 35
 
-## Structure des 5 cartes
+## Solution
 
-| Slide | Saison | Pays | Acces |
-|-------|--------|------|-------|
-| 1 | Signal Initial (Gratuit) | CH, US, CN, BR, IN | Toujours visible |
-| 2 | Les Observateurs (S1) | Pays 6-50 | Apres achat S1 |
-| 3 | Les Architectes (S2) | Pays 51-100 | Apres achat S2 |
-| 4 | La Faille (S3) | Pays 101-150 | Apres achat S3 |
-| 5 | Le Protocole Final (S4) | Pays 151-195 | Apres achat S4 |
+### Etape 1 : Migration SQL pour recaler les season_number
 
-## Comportement
+Executer une migration qui met a jour `season_number` en fonction de `release_order` :
 
-- Par defaut, le joueur voit la carte gratuite (Slide 1)
-- Des indicateurs de navigation (dots ou onglets) en bas/haut de la carte permettent de passer d'une saison a l'autre
-- Cliquer sur une saison non achetee affiche un overlay verrouille avec le nom de la saison, le nombre de pays, et un bouton "Debloquer"
-- Une saison achetee affiche sa carte avec uniquement les pays de cette saison
-- Le joueur peut revenir librement entre les cartes deverrouillees (swipe ou boutons precedent/suivant)
-- La carte de fond (`carte-wep.png`) reste identique sur toutes les slides, seuls les noeuds de pays changes
-- La barre de progression globale en haut reste visible et aggrege toutes les saisons
+```text
+UPDATE countries SET season_number = 0 WHERE release_order BETWEEN 1 AND 5;
+UPDATE countries SET season_number = 1 WHERE release_order BETWEEN 6 AND 50;
+UPDATE countries SET season_number = 2 WHERE release_order BETWEEN 51 AND 100;
+UPDATE countries SET season_number = 3 WHERE release_order BETWEEN 101 AND 150;
+UPDATE countries SET season_number = 4 WHERE release_order BETWEEN 151 AND 195;
+```
 
-## Details techniques
+### Etape 2 : Mettre a jour les compteurs dans SeasonMapNavigator.tsx
 
-### Nouveau composant : `src/components/SeasonMapNavigator.tsx`
+Modifier les `countLabel` dans le fichier `src/components/SeasonMapNavigator.tsx` :
+- Saison 1 : "45 PAYS"
+- Saison 2 : "50 PAYS"
+- Saison 3 : "50 PAYS"
+- Saison 4 : "45 PAYS"
 
-- Wrapper autour de `CinematicWorldMap` qui gere l'etat de la saison active
-- Props : `puzzleData`, `tier`, `entitlements`, `fragments`, etc.
-- State : `activeSeason` (0-4)
-- Filtre les pays par `season_number` avant de les passer a `CinematicWorldMap`
-- Affiche les indicateurs de navigation (dots colores par saison)
-- Gere le swipe tactile (touch events) et les fleches clavier
+### Etape 3 : Mettre a jour la table countries_missions
 
-### Modification : `src/components/CinematicWorldMap.tsx`
-
-- Accepte une nouvelle prop optionnelle `seasonFilter?: number` pour ne rendre que les pays de cette saison
-- Si `seasonFilter` est defini, filtrer `playableNodes` et `lockedNodes` par `seasonNumber`
-- Les connexions SVG (FREE_CONNECTIONS) ne s'affichent que sur la slide de la saison 0
-
-### Modification : `src/pages/Puzzle.tsx`
-
-- Remplacer l'appel direct a `CinematicWorldMap` par `SeasonMapNavigator`
-- Passer les entitlements du joueur pour determiner quelles saisons sont deverrouillees
-- Recuperer les entitlements depuis la table `entitlements` (cles : `season_1`, `season_2`, `season_3`, `season_4`)
-
-### Overlay saison verrouillee
-
-- Quand le joueur navigue vers une saison non achetee, un overlay semi-transparent s'affiche par-dessus la carte (fond sombre)
-- Contenu : icone cadenas, nom de l'operation (ex: "LES OBSERVATEURS"), nombre de pays, prix, et bouton "Debloquer cette saison" qui ouvre le `UpgradeModal`
-
-### Navigation visuelle
-
-- 5 dots en bas de la carte, colores selon la palette de chaque saison (`SEASON_CONFIG`)
-- Le dot actif est plus grand et lumineux
-- Fleches gauche/droite sur les cotes de la carte (style cinematique, semi-transparentes)
-- Animation de transition : fade + leger slide horizontal entre les cartes
-- Sur mobile : support du swipe gauche/droite via touch events
+La table `countries_missions` a aussi un champ `season` qui devra etre recale de la meme maniere en se basant sur le `release_order` de la table `countries` correspondante (via le code pays).
 
 ### Fichiers concernes
 
-1. **Creer** `src/components/SeasonMapNavigator.tsx` -- composant wrapper avec navigation
-2. **Modifier** `src/components/CinematicWorldMap.tsx` -- ajouter prop `seasonFilter`
-3. **Modifier** `src/pages/Puzzle.tsx` -- integrer `SeasonMapNavigator`, charger les entitlements
+- **Migration SQL** : recaler `season_number` dans `countries` et `season` dans `countries_missions`
+- **`src/components/SeasonMapNavigator.tsx`** : corriger les 4 valeurs `countLabel`
 
