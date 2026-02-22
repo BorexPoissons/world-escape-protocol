@@ -9,7 +9,7 @@ import {
   Shield, Users, Globe, Target, Plus, Trash2, Save, ArrowLeft,
   Home, BarChart3, Search, Eye, EyeOff, Star, FileJson, CheckCircle, XCircle,
   TrendingUp, Flame, Lock, CreditCard, Upload, Filter, AlertCircle, RotateCcw,
-  Download, ShieldAlert, KeyRound,
+  Download, ShieldAlert, KeyRound, ClipboardPaste,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -122,6 +122,8 @@ const Admin = () => {
   const [jsonImportPreview, setJsonImportPreview] = useState<JsonImportPreview>(null);
   const [jsonImporting, setJsonImporting] = useState(false);
   const jsonInputRef = useRef<HTMLInputElement>(null);
+  const [pasteTarget, setPasteTarget] = useState<string | null>(null);
+  const [pasteText, setPasteText] = useState("");
 
   // Purchases tab state
   const [confirmChange, setConfirmChange] = useState<{ userId: string; name: string; newType: string } | null>(null);
@@ -306,20 +308,13 @@ const Admin = () => {
   };
 
   // ── JSON Import ────────────────────────────────────────────
-  const handleJsonFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const json = JSON.parse(ev.target?.result as string);
-
-        // Detect format: master template (has meta.code) vs legacy (has country.code)
-        const isMasterTemplate = !!json.meta?.code;
-
-        const code = (
-          json.meta?.code || json.country?.code || json.code || file.name.replace(".json", "")
-        ).toUpperCase();
+  const parseJsonString = (jsonString: string, fallbackCode?: string): any | null => {
+    try {
+      const json = JSON.parse(jsonString);
+      const isMasterTemplate = !!json.meta?.code;
+      const code = (
+        json.meta?.code || json.country?.code || json.code || fallbackCode || "XX"
+      ).toUpperCase();
         const name = json.meta?.country || json.country?.name || json.country?.name_fr || json.country?.name_en || json.name;
         const description = json.country?.description || json.mission?.description || json.description;
         const monuments = json.country?.monuments || json.monuments || [];
@@ -383,19 +378,41 @@ const Admin = () => {
           token_letter: json.rewards?.token?.value,
         } : undefined;
 
-        setJsonImportPreview({
-          code, name, description, monuments, historical_events, symbols,
-          questionCount, missionTitle, parsedQuestions: rawQuestions,
-          storyFields,
-          // Store full JSON for countries_missions upsert
-          _fullJson: json,
-          _isMasterTemplate: isMasterTemplate,
-        } as any);
-      } catch {
-        toast({ title: "Erreur JSON", description: "Fichier JSON invalide", variant: "destructive" });
-      }
+      return {
+        code, name, description, monuments, historical_events, symbols,
+        questionCount, missionTitle, parsedQuestions: rawQuestions,
+        storyFields,
+        _fullJson: json,
+        _isMasterTemplate: isMasterTemplate,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const handleJsonFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = parseJsonString(ev.target?.result as string, file.name.replace(".json", ""));
+      if (result) setJsonImportPreview(result as any);
+      else toast({ title: "Erreur JSON", description: "Fichier JSON invalide", variant: "destructive" });
     };
     reader.readAsText(file);
+  };
+
+  const handlePasteAnalyze = (countryCode: string) => {
+    if (!pasteText.trim()) return;
+    const result = parseJsonString(pasteText, countryCode);
+    if (result) {
+      setJsonImportPreview(result as any);
+      setPasteTarget(null);
+      setPasteText("");
+      toast({ title: "✓ JSON analysé", description: `${result.questionCount || 0} questions détectées pour ${result.code}` });
+    } else {
+      toast({ title: "Erreur JSON", description: "Le texte collé n'est pas un JSON valide", variant: "destructive" });
+    }
   };
 
   const handleJsonImport = async () => {
@@ -960,7 +977,7 @@ const Admin = () => {
                       <div className="h-px flex-1 bg-border" />
                     </div>
                     {seasonCountries.map(c => (
-                      <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
+                      <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} isPasting={pasteTarget === c.code} onPaste={() => { setPasteTarget(pasteTarget === c.code ? null : c.code); setPasteText(""); }} pasteText={pasteText} onPasteTextChange={setPasteText} onPasteAnalyze={() => handlePasteAnalyze(c.code)} />
                     ))}
                   </div>
                 );
@@ -975,7 +992,7 @@ const Admin = () => {
                     <div className="h-px flex-1 bg-border" />
                   </div>
                   {filteredCountries.filter(c => !c.season_number || c.season_number === 0).map(c => (
-                    <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
+                    <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} isPasting={pasteTarget === c.code} onPaste={() => { setPasteTarget(pasteTarget === c.code ? null : c.code); setPasteText(""); }} pasteText={pasteText} onPasteTextChange={setPasteText} onPasteAnalyze={() => handlePasteAnalyze(c.code)} />
                   ))}
                 </div>
               )}
@@ -1467,9 +1484,14 @@ interface CountryAdminRowProps {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  isPasting?: boolean;
+  onPaste?: () => void;
+  pasteText?: string;
+  onPasteTextChange?: (text: string) => void;
+  onPasteAnalyze?: () => void;
 }
 
-const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: CountryAdminRowProps) => {
+const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete, isPasting, onPaste, pasteText, onPasteTextChange, onPasteAnalyze }: CountryAdminRowProps) => {
   const seasonLabel = getSeasonLabel(country.season_number ?? 0);
   const hasStatic = STATIC_CONTENT_CODES.includes(country.code);
   const flag = FLAG_EMOJI[country.code] || "🌍";
@@ -1518,6 +1540,11 @@ const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: Coun
           <button onClick={e => { e.stopPropagation(); onEdit(); }} className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors" title="Modifier">
             <Save className="h-3.5 w-3.5" />
           </button>
+          {onPaste && (
+            <button onClick={e => { e.stopPropagation(); onPaste(); }} className={`p-1.5 rounded transition-colors ${isPasting ? 'text-accent-foreground bg-accent' : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'}`} title="Coller JSON">
+              <ClipboardPaste className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button onClick={e => { e.stopPropagation(); onDelete(); }} className="p-1.5 rounded text-destructive hover:bg-destructive/10 transition-colors" title="Supprimer">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -1566,6 +1593,26 @@ const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: Coun
             <p className="text-xs text-muted-foreground mt-3 font-display">
               📍 {country.latitude.toFixed(4)}, {country.longitude.toFixed(4)}
             </p>
+          )}
+
+          {/* Paste JSON zone */}
+          {isPasting && (
+            <div className="mt-4 border-t border-border pt-3 space-y-2">
+              <p className="text-xs font-display text-muted-foreground tracking-wider">COLLER LE JSON DEPUIS CHATGPT</p>
+              <textarea
+                value={pasteText || ""}
+                onChange={e => onPasteTextChange?.(e.target.value)}
+                placeholder={`Collez votre JSON ici pour ${country.code}...`}
+                className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <button
+                onClick={onPasteAnalyze}
+                disabled={!pasteText?.trim()}
+                className="px-4 py-1.5 rounded text-xs font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              >
+                ANALYSER
+              </button>
+            </div>
           )}
         </motion.div>
       )}
