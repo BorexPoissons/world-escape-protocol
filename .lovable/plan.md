@@ -60,6 +60,6 @@
 - [x] FLAG_EMOJI étendu aux 48 codes pays
 - [x] getSubscriptionBadge aligné sur season_1..4 + full_bundle
 
-## Phase 8 — Carry-over & Polish
-- [ ] Vies S1 → bonus S2
-- [ ] Tests end-to-end
+## Phase 8 — Carry-over & Polish ✅
+- [x] Vies S1 → bonus S2 (chaque vie = 60s bonus, reset lives_banked à 0)
+- [x] Tests end-to-end : XP, level, gate, bonus exchange, carry-over, π validation (21 tests)
