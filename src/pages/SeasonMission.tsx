@@ -380,6 +380,7 @@ const SeasonMission = () => {
   const timerPercent = (timeLeft / rules.timer_seconds) * 100;
   const timerColor = timerPercent > 50 ? "bg-primary" : timerPercent > 25 ? "bg-yellow-500" : "bg-destructive";
   const canExchange = bonusSeconds >= rules.bonus_seconds_exchange_rate;
+  const imageSlots = content.ui?.image_slots ?? {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -441,6 +442,17 @@ const SeasonMission = () => {
                 {content.story.location_context.city.toUpperCase()} · {content.meta.fragment_id}
               </p>
 
+              {/* Intro image */}
+              {imageSlots.image_intro && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
+                  <img
+                    src={imageSlots.image_intro}
+                    alt={`${countryName} intro`}
+                    className="w-full max-h-56 object-cover rounded-xl border border-border"
+                  />
+                </motion.div>
+              )}
+
               <div className="bg-card border border-border rounded-xl p-6 text-left">
                 <TypewriterText text={content.story.intro} className="text-foreground leading-relaxed whitespace-pre-line" speed={30} />
               </div>
@@ -500,6 +512,17 @@ const SeasonMission = () => {
                   ÉCHANGER {rules.bonus_seconds_exchange_rate}s → +1 VIE
                   <span className="text-yellow-500/60">({bonusSeconds}s dispo)</span>
                 </motion.button>
+              )}
+
+              {/* Scene image */}
+              {imageSlots.image_scene && currentQ === 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <img
+                    src={imageSlots.image_scene}
+                    alt={`${countryName} scene`}
+                    className="w-full max-h-40 object-cover rounded-xl border border-border"
+                  />
+                </motion.div>
               )}
 
               {/* Question */}
@@ -609,6 +632,14 @@ const SeasonMission = () => {
                 Score : {score}/{questions.length} — Le Protocole accepte votre progression.
               </p>
               <div className="bg-card border border-primary/30 rounded-xl p-6 border-glow">
+                {/* Completion image */}
+                {imageSlots.image_completion && (
+                  <img
+                    src={imageSlots.image_completion}
+                    alt={`${countryName} completion`}
+                    className="w-full max-h-44 object-cover rounded-xl border border-border mb-4"
+                  />
+                )}
                 <p className="text-xs text-primary font-display tracking-wider mb-2">FRAGMENT OBTENU</p>
                 <p className="text-2xl font-display font-bold text-foreground">{content.rewards.fragment.label}</p>
                 <p className="text-sm text-muted-foreground mt-1">{content.completion.success_message}</p>
