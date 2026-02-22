@@ -205,7 +205,7 @@ const Season1Unlock: React.FC = () => {
               onClick={() => navigate("/dashboard")}
               className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors font-display tracking-[0.3em] py-2"
             >
-              CONTINUER EN MODE GRATUIT
+              CONTINUER L'OBSERVATION
             </button>
           </motion.div>
 

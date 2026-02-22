@@ -429,7 +429,7 @@ const CinematicWorldMap = ({
                     color: "hsl(40 85% 72%)", boxShadow: "0 0 6px hsl(40 80% 55% / 0.25)",
                   }}
                 >
-                  GRATUIT
+                  S0
                 </div>
               )}
               <div

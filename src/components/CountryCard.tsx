@@ -7,9 +7,9 @@ import FlagImage from "@/components/FlagImage";
 
 
 
-// Static lore — 5 pays gratuits officiels + Saison 1
+// Static lore — 5 pays Signal Initial + Saison 1
 const COUNTRY_LORE: Record<string, { theme: string; intro: string; missions: number }> = {
-  // ── SAISON 0 — GRATUIT ──
+  // ── SAISON 0 — SIGNAL INITIAL ──
   CH: { theme: "LE CERCLE DE DAVOS", intro: "Berne, -3°C. Le premier fil. Les coffres les plus secrets du monde vous attendent.", missions: 1 },
   BR: { theme: "CARNAVAL NOIR", intro: "Rio, 2h du matin. 2 millions de personnes. Un code caché dans les couleurs du carnaval.", missions: 1 },
   CN: { theme: "ALGORITHME IMPÉRIAL", intro: "Pékin, 3h17. Une IA qui vous connaît mieux que vous-même. Elle dit être consciente.", missions: 1 },

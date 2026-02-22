@@ -100,7 +100,7 @@ const SEASON_META: Record<number, {
 }> = {
   0: {
     label: "SIGNAL INITIAL",
-    codename: "OP-00 · ACCÈS GRATUIT",
+    codename: "OP-00 · SIGNAL INITIAL",
     subtitle: "5 pays — Découvrez qu'un réseau mondial existe",
     theme: "Finance · Géopolitique · Premiers indices",
     reward: "Badge Agent Initié",
@@ -793,7 +793,7 @@ const Dashboard = () => {
                     Ω
                   </motion.div>
                   <div className="flex-1 text-center sm:text-left">
-                    <p className="text-[10px] font-display tracking-[0.4em] text-primary/60 mb-1">ESSAI GRATUIT COMPLÉTÉ</p>
+                    <p className="text-[10px] font-display tracking-[0.4em] text-primary/60 mb-1">SIGNAL INITIAL COMPLÉTÉ</p>
                     <h3 className="text-xl font-display font-bold text-primary tracking-wider mb-1">LES OBSERVATEURS</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Saison 1 · 45 pays · Prochaine destination : Brésil 🇧🇷

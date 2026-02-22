@@ -457,7 +457,7 @@ const MissionComplete = () => {
                     <p className="text-sm text-muted-foreground">
                       {completionData.next_hook
                         ?? nextCountry.description
-                        ?? `Mission ${SIGNAL_INITIAL_SEQUENCE.indexOf(nextCountry.code) + 1} / 5 — Phase gratuite`}
+                        ?? `Mission ${SIGNAL_INITIAL_SEQUENCE.indexOf(nextCountry.code) + 1} / 5 — Signal Initial`}
                     </p>
                   </motion.div>
                 )}
