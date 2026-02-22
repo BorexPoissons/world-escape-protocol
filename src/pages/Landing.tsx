@@ -60,7 +60,7 @@ const Landing = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-body"
           >
-            Une conspiration mondiale. 195 pays. Des énigmes générées par IA.
+            Une conspiration mondiale. 48 pays. Des énigmes générées par IA.
             Chaque mission vous rapproche de la vérité.
           </motion.p>
 
@@ -111,7 +111,7 @@ const Landing = () => {
         >
           <div className="max-w-4xl mx-auto flex justify-center gap-8 md:gap-16">
             {[
-              { icon: Globe, label: "Pays disponibles", value: "195" },
+              { icon: Globe, label: "Pays disponibles", value: "48" },
               { icon: Key, label: "Énigmes uniques", value: "∞" },
               { icon: Shield, label: "Missions IA", value: "Dynamiques" },
             ].map((stat, i) => (

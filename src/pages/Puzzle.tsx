@@ -388,12 +388,12 @@ const Puzzle = () => {
 
   // Count countries with at least 1 fragment (1 per country max)
   const countriesWithFragment = puzzleData.filter(d => d.unlockedPieces > 0).length;
-  const globalProgressOn195 = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
+  const globalProgress = Math.round((countriesWithFragment / TOTAL_COUNTRIES_IN_WORLD) * 100 * 10) / 10;
 
   // Trigger final reveal sequence when 100% reached for the first time
   useEffect(() => {
     if (
-      globalProgressOn195 >= 100 &&
+      globalProgress >= 100 &&
       !hasCompletedPuzzle &&
       !showFinalReveal &&
       user &&
@@ -406,7 +406,7 @@ const Puzzle = () => {
         .eq("user_id", user.id)
         .then(() => setHasCompletedPuzzle(true));
     }
-  }, [globalProgressOn195, hasCompletedPuzzle, showFinalReveal, user, loading]);
+  }, [globalProgress, hasCompletedPuzzle, showFinalReveal, user, loading]);
 
   // ─── Derived data ─────────────────────────────────────────────────────────
 
@@ -542,7 +542,7 @@ const Puzzle = () => {
           <div className="hidden md:flex items-center gap-6">
             <div className="text-right">
               <p className="text-xs font-display tracking-widest text-muted-foreground">🧩 PLAN RÉVÉLÉ</p>
-              <p className="text-sm font-display font-bold text-primary">{globalProgressOn195}%</p>
+              <p className="text-sm font-display font-bold text-primary">{globalProgress}%</p>
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="text-right">
@@ -558,17 +558,17 @@ const Puzzle = () => {
                 className="text-sm font-display font-bold"
                 style={{
                   color:
-                    globalProgressOn195 >= 100 ? "hsl(0 70% 58%)" :
-                    globalProgressOn195 >= 50  ? "hsl(280 65% 62%)" :
-                    globalProgressOn195 >= 20  ? "hsl(160 60% 52%)" :
-                    globalProgressOn195 >= 5   ? "hsl(220 80% 65%)" :
+                    globalProgress >= 100 ? "hsl(0 70% 58%)" :
+                    globalProgress >= 50  ? "hsl(280 65% 62%)" :
+                    globalProgress >= 20  ? "hsl(160 60% 52%)" :
+                    globalProgress >= 5   ? "hsl(220 80% 65%)" :
                     "hsl(40 85% 62%)",
                 }}
               >
-                {globalProgressOn195 >= 100 ? "MAÎTRE DU PROTOCOLE" :
-                 globalProgressOn195 >= 50  ? "ARCHITECTE" :
-                 globalProgressOn195 >= 20  ? "STRATÈGE" :
-                 globalProgressOn195 >= 5   ? "AGENT" : "EXPLORATEUR"}
+                {globalProgress >= 100 ? "MAÎTRE DU PROTOCOLE" :
+                 globalProgress >= 50  ? "ARCHITECTE" :
+                 globalProgress >= 20  ? "STRATÈGE" :
+                 globalProgress >= 5   ? "AGENT" : "EXPLORATEUR"}
               </p>
             </div>
           </div>
@@ -618,14 +618,14 @@ const Puzzle = () => {
         >
           <div className="flex items-center justify-between mb-1.5 text-xs font-display text-muted-foreground tracking-wider">
             <span>PROGRESSION MONDIALE — {TOTAL_COUNTRIES_IN_WORLD} PAYS</span>
-            <span>{globalProgressOn195}% — {countriesWithFragment}/{TOTAL_COUNTRIES_IN_WORLD} ACTIFS</span>
+            <span>{globalProgress}% — {countriesWithFragment}/{TOTAL_COUNTRIES_IN_WORLD} ACTIFS</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
             <motion.div
               className="h-full rounded-full relative overflow-hidden"
               style={{ background: "linear-gradient(90deg, hsl(40 80% 55%), hsl(40 60% 40%))" }}
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(globalProgressOn195, 100)}%` }}
+              animate={{ width: `${Math.min(globalProgress, 100)}%` }}
               transition={{ duration: 1.5, ease: "easeOut" }}
             >
               <motion.div
@@ -652,7 +652,7 @@ const Puzzle = () => {
             onDropOnCountry={handleDropOnCountry}
             onDropOnMap={handleDropOnMap}
             onCountryClick={handleCountryClick}
-            globalProgress={globalProgressOn195}
+            globalProgress={globalProgress}
             collectedCountryCodes={fragments.map(f => f.countryCode)}
             forceFullReveal={forceFullReveal || introPhase === "full_reveal"}
             snapTargetId={snapTargetId}
@@ -842,8 +842,8 @@ const Puzzle = () => {
                     SIGNAL INITIAL COMPLÉTÉ
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5 font-body">
-                    Vous avez collecté tous les fragments de l'opération initiale. La suite de l'enquête — 190 pays, 
-                    des révélations classifiées et le Protocole Oméga — requiert une autorisation de niveau supérieur.
+                    Vous avez collecté tous les fragments de l'opération initiale. La suite de l'enquête — 43 pays, 
+                    des révélations classifiées et le Protocole Oméga — requièrent une autorisation de niveau supérieur.
                   </p>
 
                   <div
@@ -867,7 +867,7 @@ const Puzzle = () => {
                   </Button>
 
                   <p className="text-xs text-muted-foreground font-display tracking-wider text-center">
-                    50 PAYS · MISSIONS NARRATIVES ÉTENDUES · BADGES EXCLUSIFS
+                    12 PAYS · MISSIONS NARRATIVES ÉTENDUES · BADGES EXCLUSIFS
                   </p>
                 </div>
               )
@@ -883,19 +883,19 @@ const Puzzle = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(220 80% 65%)" }} />
-            <span style={{ color: "hsl(220 80% 65%)" }}>SAISON 1 (43)</span>
+            <span style={{ color: "hsl(220 80% 65%)" }}>SAISON 1 (12)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(160 60% 52%)" }} />
-            <span style={{ color: "hsl(160 60% 52%)" }}>SAISON 2 (72)</span>
+            <span style={{ color: "hsl(160 60% 52%)" }}>SAISON 2 (12)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(280 65% 62%)" }} />
-            <span style={{ color: "hsl(280 65% 62%)" }}>SAISON 3 (40)</span>
+            <span style={{ color: "hsl(280 65% 62%)" }}>SAISON 3 (12)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(0 70% 58%)" }} />
-            <span style={{ color: "hsl(0 70% 58%)" }}>SAISON 4 (35)</span>
+            <span style={{ color: "hsl(0 70% 58%)" }}>SAISON 4 (12)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full opacity-50" style={{ background: "hsl(280 60% 30%)" }} />

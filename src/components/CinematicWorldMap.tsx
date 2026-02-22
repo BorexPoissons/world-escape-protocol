@@ -69,14 +69,14 @@ const SEASON_CONFIG: Record<number, { label: string; codename: string; color: st
   1: { label: "PROTOCOLE OMÉGA",  codename: "OP-01",             color: "hsl(220 80% 65%)", lockColor: "hsl(220 70% 45% / 0.7)" },
   2: { label: "RÉSEAU ATLAS",     codename: "OP-02",             color: "hsl(160 60% 52%)", lockColor: "hsl(160 60% 35% / 0.6)" },
   3: { label: "DOMINION SHADOW",  codename: "OP-03",             color: "hsl(280 65% 62%)", lockColor: "hsl(280 60% 40% / 0.6)" },
-  4: { label: "CONVERGENCE 195",  codename: "OP-04 · FINALE",    color: "hsl(0 70% 58%)",   lockColor: "hsl(0 65% 35% / 0.6)" },
+  4: { label: "CONVERGENCE FINALE",  codename: "OP-04 · FINALE",    color: "hsl(0 70% 58%)",   lockColor: "hsl(0 65% 35% / 0.6)" },
 };
 
 function getSeasonTooltip(season: number): string {
-  if (season === 1) return "🔒 PROTOCOLE OMÉGA · 43 pays";
-  if (season === 2) return "🔒 RÉSEAU ATLAS · 50 pays";
-  if (season === 3) return "🔒 DOMINION SHADOW · 50 pays";
-  if (season === 4) return "🔒 CONVERGENCE 195 · 47 pays";
+  if (season === 1) return "🔒 PROTOCOLE OMÉGA · 12 pays";
+  if (season === 2) return "🔒 RÉSEAU ATLAS · 12 pays";
+  if (season === 3) return "🔒 DOMINION SHADOW · 12 pays";
+  if (season === 4) return "🔒 CONVERGENCE FINALE · 12 pays";
   return "Verrouillé";
 }
 
