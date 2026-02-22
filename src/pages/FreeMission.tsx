@@ -253,8 +253,8 @@ const FreeMission = () => {
       const qbank = questions.map((q: any, i: number) => {
         const opts = (q.options ?? []).map((o: any) => o.text ?? o);
         let ansIdx = 0;
-        if (q.answer?.value) {
-          const idx = (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.answer.value);
+        if (q.correct_answer) {
+          const idx = (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.correct_answer);
           ansIdx = idx >= 0 ? idx : 0;
         }
         // Map DB question types: mcq/text → A, logic/number → B, strategic → C
@@ -378,9 +378,24 @@ const FreeMission = () => {
       setLogicQuestion(lq);
       setStrategicQuestion(stq);
 
-      if (sq) setSceneChoices(shuffle([...sq.choices]));
-      if (lq) setLogicChoices(shuffle([...lq.choices]));
-      if (stq) setStrategicChoices(shuffle([...stq.choices]));
+      if (sq) {
+        const correctText = sq.choices[sq.answer_index];
+        const shuffled = shuffle([...sq.choices]);
+        sq.answer_index = shuffled.indexOf(correctText);
+        setSceneChoices(shuffled);
+      }
+      if (lq) {
+        const correctText = lq.choices[lq.answer_index];
+        const shuffled = shuffle([...lq.choices]);
+        lq.answer_index = shuffled.indexOf(correctText);
+        setLogicChoices(shuffled);
+      }
+      if (stq) {
+        const correctText = stq.choices[stq.answer_index];
+        const shuffled = shuffle([...stq.choices]);
+        stq.answer_index = shuffled.indexOf(correctText);
+        setStrategicChoices(shuffled);
+      }
 
       // Set letter from DB token if available
       const letter = (dbContent?.rewards?.token?.value as string)
