@@ -337,6 +337,8 @@ const SeasonMission = () => {
     // Navigate to next
     if (content.completion.next_country) {
       navigate(`/season-mission/${content.completion.next_country}`);
+    } else if (content.meta.season === 1) {
+      navigate("/season1-complete");
     } else {
       navigate("/puzzle");
     }
