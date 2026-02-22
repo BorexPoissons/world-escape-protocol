@@ -92,15 +92,38 @@ const Season1Complete = () => {
 
   const handlePiSubmit = async () => {
     if (piInput.trim() === "314159") {
-      // Mark season complete
+      // Mark season complete + carry-over lives → bonus seconds for S2
       if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("lives_banked, bonus_seconds_banked")
+          .eq("user_id", user.id)
+          .single();
+
+        const livesCarryOver = profile?.lives_banked ?? 0;
+        const existingBonus = profile?.bonus_seconds_banked ?? 0;
+        // Each banked life converts to 60 bonus seconds for S2
+        const bonusFromLives = livesCarryOver * 60;
+
         await supabase
           .from("profiles")
-          .update({ season_1_unlocked: true })
+          .update({
+            season_1_unlocked: true,
+            bonus_seconds_banked: existingBonus + bonusFromLives,
+            lives_banked: 0, // Reset lives after carry-over
+          })
           .eq("user_id", user.id);
+
+        if (livesCarryOver > 0) {
+          toast({
+            title: "🔑 CLÉ ASSEMBLÉE",
+            description: `WATCHER — ACCESS LEVEL 1 · ${livesCarryOver} vie(s) → +${bonusFromLives}s bonus S2`,
+          });
+        } else {
+          toast({ title: "🔑 CLÉ ASSEMBLÉE", description: "WATCHER — ACCESS LEVEL 1" });
+        }
       }
       setPhase("complete");
-      toast({ title: "🔑 CLÉ ASSEMBLÉE", description: "WATCHER — ACCESS LEVEL 1" });
     } else {
       setPiAttempts(prev => prev + 1);
       setPiInput("");
