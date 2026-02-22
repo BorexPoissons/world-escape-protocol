@@ -60,7 +60,7 @@ const MissionComplete = () => {
     on_reveal_message?: string;
     set_revealed_word?: string;
   }>({ triggered: false });
-  const [puzzleProgress, setPuzzleProgress] = useState({ unlocked: 0, total: 195 });
+  const [puzzleProgress, setPuzzleProgress] = useState({ unlocked: 0, total: 48 });
   const [newBadges, setNewBadges] = useState<BadgeKey[]>([]);
 
   useEffect(() => {
@@ -157,7 +157,7 @@ const MissionComplete = () => {
         });
 
         const fragmentCount = (fragmentsRes.data as any[])?.length ?? 0;
-        setPuzzleProgress({ unlocked: fragmentCount, total: 195 });
+        setPuzzleProgress({ unlocked: fragmentCount, total: 48 });
 
         if (badgesRes.data) setNewBadges(badgesRes.data.map((b: any) => b.badge_key));
       }
