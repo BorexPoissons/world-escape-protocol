@@ -155,7 +155,7 @@ const FreeMission = () => {
   const [missionStartTime] = useState(() => Date.now());
 
   // The 3 selected questions — ancien format (question_bank A/B/C)
-  type QBankItem = NonNullable<FreeCountryData["question_bank"]>[0] & { hint?: { text: string; cost_xp: number } };
+  type QBankItem = NonNullable<FreeCountryData["question_bank"]>[0] & { hint?: { text: string; cost_xp: number }; input_type?: string; accepted_answers?: string[]; correct_answer?: string };
   const [sceneQuestion, setSceneQuestion] = useState<QBankItem | null>(null);
   const [logicQuestion, setLogicQuestion] = useState<QBankItem | null>(null);
   const [strategicQuestion, setStrategicQuestion] = useState<QBankItem | null>(null);
@@ -179,6 +179,7 @@ const FreeMission = () => {
   const [explanationOpen, setExplanationOpen] = useState(false);
   const [hintRevealed, setHintRevealed] = useState(false);
   const [playerXP, setPlayerXP] = useState(0);
+  const [textInput, setTextInput] = useState("");
 
   // Next country info
   const [nextCountry, setNextCountry] = useState<Tables<"countries"> | null>(null);
@@ -274,6 +275,11 @@ const FreeMission = () => {
           narrative_unlock: q.narrative_unlock,
           explanation: q.explanation,
           hint: q.hint,
+          ...(dbType === "text_input" ? {
+            input_type: "text_input",
+            accepted_answers: q.accepted_answers,
+            correct_answer: q.correct_answer,
+          } : {}),
         };
       });
 
@@ -596,6 +602,33 @@ const FreeMission = () => {
     }
   };
 
+  // Ancien format : question text_input (life penalty)
+  const handleTextInputAnswer = () => {
+    if (answerRevealed || !strategicQuestion) return;
+    const normalized = textInput.trim().toLowerCase();
+    const accepted = (strategicQuestion.accepted_answers ?? []).map(a => a.trim().toLowerCase());
+    const correct = accepted.includes(normalized);
+
+    setSelectedAnswer(textInput.trim());
+    setAnswerRevealed(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    if (correct && strategicQuestion.narrative_unlock) {
+      setNarrativeText(strategicQuestion.narrative_unlock);
+    }
+
+    if (correct) {
+      setBonusPool(prev => prev + timeLeft);
+      if (!earnedLetter || earnedLetter === "?") {
+        const letter = country ? (COUNTRY_LETTERS[country.code] ?? "?") : "?";
+        setEarnedLetter(letter);
+      }
+      setTimeout(() => setPhase("letter_reveal"), 1000);
+    } else {
+      handleWrongWithLives(null);
+    }
+  };
+
   // ── Continue after wrong answer (survived) ──────────────────────────────────
 
   const continueAfterWrong = (nextPhase: FreePhase) => {
@@ -692,6 +725,7 @@ const FreeMission = () => {
     setEarnedLetter("");
     setNarrativeText("");
     setHintRevealed(false);
+    setTextInput("");
     setLives(FREE_MISSION_CONFIG.lives);
     setFirstMistakeWarning(false);
     setBonusPool(0);
@@ -716,8 +750,10 @@ const FreeMission = () => {
     (phase === "logic_puzzle" && !isNewFormat(data!) && logicQuestion && selectedAnswer !== logicQuestion.choices[logicQuestion.answer_index]) ||
     // logic_puzzle wrong in new format (letter puzzle)
     (phase === "logic_puzzle" && isNewFormat(data!) && data?.puzzle && selectedAnswer !== data.puzzle.solution_letter) ||
-    // strategic wrong in old format
-    (phase === "strategic" && !isNewFormat(data!) && strategicQuestion && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index]) ||
+    // strategic wrong in old format (MCQ)
+    (phase === "strategic" && !isNewFormat(data!) && strategicQuestion && strategicQuestion.input_type !== "text_input" && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index]) ||
+    // strategic wrong in old format (text_input)
+    (phase === "strategic" && !isNewFormat(data!) && strategicQuestion && strategicQuestion.input_type === "text_input" && !(strategicQuestion.accepted_answers ?? []).map(a => a.trim().toLowerCase()).includes((selectedAnswer ?? "").trim().toLowerCase())) ||
     // strategic wrong in new format
     (phase === "strategic" && isNewFormat(data!) && data?.final_question && selectedAnswer !== data.final_question.choices[data.final_question.answer_index]) ||
     // timeout
@@ -1457,52 +1493,108 @@ const FreeMission = () => {
                 }}
               />
 
-              <div className="space-y-3">
-                {strategicChoices.map((choice, i) => {
-                  const isCorrect = choice === strategicQuestion.choices[strategicQuestion.answer_index];
-                  const isSelected = choice === selectedAnswer;
-                  let cls = "border-border hover:border-primary/50 cursor-pointer hover:bg-primary/5";
-                  if (answerRevealed) {
-                    if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
-                    else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
-                    else cls = "border-border opacity-40 cursor-default";
-                  }
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => handleStrategicAnswer(choice)}
+              {/* Text input mode */}
+              {strategicQuestion.input_type === "text_input" ? (
+                <>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={textInput}
+                      onChange={e => setTextInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && textInput.trim() && !answerRevealed) handleTextInputAnswer(); }}
                       disabled={answerRevealed}
-                      className={`w-full text-left p-4 rounded-lg border transition-all bg-card ${cls}`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-foreground leading-snug">{choice}</span>
-                        {answerRevealed && isCorrect && <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />}
-                        {answerRevealed && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Wrong but alive on strategic — retry */}
-              {answerRevealed && selectedAnswer !== null && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index] && lives > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
-                    ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau.
+                      placeholder="Votre réponse..."
+                      className="flex h-12 w-full rounded-md border border-input bg-background px-4 py-2 text-lg font-display tracking-wider ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      autoFocus
+                    />
+                    {!answerRevealed && (
+                      <Button
+                        onClick={handleTextInputAnswer}
+                        disabled={!textInput.trim()}
+                        className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        VALIDER
+                      </Button>
+                    )}
                   </div>
-                  <ExplanationToggle
-                    explanation={strategicQuestion?.explanation}
-                    isCorrect={false}
-                    isOpen={explanationOpen}
-                    onToggle={() => setExplanationOpen(o => !o)}
-                  />
-                  <Button
-                    onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); }}
-                    className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    RÉESSAYER LA QUESTION →
-                  </Button>
-                </motion.div>
+
+                  {/* Correct feedback */}
+                  {answerRevealed && (strategicQuestion.accepted_answers ?? []).map(a => a.trim().toLowerCase()).includes(textInput.trim().toLowerCase()) && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                      <div className="rounded-lg px-5 py-4 border border-primary/40 bg-primary/8 text-primary text-sm font-display tracking-wider flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                        ✓ CORRECT — {strategicQuestion.correct_answer ?? "Bonne réponse."}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Wrong but alive — retry */}
+                  {answerRevealed && !(strategicQuestion.accepted_answers ?? []).map(a => a.trim().toLowerCase()).includes(textInput.trim().toLowerCase()) && lives > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                      <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider flex items-center gap-2">
+                        <XCircle className="h-5 w-5 flex-shrink-0" />
+                        ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau.
+                      </div>
+                      <Button
+                        onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setTextInput(""); }}
+                        className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        RÉESSAYER →
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* MCQ mode (existing) */}
+                  <div className="space-y-3">
+                    {strategicChoices.map((choice, i) => {
+                      const isCorrect = choice === strategicQuestion.choices[strategicQuestion.answer_index];
+                      const isSelected = choice === selectedAnswer;
+                      let cls = "border-border hover:border-primary/50 cursor-pointer hover:bg-primary/5";
+                      if (answerRevealed) {
+                        if (isCorrect) cls = "border-primary bg-primary/10 cursor-default";
+                        else if (isSelected) cls = "border-destructive bg-destructive/10 cursor-default";
+                        else cls = "border-border opacity-40 cursor-default";
+                      }
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleStrategicAnswer(choice)}
+                          disabled={answerRevealed}
+                          className={`w-full text-left p-4 rounded-lg border transition-all bg-card ${cls}`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-foreground leading-snug">{choice}</span>
+                            {answerRevealed && isCorrect && <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />}
+                            {answerRevealed && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Wrong but alive on strategic — retry */}
+                  {answerRevealed && selectedAnswer !== null && selectedAnswer !== strategicQuestion.choices[strategicQuestion.answer_index] && lives > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                      <div className="rounded-lg px-5 py-4 border border-destructive/40 bg-destructive/8 text-destructive text-sm font-display tracking-wider">
+                        ✗ MAUVAISE RÉPONSE — Vous avez encore {lives} vie{lives > 1 ? "s" : ""}. Tentez à nouveau.
+                      </div>
+                      <ExplanationToggle
+                        explanation={strategicQuestion?.explanation}
+                        isCorrect={false}
+                        isOpen={explanationOpen}
+                        onToggle={() => setExplanationOpen(o => !o)}
+                      />
+                      <Button
+                        onClick={() => { setSelectedAnswer(null); setAnswerRevealed(false); setExplanationOpen(false); setHintRevealed(false); }}
+                        className="w-full font-display tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        RÉESSAYER LA QUESTION →
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
               )}
             </motion.div>
           )}
