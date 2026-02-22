@@ -93,8 +93,8 @@ const Season1Unlock: React.FC = () => {
             <h1 className="text-4xl md:text-5xl font-display font-bold tracking-[0.15em] text-primary text-glow mb-2">
               LES OBSERVATEURS
             </h1>
-            <p className="text-sm font-display tracking-widest text-muted-foreground">
-              SAISON I · 45 PAYS · L'INTERFÉRENCE COMMENCE
+             <p className="text-sm font-display tracking-widest text-muted-foreground">
+               SAISON I · 12 PAYS · L'INTERFÉRENCE COMMENCE
             </p>
           </motion.div>
 
@@ -181,8 +181,8 @@ const Season1Unlock: React.FC = () => {
                 29
                 <span className="text-xl text-muted-foreground ml-2">CHF</span>
               </p>
-              <p className="text-xs text-muted-foreground font-display tracking-wider">
-                Sans abonnement · Sans frais cachés · 45 pays débloqués
+                 <p className="text-xs text-muted-foreground font-display tracking-wider">
+                   Sans abonnement · Sans frais cachés · 12 pays débloqués
               </p>
             </div>
 
@@ -217,7 +217,7 @@ const Season1Unlock: React.FC = () => {
             className="grid grid-cols-2 gap-3 pb-8"
           >
             {[
-              { icon: "🌍", text: "45 pays débloqués" },
+              { icon: "🌍", text: "12 pays débloqués" },
               { icon: "📖", text: "Missions narratives étendues" },
               { icon: "🔐", text: "Archives classifiées Niv. 2" },
               { icon: "🏅", text: "Badges exclusifs Agents" },

@@ -56,7 +56,7 @@ type CountryVisibility = "playable" | "locked_s1" | "locked_s2" | "locked_s3" | 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TOTAL_PIECES_PER_COUNTRY = 5;
-const TOTAL_COUNTRIES_IN_WORLD = 195;
+const TOTAL_COUNTRIES_IN_WORLD = 48;
 
 const INSPIRING_MESSAGES = [
   "Chaque pièce vous rapproche de la vérité.",
@@ -446,7 +446,7 @@ const Puzzle = () => {
       };
     });
 
-  // Next country = respects SIGNAL INITIAL sequence (CH→FR→EG→US→JP)
+  // Next country = respects SIGNAL INITIAL sequence (free countries)
   const SIGNAL_INITIAL_SEQUENCE = ["CH", "FR", "EG", "US", "JP"];
 
   // Find the first country in sequence that has no fragment yet

@@ -44,10 +44,13 @@
 - [x] Mini-jeu π : saisir 314159
 - [x] Route `/season1-complete`, redirection auto depuis dernière mission S1
 
-## Phase 6 — Map/Puzzle/UI 48 pays
-- [ ] Carte mondiale 48 pays (SeasonMapNavigator)
-- [ ] IntroScreen : nouveau texte Jasper canonique
-- [ ] MissionComplete.tsx : adapter pour S1
+## Phase 6 — Map/Puzzle/UI 48 pays ✅
+- [x] SeasonMapNavigator : 12 pays/saison, labels corrigés
+- [x] IntroScreen : nouveau texte Jasper canonique (48 pays, 4 saisons, 4 clés)
+- [x] MissionComplete.tsx : total 48 pays
+- [x] Puzzle.tsx : TOTAL_COUNTRIES_IN_WORLD = 48
+- [x] Seasons.tsx : descriptions 12 pays/saison, bundle 48 pays
+- [x] Season1Unlock.tsx : 12 pays
 
 ## Phase 7 — Stripe/Admin alignment
 - [ ] Tiers/entitlements 4 saisons × 12 pays

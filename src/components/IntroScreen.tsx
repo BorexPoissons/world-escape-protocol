@@ -7,10 +7,8 @@ interface IntroScreenProps {
   onComplete: () => void;
 }
 
-// Durées en ms par slide
 const SLIDE_DURATIONS = [7000, 8000, 8000, 7000, 6000];
 
-// Ligne animée ligne par ligne
 function TypeLines({ lines, delay = 0 }: { lines: { text: string; style?: string }[]; delay?: number }) {
   return (
     <div className="flex flex-col gap-3">
@@ -20,7 +18,7 @@ function TypeLines({ lines, delay = 0 }: { lines: { text: string; style?: string
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: delay + i * 0.55 }}
-          className={line.style ?? "text-xl md:text-2xl font-body text-white/80 leading-relaxed"}
+          className={line.style ?? "text-xl md:text-2xl font-body text-foreground/80 leading-relaxed"}
         >
           {line.text}
         </motion.p>
@@ -51,13 +49,12 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
   }, [slideIndex, showFinal, advance]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black">
-      {/* PASSER — toujours visible */}
+    <div className="fixed inset-0 z-50 overflow-hidden bg-background">
+      {/* PASSER */}
       {!showFinal && (
         <button
           onClick={skip}
-          className="absolute top-5 right-5 z-50 flex items-center gap-1.5 text-xs tracking-widest font-display px-3 py-1.5 rounded border transition-opacity hover:opacity-100 opacity-60"
-          style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))", background: "rgba(0,0,0,0.5)" }}
+          className="absolute top-5 right-5 z-50 flex items-center gap-1.5 text-xs tracking-widest font-display px-3 py-1.5 rounded border border-border text-muted-foreground bg-background/50 transition-opacity hover:opacity-100 opacity-60"
         >
           <SkipForward className="h-3 w-3" />
           PASSER
@@ -70,11 +67,10 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
           {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
             <div
               key={i}
-              className="h-0.5 rounded-full transition-all duration-700"
-              style={{
-                width: i === slideIndex ? "2rem" : "0.4rem",
-                backgroundColor: i <= slideIndex ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
-              }}
+              className={`h-0.5 rounded-full transition-all duration-700 ${
+                i <= slideIndex ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+              style={{ width: i === slideIndex ? "2rem" : "0.4rem" }}
             />
           ))}
         </div>
@@ -90,14 +86,14 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
           >
-            {/* ═══ SLIDE 1 — Le monde n'est pas ce qu'il paraît ═══ */}
+            {/* ═══ SLIDE 1 — 48 pays, un réseau invisible ═══ */}
             {slideIndex === 0 && (
-              <div className="h-full flex flex-col items-center justify-center px-8 bg-black">
+              <div className="h-full flex flex-col items-center justify-center px-8 bg-background">
                 <div className="absolute inset-0 bg-grid opacity-[0.06] pointer-events-none" />
                 <div className="max-w-2xl text-center space-y-6">
                   <TypeLines
                     lines={[
-                      { text: "🌍 Le monde n'est pas ce qu'il paraît.", style: "text-2xl md:text-4xl font-display font-bold text-white text-center leading-tight" },
+                      { text: "🌍 48 pays. Un réseau invisible.", style: "text-2xl md:text-4xl font-display font-bold text-foreground text-center leading-tight" },
                     ]}
                     delay={0.4}
                   />
@@ -107,11 +103,11 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     transition={{ delay: 1.6, duration: 1 }}
                     className="space-y-3 text-center"
                   >
-                    <p className="text-base md:text-lg font-body text-white/60 leading-relaxed">
-                      Depuis des décennies, des décisions majeures semblent prises dans l'ombre.
+                    <p className="text-base md:text-lg font-body text-foreground/60 leading-relaxed">
+                      Des crises surgissent comme des dominos parfaitement alignés.
                     </p>
-                    <p className="text-sm md:text-base font-display tracking-widest" style={{ color: "hsl(var(--primary) / 0.9)" }}>
-                      Crises financières.&nbsp;&nbsp;Pénuries énergétiques.&nbsp;&nbsp;Accords technologiques.
+                    <p className="text-sm md:text-base font-display tracking-widest text-primary/90">
+                      4 saisons.&nbsp;&nbsp;12 pays chacune.&nbsp;&nbsp;Une vérité enfouie.
                     </p>
                   </motion.div>
                   <motion.div
@@ -120,11 +116,8 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     transition={{ delay: 3.2, duration: 0.9 }}
                     className="pt-2"
                   >
-                    <p className="text-white/50 text-sm font-body mb-2">Un nom revient dans les archives confidentielles :</p>
-                    <p
-                      className="text-3xl md:text-5xl font-display font-bold tracking-widest"
-                      style={{ color: "hsl(var(--primary))", textShadow: "0 0 40px hsl(var(--gold-glow) / 0.5)" }}
-                    >
+                    <p className="text-foreground/50 text-sm font-body mb-2">Un nom revient dans les archives confidentielles :</p>
+                    <p className="text-3xl md:text-5xl font-display font-bold tracking-widest text-primary">
                       LE CERCLE.
                     </p>
                   </motion.div>
@@ -134,22 +127,21 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
 
             {/* ═══ SLIDE 2 — Le Cercle ═══ */}
             {slideIndex === 1 && (
-              <div className="h-full flex flex-col items-center justify-center px-8 bg-gradient-to-b from-black via-zinc-950 to-black">
+              <div className="h-full flex flex-col items-center justify-center px-8 bg-background">
                 <div className="absolute inset-0 bg-grid opacity-[0.07] pointer-events-none" />
                 <div className="max-w-2xl text-center space-y-5">
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
-                    className="text-sm font-display tracking-[0.3em] uppercase"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
+                    className="text-sm font-display tracking-[0.3em] uppercase text-muted-foreground"
                   >
                     Archives — Niveau Oméga
                   </motion.p>
                   <TypeLines
                     lines={[
-                      { text: "Personne ne sait s'il s'agit d'une organisation…", style: "text-xl md:text-2xl font-body text-white/70 leading-relaxed italic" },
-                      { text: "…ou d'un réseau invisible présent dans chaque pays.", style: "text-xl md:text-2xl font-body text-white/70 leading-relaxed italic" },
+                      { text: "Personne ne sait s'il s'agit d'une organisation…", style: "text-xl md:text-2xl font-body text-foreground/70 leading-relaxed italic" },
+                      { text: "…ou d'un système enraciné dans 48 pays.", style: "text-xl md:text-2xl font-body text-foreground/70 leading-relaxed italic" },
                     ]}
                     delay={0.8}
                   />
@@ -157,12 +149,11 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 2.8, duration: 0.8 }}
-                    className="mt-4 border rounded-lg p-4"
-                    style={{ borderColor: "hsl(var(--primary) / 0.25)", background: "hsl(var(--primary) / 0.05)" }}
+                    className="mt-4 border border-primary/25 bg-primary/5 rounded-lg p-4"
                   >
-                    <p className="text-white/50 text-xs font-display tracking-widest mb-1">DOSSIER CONFIDENTIEL #0071-C</p>
-                    <p className="text-base md:text-lg font-body text-white/80">
-                      "Le Cercle ne fait pas de bruit. Il déplace des pions."
+                    <p className="text-foreground/50 text-xs font-display tracking-widest mb-1">DOSSIER CONFIDENTIEL #0071-C</p>
+                    <p className="text-base md:text-lg font-body text-foreground/80">
+                      "Le Cercle ne fait pas de bruit. Il déplace des pions sur 4 continents."
                     </p>
                   </motion.div>
                 </div>
@@ -171,41 +162,33 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
 
             {/* ═══ SLIDE 3 — Jasper Valcourt ═══ */}
             {slideIndex === 2 && (
-              <div className="h-full flex items-center justify-center px-4 bg-gradient-to-br from-zinc-950 via-stone-950 to-black">
+              <div className="h-full flex items-center justify-center px-4 bg-background">
                 <div className="max-w-4xl w-full flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                  {/* Portrait */}
                   <motion.div
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 1, delay: 0.3 }}
                     className="flex-shrink-0"
                   >
-                    <div
-                      className="w-52 md:w-64 rounded-xl overflow-hidden"
-                      style={{ boxShadow: "0 0 40px hsl(var(--gold-glow) / 0.25), 0 0 80px hsl(var(--gold-glow) / 0.1)" }}
-                    >
+                    <div className="w-52 md:w-64 rounded-xl overflow-hidden shadow-lg">
                       <img src={jasperImg} alt="J. Valcourt" className="w-full h-full object-cover" />
                     </div>
                   </motion.div>
 
-                  {/* Text */}
                   <div className="flex-1 space-y-4 text-center md:text-left">
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }}>
-                      <p className="text-xs font-display tracking-[0.3em] mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      <p className="text-xs font-display tracking-[0.3em] mb-1 text-muted-foreground">
                         BERNE — 05H42
                       </p>
-                      <h2
-                        className="text-3xl md:text-5xl font-display font-bold"
-                        style={{ color: "hsl(var(--primary))", textShadow: "0 0 30px hsl(var(--gold-glow) / 0.4)" }}
-                      >
+                      <h2 className="text-3xl md:text-5xl font-display font-bold text-primary">
                         Jasper Valcourt
                       </h2>
                     </motion.div>
                     <TypeLines
                       lines={[
-                        { text: "Je ne travaille ni pour un gouvernement.", style: "text-base md:text-lg font-body text-white/80 italic" },
-                        { text: "Ni pour une banque. Ni pour une agence.", style: "text-base md:text-lg font-body text-white/70 italic" },
-                        { text: "Je travaille pour les incohérences.", style: "text-base md:text-lg font-body font-semibold italic", },
+                        { text: "J'ai parcouru 48 pays en trois ans.", style: "text-base md:text-lg font-body text-foreground/80 italic" },
+                        { text: "Partout, les mêmes incohérences.", style: "text-base md:text-lg font-body text-foreground/70 italic" },
+                        { text: "Ce n'est pas du hasard. C'est un système.", style: "text-base md:text-lg font-body font-semibold text-foreground/90 italic" },
                       ]}
                       delay={1.1}
                     />
@@ -213,34 +196,33 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 3.4, duration: 0.9 }}
-                      className="text-sm md:text-base font-body text-white/50 italic"
+                      className="text-sm md:text-base font-body text-foreground/50 italic"
                     >
-                      — Jasper Valcourt
+                      — Jasper Valcourt, enquêteur indépendant
                     </motion.p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ═══ SLIDE 4 — La Suisse / Le Système ═══ */}
+            {/* ═══ SLIDE 4 — La Suisse, point de départ ═══ */}
             {slideIndex === 3 && (
-              <div className="h-full flex flex-col items-center justify-center px-8 bg-gradient-to-b from-black via-slate-950 to-black">
+              <div className="h-full flex flex-col items-center justify-center px-8 bg-background">
                 <div className="absolute inset-0 bg-grid opacity-[0.07] pointer-events-none" />
                 <div className="max-w-2xl w-full space-y-5">
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="text-sm font-display tracking-[0.3em] text-center"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
+                    className="text-sm font-display tracking-[0.3em] text-center text-muted-foreground"
                   >
                     🇨🇭 POINT DE DÉPART — SUISSE
                   </motion.p>
                   <TypeLines
                     lines={[
-                      { text: "Des crises apparaissent comme des dominos parfaitement alignés.", style: "text-xl md:text-2xl font-body text-white/80 text-center leading-relaxed italic" },
-                      { text: "Ce n'est pas du hasard.", style: "text-xl md:text-2xl font-body text-white/60 text-center" },
-                      { text: "C'est un système.", style: "text-xl md:text-2xl font-display font-bold text-center", },
+                      { text: "Berne. Le coffre-fort de l'Europe.", style: "text-xl md:text-2xl font-body text-foreground/80 text-center leading-relaxed italic" },
+                      { text: "Un pays qui ne dirige rien…", style: "text-xl md:text-2xl font-body text-foreground/60 text-center" },
+                      { text: "…mais par lequel tout transite.", style: "text-xl md:text-2xl font-display font-bold text-center text-primary" },
                     ]}
                     delay={0.6}
                   />
@@ -248,22 +230,21 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 2.6, duration: 0.8 }}
-                    className="mt-2 border rounded-lg p-4"
-                    style={{ borderColor: "hsl(var(--primary) / 0.25)", background: "hsl(var(--primary) / 0.05)" }}
+                    className="mt-2 border border-primary/25 bg-primary/5 rounded-lg p-4"
                   >
-                    <p className="text-base md:text-lg font-body text-white/80 text-center leading-relaxed">
-                      "Un pays qui ne dirige rien…<br />
-                      <span style={{ color: "hsl(var(--primary))" }}>mais par lequel tout transite.</span>"
+                    <p className="text-base md:text-lg font-body text-foreground/80 text-center leading-relaxed">
+                      "4 saisons. 48 pays. 4 clés à assembler.
+                      <br />
+                      <span className="text-primary">Et chaque pays laisse des traces."</span>
                     </p>
                   </motion.div>
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 4.2 }}
-                    className="text-center font-display tracking-widest pt-2 text-xs"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
+                    className="text-center font-display tracking-widest pt-2 text-xs text-muted-foreground"
                   >
-                    Et chaque système laisse des traces.
+                    La Saison I commence ici.
                   </motion.p>
                 </div>
               </div>
@@ -271,18 +252,18 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
 
             {/* ═══ SLIDE 5 — Avertissement ═══ */}
             {slideIndex === 4 && (
-              <div className="h-full flex flex-col items-center justify-center px-8 bg-black">
+              <div className="h-full flex flex-col items-center justify-center px-8 bg-background">
                 <div className="absolute inset-0 bg-grid opacity-[0.06] pointer-events-none" />
                 <div className="max-w-xl text-center space-y-6">
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
                     <p className="text-4xl mb-3">⚠️</p>
-                    <p className="text-xl md:text-3xl font-display font-bold text-white">Le Cercle ne regarde pas sans agir.</p>
+                    <p className="text-xl md:text-3xl font-display font-bold text-foreground">Le Cercle ne regarde pas sans agir.</p>
                   </motion.div>
                   <TypeLines
                     lines={[
-                      { text: "Certaines missions seront simples.", style: "text-base md:text-lg font-body text-white/60 text-center" },
-                      { text: "D'autres te feront douter.", style: "text-base md:text-lg font-body text-white/60 text-center" },
-                      { text: "Chaque décision te rapproche de la vérité.", style: "text-base md:text-lg font-body text-white/80 text-center font-medium" },
+                      { text: "120 secondes par pays. 3 vies. Pas de seconde chance.", style: "text-base md:text-lg font-body text-foreground/60 text-center" },
+                      { text: "Chaque fragment vous rapproche de la clé.", style: "text-base md:text-lg font-body text-foreground/60 text-center" },
+                      { text: "48 pays. 4 clés. Une vérité.", style: "text-base md:text-lg font-body text-foreground/80 text-center font-medium" },
                     ]}
                     delay={1.2}
                   />
@@ -294,8 +275,7 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
           /* ═══════════ ÉCRAN FINAL ═══════════ */
           <motion.div
             key="final"
-            className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
-            style={{ background: "hsl(var(--background))" }}
+            className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center bg-background"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2 }}
@@ -304,40 +284,32 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
             <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
 
             <div className="relative z-10 flex flex-col items-center gap-7 max-w-lg">
-              {/* Classified stamp */}
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
                 <span className="classified-stamp text-xs">CLASSIFIÉ — NIVEAU OMEGA</span>
               </motion.div>
 
-              {/* Portrait petit */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
-                className="w-24 rounded-xl overflow-hidden"
-                style={{ boxShadow: "0 0 24px hsl(var(--gold-glow) / 0.3)" }}
+                className="w-24 rounded-xl overflow-hidden shadow-lg"
               >
                 <img src={jasperImg} alt="J. Valcourt" className="w-full object-cover" />
               </motion.div>
 
-              {/* Logo */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.8 }}>
                 <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground tracking-tight leading-tight">
                   WORLD ESCAPE
                   <br />
-                  <span
-                    className="font-display font-bold"
-                    style={{ color: "hsl(var(--primary))", textShadow: "0 0 30px hsl(var(--gold-glow) / 0.5), 0 0 60px hsl(var(--gold-glow) / 0.2)" }}
-                  >
+                  <span className="font-display font-bold text-primary">
                     PROTOCOL
                   </span>
                 </h1>
-                <p className="mt-2 text-sm font-display tracking-[0.3em]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  SAISON 1
+                <p className="mt-2 text-sm font-display tracking-[0.3em] text-muted-foreground">
+                  48 PAYS · 4 SAISONS · 4 CLÉS
                 </p>
               </motion.div>
 
-              {/* CTA */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -346,16 +318,14 @@ export default function IntroScreen({ onComplete }: IntroScreenProps) {
               >
                 <button
                   onClick={onComplete}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-display tracking-widest text-sm transition-all border-glow"
-                  style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-display tracking-widest text-sm transition-all border-glow bg-primary text-primary-foreground"
                 >
                   <ChevronRight className="h-4 w-4" />
                   COMMENCER L'ENQUÊTE
                 </button>
                 <button
                   onClick={skip}
-                  className="flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-display tracking-widest text-sm transition-all border"
-                  style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
+                  className="flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-display tracking-widest text-sm transition-all border border-border text-muted-foreground"
                 >
                   <SkipForward className="h-4 w-4" />
                   PASSER
