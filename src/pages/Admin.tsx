@@ -16,15 +16,23 @@ import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 
 const FLAG_EMOJI: Record<string, string> = {
-  CH: "🇨🇭", JP: "🇯🇵", EG: "🇪🇬", FR: "🇫🇷", DE: "🇩🇪",
-  IT: "🇮🇹", ES: "🇪🇸", GB: "🇬🇧", BR: "🇧🇷", US: "🇺🇸",
-  CA: "🇨🇦", AU: "🇦🇺", CN: "🇨🇳", IN: "🇮🇳", MX: "🇲🇽",
-  MA: "🇲🇦", TR: "🇹🇷", AR: "🇦🇷", KR: "🇰🇷", GR: "🇬🇷",
-  RU: "🇷🇺",
+  // S1
+  CH: "🇨🇭", GR: "🇬🇷", IN: "🇮🇳", MA: "🇲🇦", IT: "🇮🇹", JP: "🇯🇵",
+  MX: "🇲🇽", PE: "🇵🇪", TR: "🇹🇷", ET: "🇪🇹", KH: "🇰🇭", DE: "🇩🇪",
+  // S2
+  US: "🇺🇸", CA: "🇨🇦", BR: "🇧🇷", AR: "🇦🇷", ES: "🇪🇸", PT: "🇵🇹",
+  GB: "🇬🇧", NL: "🇳🇱", SE: "🇸🇪", PL: "🇵🇱", RO: "🇷🇴", IL: "🇮🇱",
+  // S3
+  CN: "🇨🇳", KR: "🇰🇷", SG: "🇸🇬", AU: "🇦🇺", NZ: "🇳🇿", ZA: "🇿🇦",
+  EG: "🇪🇬", AE: "🇦🇪", TH: "🇹🇭", VN: "🇻🇳", ID: "🇮🇩", CL: "🇨🇱",
+  // S4
+  NO: "🇳🇴", FI: "🇫🇮", CZ: "🇨🇿", HU: "🇭🇺", QA: "🇶🇦", SA: "🇸🇦",
+  KZ: "🇰🇿", MN: "🇲🇳", PH: "🇵🇭", MY: "🇲🇾", BE: "🇧🇪", FR: "🇫🇷",
 };
 
-const STATIC_CONTENT_CODES = ["CH", "JP", "EG", "US", "BR", "CN", "IN", "MA", "ES", "IT", "FR", "GR", "RU"];
-const FREE_THRESHOLD = 5; // pays 1–5 sont FREE (CH, BR, CN, US, IN)
+const STATIC_CONTENT_CODES = [
+  "CH", "GR", "IN", "MA", "IT", "JP", "MX", "PE", "TR", "ET", "KH", "DE",
+];
 
 type CountryRow = Tables<"countries"> & {
   release_order?: number;
@@ -33,15 +41,26 @@ type CountryRow = Tables<"countries"> & {
   visibility_level?: number;
 };
 
+function getSeasonLabel(seasonNum: number): { label: string; color: string } {
+  if (seasonNum === 1) return { label: "SAISON 1", color: "hsl(220 80% 65%)" };
+  if (seasonNum === 2) return { label: "SAISON 2", color: "hsl(160 60% 52%)" };
+  if (seasonNum === 3) return { label: "SAISON 3", color: "hsl(280 65% 62%)" };
+  if (seasonNum === 4) return { label: "SAISON 4", color: "hsl(0 70% 58%)" };
+  return { label: "FREE", color: "hsl(40 80% 55%)" };
+}
+
+// Legacy compat — used by CountryAdminRow
 function getTierLabel(order: number): { label: string; color: string } {
-  if (order <= FREE_THRESHOLD) return { label: "FREE", color: "hsl(40 80% 55%)" };
-  if (order <= 50) return { label: "AGENT", color: "hsl(220 80% 65%)" };
-  return { label: "DIRECTOR", color: "hsl(280 60% 65%)" };
+  return { label: `#${order}`, color: "hsl(220 80% 65%)" };
 }
 
 function getSubscriptionBadge(type: string) {
-  if (type === "director") return { label: "DIRECTOR", color: "hsl(280 60% 65%)" };
-  if (type === "agent" || type === "season1") return { label: "AGENT", color: "hsl(220 80% 65%)" };
+  if (type === "full_bundle") return { label: "FULL BUNDLE", color: "hsl(40 80% 55%)" };
+  if (type === "season_4") return { label: "SAISON 4", color: "hsl(0 70% 58%)" };
+  if (type === "season_3") return { label: "SAISON 3", color: "hsl(280 65% 62%)" };
+  if (type === "season_2") return { label: "SAISON 2", color: "hsl(160 60% 52%)" };
+  if (type === "season_1" || type === "agent" || type === "season1") return { label: "SAISON 1", color: "hsl(220 80% 65%)" };
+  if (type === "director") return { label: "FULL BUNDLE", color: "hsl(40 80% 55%)" };
   return { label: "FREE", color: "hsl(40 80% 55%)" };
 }
 
@@ -553,9 +572,10 @@ const Admin = () => {
     ...m, attempts: attemptsByCountry[m.country_id] || 1,
   }));
 
-  const freeCountries = countries.filter(c => (c.release_order ?? 999) <= FREE_THRESHOLD);
-  const agentCountries = countries.filter(c => { const o = c.release_order ?? 999; return o > FREE_THRESHOLD && o <= 50; });
-  const directorCountries = countries.filter(c => (c.release_order ?? 999) > 50);
+  const s1Countries = countries.filter(c => c.season_number === 1);
+  const s2Countries = countries.filter(c => c.season_number === 2);
+  const s3Countries = countries.filter(c => c.season_number === 3);
+  const s4Countries = countries.filter(c => c.season_number === 4);
 
   const filteredMissions = (() => {
     const source = missionDedup ? uniqueMissions : missions;
@@ -573,8 +593,7 @@ const Admin = () => {
 
   // Purchases analytics
   const freeUsers = profiles.filter(p => !((p as any).subscription_type) || (p as any).subscription_type === "free");
-  const agentUsers = profiles.filter(p => ["agent", "season1"].includes((p as any).subscription_type || ""));
-  const directorUsers = profiles.filter(p => (p as any).subscription_type === "director");
+  const paidUsers = profiles.filter(p => ((p as any).subscription_type || "free") !== "free");
 
   const tabs = [
     { key: "overview" as const, label: "APERÇU", icon: BarChart3 },
@@ -633,7 +652,7 @@ const Admin = () => {
                 { label: "TENTATIVES TOTALES", value: missions.length, icon: Target, sub: `dont ${uniqueMissions.length} pays distincts` },
                 { label: "TAUX COMPLÉTION", value: `${completionRate}%`, icon: TrendingUp, sub: `${completedMissions.length}/${missions.length}` },
                 { label: "SCORE MOYEN", value: `${avgPct}%`, icon: Star, sub: `${avgScore}/${avgTotal} moy.` },
-                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${agentUsers.length} Agent · ${directorUsers.length} Director` },
+                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${paidUsers.length} payant(s) · ${freeUsers.length} gratuit(s)` },
               ].map((card, i) => (
                 <motion.div
                   key={card.label}
@@ -652,12 +671,13 @@ const Admin = () => {
               ))}
             </div>
 
-            {/* Tier breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Season breakdown */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "TIER FREE", count: freeCountries.length, color: "hsl(40 80% 55%)", icon: "🔓", desc: `Pays 1–${FREE_THRESHOLD} · Accès gratuit` },
-                { label: "TIER AGENT", count: agentCountries.length, color: "hsl(220 80% 65%)", icon: "🕵️", desc: `Pays ${FREE_THRESHOLD + 1}–50 · 19.90 CHF` },
-                { label: "TIER DIRECTOR", count: directorCountries.length, color: "hsl(280 60% 65%)", icon: "👁", desc: "Pays 51+ · 119 CHF" },
+                { label: "SAISON 1", count: s1Countries.length, color: "hsl(220 80% 65%)", icon: "👁", desc: "12 pays · 29 CHF" },
+                { label: "SAISON 2", count: s2Countries.length, color: "hsl(160 60% 52%)", icon: "🗺", desc: "12 pays · 29 CHF" },
+                { label: "SAISON 3", count: s3Countries.length, color: "hsl(280 65% 62%)", icon: "⚡", desc: "12 pays · 29 CHF" },
+                { label: "SAISON 4", count: s4Countries.length, color: "hsl(0 70% 58%)", icon: "🧩", desc: "12 pays · 29 CHF" },
               ].map((tier) => (
                 <div key={tier.label} className="bg-card border border-border rounded-xl p-5">
                   <div className="flex items-center justify-between mb-3">
@@ -669,7 +689,7 @@ const Admin = () => {
                   </div>
                   <p className="text-3xl font-display font-bold text-foreground mb-1">{tier.count}</p>
                   <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-2">
-                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, (tier.count / 195) * 100)}%`, background: tier.color }} />
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, (tier.count / 12) * 100)}%`, background: tier.color }} />
                   </div>
                   <p className="text-xs text-muted-foreground">{tier.desc}</p>
                 </div>
@@ -925,29 +945,34 @@ const Admin = () => {
                 <span className="text-xs font-display text-muted-foreground tracking-wider">{countries.length} PAYS</span>
               </div>
 
-              {/* Free countries section */}
-              {freeCountries.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2 px-1">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-display tracking-widest px-2" style={{ color: "hsl(40 80% 55%)" }}>— TIER FREE (1–{FREE_THRESHOLD}) —</span>
-                    <div className="h-px flex-1 bg-border" />
+              {/* Countries grouped by season */}
+              {[1, 2, 3, 4].map(sn => {
+                const seasonLabel = getSeasonLabel(sn);
+                const seasonCountries = filteredCountries.filter(c => c.season_number === sn);
+                if (seasonCountries.length === 0) return null;
+                return (
+                  <div key={sn}>
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-display tracking-widest px-2" style={{ color: seasonLabel.color }}>— {seasonLabel.label} ({seasonCountries.length}/12) —</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    {seasonCountries.map(c => (
+                      <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
+                    ))}
                   </div>
-                  {freeCountries.filter(c => !countrySearch || c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch.toUpperCase())).map(c => (
-                    <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
-                  ))}
-                </div>
-              )}
+                );
+              })}
 
-              {/* Other countries */}
-              {filteredCountries.filter(c => (c.release_order ?? 999) > FREE_THRESHOLD).length > 0 && (
+              {/* Countries without season */}
+              {filteredCountries.filter(c => !c.season_number || c.season_number === 0).length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 my-2 px-1">
                     <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-display tracking-widest px-2 text-muted-foreground">— AGENT / DIRECTOR —</span>
+                    <span className="text-xs font-display tracking-widest px-2 text-muted-foreground">— SANS SAISON —</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  {filteredCountries.filter(c => (c.release_order ?? 999) > FREE_THRESHOLD).map(c => (
+                  {filteredCountries.filter(c => !c.season_number || c.season_number === 0).map(c => (
                     <CountryAdminRow key={c.id} country={c} expanded={expandedCountry === c.id} onToggle={() => setExpandedCountry(expandedCountry === c.id ? null : c.id)} onEdit={() => editCountry(c)} onDelete={() => handleDeleteCountry(c.id)} />
                   ))}
                 </div>
@@ -1215,7 +1240,7 @@ const Admin = () => {
               {[
                 { label: "VENTES", value: purchases.filter((p: any) => p.status === "completed").length, icon: CreditCard, sub: `${purchases.length} transactions` },
                 { label: "REVENUS", value: `${(purchases.filter((p: any) => p.status === "completed").reduce((s: number, p: any) => s + (p.amount || 0), 0) / 100).toFixed(2)} CHF`, icon: TrendingUp, sub: "Total brut" },
-                { label: "PAYANTS", value: agentUsers.length + directorUsers.length, icon: Users, sub: `${agentUsers.length} Agent · ${directorUsers.length} Director` },
+                { label: "PAYANTS", value: paidUsers.length, icon: Users, sub: `${freeUsers.length} gratuit(s)` },
                 { label: "ENTITLEMENTS", value: entitlements.filter((e: any) => e.active).length, icon: KeyRound, sub: `${entitlements.length} total` },
               ].map((card, i) => (
                 <motion.div key={card.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card border border-border rounded-xl p-5">
@@ -1292,7 +1317,7 @@ const Admin = () => {
                 {profiles.map((p)=>{const subType=(p as any).subscription_type||"free";const badge=getSubscriptionBadge(subType);return(
                   <div key={p.id} className="flex items-center justify-between gap-4 py-2 border-b border-border/50 last:border-0">
                     <div className="flex items-center gap-2"><span className="font-display text-foreground text-sm">{p.display_name||"Agent"}</span><span className="text-xs font-display px-1.5 py-0.5 rounded" style={{color:badge.color,border:`1px solid ${badge.color}30`,background:`${badge.color}10`}}>{badge.label}</span></div>
-                    <div className="flex gap-2 flex-shrink-0">{["free","agent","director"].map((tier)=>(<button key={tier} disabled={subType===tier} onClick={()=>setConfirmChange({userId:p.user_id,name:p.display_name||"Agent",newType:tier})} className={`px-2.5 py-1 rounded text-xs font-display tracking-wider transition-all border ${subType===tier?"opacity-40 cursor-not-allowed border-border bg-secondary text-muted-foreground":"border-border hover:border-primary/50 bg-card text-muted-foreground hover:text-foreground"}`}>{tier==="free"?"FREE":tier==="agent"?"AGENT":"DIRECTOR"}</button>))}</div>
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap">{["free","season_1","season_2","season_3","season_4","full_bundle"].map((tier)=>{const b=getSubscriptionBadge(tier);return(<button key={tier} disabled={subType===tier} onClick={()=>setConfirmChange({userId:p.user_id,name:p.display_name||"Agent",newType:tier})} className={`px-2 py-1 rounded text-[10px] font-display tracking-wider transition-all border ${subType===tier?"opacity-40 cursor-not-allowed border-border bg-secondary text-muted-foreground":"border-border hover:border-primary/50 bg-card text-muted-foreground hover:text-foreground"}`}>{b.label}</button>);})}</div>
                   </div>);})}
               </div>
             </div>
@@ -1441,8 +1466,7 @@ interface CountryAdminRowProps {
 }
 
 const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: CountryAdminRowProps) => {
-  const order = country.release_order ?? 999;
-  const tier = getTierLabel(order);
+  const seasonLabel = getSeasonLabel(country.season_number ?? 0);
   const hasStatic = STATIC_CONTENT_CODES.includes(country.code);
   const flag = FLAG_EMOJI[country.code] || "🌍";
 
@@ -1465,10 +1489,10 @@ const CountryAdminRow = ({ country, expanded, onToggle, onEdit, onDelete }: Coun
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className="text-xs font-display px-1.5 py-0.5 rounded"
-              style={{ color: tier.color, border: `1px solid ${tier.color}30`, background: `${tier.color}10` }}>
-              {tier.label}
+              style={{ color: seasonLabel.color, border: `1px solid ${seasonLabel.color}30`, background: `${seasonLabel.color}10` }}>
+              {seasonLabel.label}
             </span>
-            <span className="text-xs text-muted-foreground font-display">#{order}</span>
+            <span className="text-xs text-muted-foreground font-display">#{country.release_order ?? "?"}</span>
             {country.phase && <span className="text-xs text-muted-foreground">Phase {country.phase}</span>}
             {country.is_secret && (
               <span className="text-xs font-display px-1.5 py-0.5 rounded" style={{ color: "hsl(280 60% 65%)", border: "1px solid hsl(280 60% 65% / 0.3)", background: "hsl(280 60% 65% / 0.1)" }}>
