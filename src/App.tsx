@@ -16,6 +16,7 @@ import CentralDilemma from "./pages/CentralDilemma";
 import Leaderboard from "./pages/Leaderboard";
 import Season1Unlock from "./pages/Season1Unlock";
 import Seasons from "./pages/Seasons";
+import SeasonMission from "./pages/SeasonMission";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/season1" element={<ProtectedRoute><Season1Unlock /></ProtectedRoute>} />
             <Route path="/seasons" element={<ProtectedRoute><Seasons /></ProtectedRoute>} />
+            <Route path="/season-mission/:countryCode" element={<ProtectedRoute><SeasonMission /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
