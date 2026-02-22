@@ -452,7 +452,7 @@ const Seasons = () => {
           <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-5 py-2.5">
             <Shield className="h-4 w-4 text-primary" />
             <span className="text-xs font-display tracking-wider text-muted-foreground">
-              SIGNAL INITIAL — 5 pays gratuits inclus pour tous les agents
+              SIGNAL INITIAL — 5 pays inclus pour tous les agents
             </span>
           </div>
         </motion.div>

@@ -221,7 +221,7 @@ const UpgradeModal = ({ open, onClose, season = "season_1" }: UpgradeModalProps)
                   onClick={onClose}
                   className="w-full mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors font-display tracking-wider"
                 >
-                  CONTINUER EN MODE GRATUIT
+                  CONTINUER L'OBSERVATION
                 </button>
               )}
             </div>

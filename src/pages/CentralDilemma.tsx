@@ -215,7 +215,7 @@ const CentralDilemma: React.FC = () => {
             <span className="font-display text-sm text-primary tracking-widest">W.E.P. — DILEMME CENTRAL</span>
           </div>
           <span className="text-xs text-muted-foreground font-display tracking-wider">
-            FREE-SET-001
+            SIGNAL-001
           </span>
         </div>
       </header>

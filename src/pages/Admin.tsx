@@ -47,7 +47,7 @@ function getSeasonLabel(seasonNum: number): { label: string; color: string } {
   if (seasonNum === 2) return { label: "SAISON 2", color: "hsl(160 60% 52%)" };
   if (seasonNum === 3) return { label: "SAISON 3", color: "hsl(280 65% 62%)" };
   if (seasonNum === 4) return { label: "SAISON 4", color: "hsl(0 70% 58%)" };
-  return { label: "FREE", color: "hsl(40 80% 55%)" };
+  return { label: "S0", color: "hsl(40 80% 55%)" };
 }
 
 // Legacy compat — used by CountryAdminRow
@@ -62,7 +62,7 @@ function getSubscriptionBadge(type: string) {
   if (type === "season_2") return { label: "SAISON 2", color: "hsl(160 60% 52%)" };
   if (type === "season_1" || type === "agent" || type === "season1") return { label: "SAISON 1", color: "hsl(220 80% 65%)" };
   if (type === "director") return { label: "FULL BUNDLE", color: "hsl(40 80% 55%)" };
-  return { label: "FREE", color: "hsl(40 80% 55%)" };
+  return { label: "S0", color: "hsl(40 80% 55%)" };
 }
 
 type ParsedQuestion = {
@@ -654,7 +654,7 @@ const Admin = () => {
                 { label: "TENTATIVES TOTALES", value: missions.length, icon: Target, sub: `dont ${uniqueMissions.length} pays distincts` },
                 { label: "TAUX COMPLÉTION", value: `${completionRate}%`, icon: TrendingUp, sub: `${completedMissions.length}/${missions.length}` },
                 { label: "SCORE MOYEN", value: `${avgPct}%`, icon: Star, sub: `${avgScore}/${avgTotal} moy.` },
-                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${paidUsers.length} payant(s) · ${freeUsers.length} gratuit(s)` },
+                { label: "AGENTS ACTIFS", value: profiles.length, icon: Users, sub: `${paidUsers.length} payant(s) · ${freeUsers.length} S0` },
               ].map((card, i) => (
                 <motion.div
                   key={card.label}
@@ -1242,7 +1242,7 @@ const Admin = () => {
               {[
                 { label: "VENTES", value: purchases.filter((p: any) => p.status === "completed").length, icon: CreditCard, sub: `${purchases.length} transactions` },
                 { label: "REVENUS", value: `${(purchases.filter((p: any) => p.status === "completed").reduce((s: number, p: any) => s + (p.amount || 0), 0) / 100).toFixed(2)} CHF`, icon: TrendingUp, sub: "Total brut" },
-                { label: "PAYANTS", value: paidUsers.length, icon: Users, sub: `${freeUsers.length} gratuit(s)` },
+                { label: "PAYANTS", value: paidUsers.length, icon: Users, sub: `${freeUsers.length} S0` },
                 { label: "ENTITLEMENTS", value: entitlements.filter((e: any) => e.active).length, icon: KeyRound, sub: `${entitlements.length} total` },
               ].map((card, i) => (
                 <motion.div key={card.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card border border-border rounded-xl p-5">
@@ -1416,8 +1416,8 @@ const Admin = () => {
               <div className="space-y-2 mb-5">
                 {[
                   { value: "all", label: "Tout réinitialiser", desc: "Supprime toute la progression" },
-                  { value: "season0", label: "Depuis le jeu gratuit (S0)", desc: "Repart de zéro complet" },
-                  { value: "season1", label: "Depuis Saison 1", desc: "Conserve le jeu gratuit (S0)" },
+                  { value: "season0", label: "Depuis Signal Initial (S0)", desc: "Repart de zéro complet" },
+                  { value: "season1", label: "Depuis Saison 1", desc: "Conserve Signal Initial (S0)" },
                   { value: "season2", label: "Depuis Saison 2", desc: "Conserve S0 et S1" },
                 ].map((opt) => (
                   <button

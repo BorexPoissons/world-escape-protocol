@@ -839,7 +839,7 @@ const Puzzle = () => {
                     SIGNAL INITIAL — TERMINÉ
                   </p>
                   <h3 className="text-lg font-display font-bold text-foreground tracking-wider mb-2">
-                    ESSAI GRATUIT COMPLÉTÉ
+                    SIGNAL INITIAL COMPLÉTÉ
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5 font-body">
                     Vous avez collecté tous les fragments de l'opération initiale. La suite de l'enquête — 190 pays, 
@@ -879,7 +879,7 @@ const Puzzle = () => {
         <div className="flex flex-wrap items-center justify-center gap-5 pb-4 text-xs font-display tracking-wider text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(40 85% 62%)" }} />
-            <span style={{ color: "hsl(40 85% 62%)" }}>GRATUIT (5)</span>
+            <span style={{ color: "hsl(40 85% 62%)" }}>SIGNAL INITIAL (5)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: "hsl(220 80% 65%)" }} />
