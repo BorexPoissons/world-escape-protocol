@@ -1,71 +1,65 @@
 
+# Correction : Support des questions "text_input" dans FreeMission
 
-# Remplacement de "195" par "48" — Audit et plan
+## Probleme identifie
 
-## Occurrences trouvees
+La mission Suisse (CH) a une question finale (CH-Q7) de type `text_input` qui demande au joueur de taper "W.E.P". Mais le composant `FreeMission.tsx` ne gere que les questions a choix multiples (MCQ). Resultat : aucun champ de saisie ni bouton n'apparait a l'etape 3 "Decision Strategique".
 
-### Textes visibles par les joueurs (UI)
+## Donnees DB pour CH-Q7
 
-| Fichier | Ligne | Texte actuel | Remplacement |
-|---|---|---|---|
-| `PuzzleFirstVisitOverlay.tsx` | 83 | `"195 pays. 195 fragments."` | `"48 pays. 48 fragments."` |
-| `Landing.tsx` | 63 | `"195 pays"` | `"48 pays"` |
-| `Puzzle.tsx` | 870 | `"50 PAYS · MISSIONS NARRATIVES..."` | `"12 PAYS · MISSIONS NARRATIVES..."` |
+- Type: `text_input`
+- Prompt: "Note le sigle vu sur le fragment (il reviendra). Saisissez-le sans faute."
+- Reponse correcte: `W.E.P`
+- Reponses acceptees: `["W.E.P", "W.E.P.", "WEP", "wep", "w.e.p", "w.e.p."]`
+- Pas de tableau `options`
 
-### Constantes internes (affectent les calculs de progression)
+## Solution
 
-| Fichier | Ligne | Valeur actuelle | Remplacement |
-|---|---|---|---|
-| `Dashboard.tsx` | 87 | `TOTAL_COUNTRIES = 195` | `TOTAL_COUNTRIES = 48` |
-| `Dashboard.tsx` | 338 | Commentaire `"out of 195 total"` | `"out of 48 total"` |
-| `Leaderboard.tsx` | 25 | `TOTAL_COUNTRIES = 195` | `TOTAL_COUNTRIES = 48` |
-| `Leaderboard.tsx` | 28 | Commentaire `"completedCountries/195*100"` | `"completedCountries/48*100"` |
+Ajouter le support des questions `text_input` dans le composant FreeMission, specifiquement pour la phase "strategic" (ancien format, car CH utilise le `question_bank`).
 
-### Saison metadata (compteurs de pays incorrects)
+### Modifications
 
-| Fichier | Ligne | Texte actuel | Remplacement |
-|---|---|---|---|
-| `Dashboard.tsx` | 113 | `"45 pays · L'interférence commence"` | `"12 pays · L'interférence commence"` |
-| `Dashboard.tsx` | 124 | `"50 pays · L'origine du Protocole"` | `"12 pays · L'origine du Protocole"` |
-| `Dashboard.tsx` | 135 | `"50 pays · La réalité se déstabilise"` | `"12 pays · La réalité se déstabilise"` |
-| `Dashboard.tsx` | 146 | `"45 pays · Tout converge"` | `"12 pays · Tout converge"` |
-| `CinematicWorldMap.tsx` | 76 | `"43 pays"` | `"12 pays"` |
-| `CinematicWorldMap.tsx` | 77 | `"50 pays"` | `"12 pays"` |
-| `CinematicWorldMap.tsx` | 78 | `"50 pays"` | `"12 pays"` |
-| `CinematicWorldMap.tsx` | 79 | `"47 pays"` | `"12 pays"` |
+**Fichier : `src/pages/FreeMission.tsx`**
 
-### Nom de la Saison 4
+1. **Enrichir le type `QBankItem`** pour inclure les champs `text_input` :
+   - Ajouter `input_type?: string` (pour detecter "text_input")
+   - Ajouter `accepted_answers?: string[]` (liste de reponses valides)
+   - Ajouter `correct_answer?: string` (reponse principale)
 
-| Fichier | Ligne | Texte actuel | Remplacement |
-|---|---|---|---|
-| `CinematicWorldMap.tsx` | 72 | `"CONVERGENCE 195"` | `"CONVERGENCE FINALE"` |
-| `CinematicWorldMap.tsx` | 79 | `"CONVERGENCE 195"` | `"CONVERGENCE FINALE"` |
+2. **Modifier le mapping des questions DB** (lignes 252-278) :
+   - Quand `q.type === "text_input"`, conserver le type original dans `input_type`
+   - Transmettre `q.accepted_answers` et `q.correct_answer` dans l'objet question
 
-### Commentaires de code (pas d'impact utilisateur, mais a corriger)
+3. **Ajouter un state `textInput`** pour stocker la saisie du joueur
 
-| Fichier | Ligne | Texte actuel | Remplacement |
-|---|---|---|---|
-| `WEPPuzzlePiece.tsx` | 17 | `"all 195 pieces"` | `"all 48 pieces"` |
-| `pieceDNA.ts` | 3 | `"all 195 pieces"` | `"all 48 pieces"` |
+4. **Ajouter un bloc de rendu "strategic text_input"** (dans la phase `strategic`, ancien format) :
+   - Detecter si `strategicQuestion.input_type === "text_input"`
+   - Afficher un champ de saisie texte (input) au lieu des boutons MCQ
+   - Bouton "VALIDER" pour soumettre la reponse
+   - Validation insensible a la casse via `accepted_answers`
+   - Meme logique de vies/timer/bonus que les MCQ
+   - Feedback correct/incorrect avec le meme style visuel
 
-### Variable interne a renommer
+### Comportement attendu
 
-| Fichier | Variable | Action |
-|---|---|---|
-| `Puzzle.tsx` | `globalProgressOn195` (lignes 391-656) | Renommer en `globalProgress` — variable interne utilisee ~15 fois |
+- Le joueur voit la question "Note le sigle vu sur le fragment..."
+- Un champ de saisie texte apparait avec un placeholder "Votre reponse..."
+- Le joueur tape sa reponse (ex: "WEP", "W.E.P", etc.)
+- Clic sur "VALIDER" → comparaison avec `accepted_answers`
+- Si correct : bonus pool + transition vers `letter_reveal`
+- Si incorrect : perte d'une vie, possibilite de reessayer
 
----
+### Details techniques
 
-## Fichiers a modifier
+Le rendu conditionnel dans la section "strategic ancien format" sera :
 
-1. `src/pages/Dashboard.tsx` — constante + commentaire + 4 subtitles saisons (6 changements)
-2. `src/pages/Leaderboard.tsx` — constante + commentaire (2 changements)
-3. `src/pages/Puzzle.tsx` — renommer variable + texte "50 PAYS" (16+ changements)
-4. `src/pages/Landing.tsx` — texte "195 pays" (1 changement)
-5. `src/components/PuzzleFirstVisitOverlay.tsx` — texte "195 pays. 195 fragments" (1 changement)
-6. `src/components/CinematicWorldMap.tsx` — "CONVERGENCE 195" + 4 tooltips saisons (6 changements)
-7. `src/components/WEPPuzzlePiece.tsx` — commentaire (1 changement)
-8. `src/lib/pieceDNA.ts` — commentaire (1 changement)
+```text
+if strategicQuestion has input_type === "text_input"
+  -> render text input + validate button
+else
+  -> render MCQ buttons (comportement actuel)
+```
 
-**Total : ~34 remplacements dans 8 fichiers. Aucune modification de logique, seulement des valeurs et textes.**
+La validation normalisera la saisie (trim + lowercase) et comparera avec chaque element de `accepted_answers` (aussi normalise).
 
+**Total : ~60 lignes ajoutees/modifiees dans 1 seul fichier (`FreeMission.tsx`). Aucun changement de schema DB.**
