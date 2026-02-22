@@ -34,10 +34,10 @@
 - [x] Rescue offer si bonus dispo à la mort
 - [x] Sauvegarde : RPC + token + XP + fragment + lives_banked
 
-## Phase 4 — Prison Break Mini-game
-- [ ] 5 templates rotatifs (code 4 chiffres, suite math, grille, anagramme, horloge)
-- [ ] Route `/prison-break/:countryCode`
-- [ ] Succès → pays suivant, Échec → nouveau template
+## Phase 4 — Prison Break Mini-game ✅
+- [x] 5 templates rotatifs (code 4 chiffres, suite math, grille 3×3, anagramme, horloge)
+- [x] Route `/prison-break/:countryCode`
+- [x] Succès → retour mission, Échec → nouveau template aléatoire
 
 ## Phase 5 — Season End: Key Assembly + π
 - [ ] Assemblage V-01..V-12 → "CLÉ DU VEILLEUR"
