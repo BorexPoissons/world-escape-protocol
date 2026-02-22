@@ -382,18 +382,21 @@ const FreeMission = () => {
         const correctText = sq.choices[sq.answer_index];
         const shuffled = shuffle([...sq.choices]);
         sq.answer_index = shuffled.indexOf(correctText);
+        sq.choices = shuffled;
         setSceneChoices(shuffled);
       }
       if (lq) {
         const correctText = lq.choices[lq.answer_index];
         const shuffled = shuffle([...lq.choices]);
         lq.answer_index = shuffled.indexOf(correctText);
+        lq.choices = shuffled;
         setLogicChoices(shuffled);
       }
       if (stq) {
         const correctText = stq.choices[stq.answer_index];
         const shuffled = shuffle([...stq.choices]);
         stq.answer_index = shuffled.indexOf(correctText);
+        stq.choices = shuffled;
         setStrategicChoices(shuffled);
       }
 
