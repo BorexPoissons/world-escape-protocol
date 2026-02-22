@@ -1,6 +1,6 @@
 // ─── W.E.P. Piece DNA — Unique visual identity per country ───────────────────
 // Each country has a fixed visual DNA: gem, symbol, keyword, pattern.
-// This dictionary is the single source of truth for all 195 pieces.
+// This dictionary is the single source of truth for all 48 pieces.
 // Extensible: add an entry per country code — fallback handles the rest.
 
 export type GemShape = "diamond" | "hexagon" | "circle" | "star" | "octagon";

@@ -22,10 +22,10 @@ const TITLE_THRESHOLDS = [
   { min: 0, title: "EXPLORATEUR", color: "hsl(40 85% 62%)" },
 ];
 
-const TOTAL_COUNTRIES = 195;
+const TOTAL_COUNTRIES = 48;
 
 function getTitle(xp: number): { title: string; color: string } {
-  // Rough estimate: level = floor(xp/200)+1, global% = completedCountries/195*100
+  // Rough estimate: level = floor(xp/200)+1, global% = completedCountries/48*100
   // For display, use XP tiers as proxy
   if (xp >= 5000) return TITLE_THRESHOLDS[0];
   if (xp >= 1000) return TITLE_THRESHOLDS[1];

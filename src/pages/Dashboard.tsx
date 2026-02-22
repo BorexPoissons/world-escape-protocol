@@ -84,7 +84,7 @@ function getMapBrightness(pct: number): number {
   return 0.42;
 }
 
-const TOTAL_COUNTRIES = 195;
+const TOTAL_COUNTRIES = 48;
 
 // Operation metadata — narrative branding
 const SEASON_META: Record<number, {
@@ -110,7 +110,7 @@ const SEASON_META: Record<number, {
   1: {
     label: "LES OBSERVATEURS",
     codename: "SAISON I",
-    subtitle: "45 pays · L'interférence commence",
+    subtitle: "12 pays · L'interférence commence",
     theme: "Surveillance · Réseaux · Infiltration",
     reward: "Clé Oméga + Accès Saison II",
     rewardIcon: "🔐",
@@ -121,7 +121,7 @@ const SEASON_META: Record<number, {
   2: {
     label: "LES ARCHITECTES",
     codename: "SAISON II",
-    subtitle: "50 pays · L'origine du Protocole",
+    subtitle: "12 pays · L'origine du Protocole",
     theme: "Organisations internationales · Zones stratégiques",
     reward: "Fragment Atlas + Badge Stratège Global",
     rewardIcon: "🗺",
@@ -132,7 +132,7 @@ const SEASON_META: Record<number, {
   3: {
     label: "LA FAILLE",
     codename: "SAISON III",
-    subtitle: "50 pays · La réalité se déstabilise",
+    subtitle: "12 pays · La réalité se déstabilise",
     theme: "Crises contrôlées · Routes énergétiques · Pouvoir invisible",
     reward: "Fragment Dominion + Badge Architecte du Réseau",
     rewardIcon: "⚡",
@@ -143,7 +143,7 @@ const SEASON_META: Record<number, {
   4: {
     label: "LE PROTOCOLE FINAL",
     codename: "SAISON IV",
-    subtitle: "45 pays · Tout converge — Révélation ultime",
+    subtitle: "12 pays · Tout converge — Révélation ultime",
     theme: "Pays Stratégiques · Assemblage final",
     reward: "Carte mondiale révélée + Titre Maître du Protocole",
     rewardIcon: "🧩",
@@ -335,7 +335,7 @@ const Dashboard = () => {
     : allPlayable.find(c => isCountryUnlocked(c, playerLevel) && !completedCountries.includes(c.id));
   const tierLabel = tier === "full_bundle" ? "ÉDITION INTÉGRALE" : tier === "season_4" ? "SAISON IV" : tier === "season_3" ? "SAISON III" : tier === "season_2" ? "SAISON II" : tier === "season_1" ? "SAISON I" : "EXPLORATEUR";
 
-  // Global progression (out of 195 total countries)
+  // Global progression (out of 48 total countries)
   const globalCompletedCount = completedCountries.length;
   const globalPct = Math.round((globalCompletedCount / TOTAL_COUNTRIES) * 1000) / 10; // 1 decimal
   const progressTitle = getProgressTitle(globalPct);

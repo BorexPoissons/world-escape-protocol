@@ -14,7 +14,7 @@ interface WEPPuzzlePieceProps {
   mode?: "inventory" | "detail" | "complete";  // affects animation style
 }
 
-// ─── Base puzzle shape (identical for all 195 pieces) ────────────────────────
+// ─── Base puzzle shape (identical for all 48 pieces) ─────────────────────────
 // 4 connectors: top tab, right tab, bottom blank, left blank
 // viewBox: 0 0 100 100 — connectors extend slightly beyond 0-100 range
 const PUZZLE_PATH = `

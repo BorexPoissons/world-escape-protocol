@@ -80,7 +80,7 @@ export default function PuzzleFirstVisitOverlay({ onDismiss }: PuzzleFirstVisitO
         {/* Typewriter message */}
         <div className="px-6 sm:px-8 mt-4 min-h-[80px]">
           <TypewriterText
-            text="Agent... Voici l'étendue du Protocole. 195 pays. 195 fragments. L'aventure commence maintenant."
+            text="Agent... Voici l'étendue du Protocole. 48 pays. 48 fragments. L'aventure commence maintenant."
             speed={28}
             onDone={() => setTextDone(true)}
             className="text-sm leading-relaxed font-body text-foreground/85 italic"
