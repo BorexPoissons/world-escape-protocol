@@ -1,68 +1,41 @@
 
+# Bouton "Coller JSON" directement sur chaque carte pays
 
-# Fix du mapping des reponses MCQ dans FreeMission
+## Ce qui change
 
-## Bug identifie
+Ajout d'un bouton "coller JSON" (icone Clipboard) a cote des boutons Modifier et Supprimer sur chaque ligne de pays dans l'onglet PAYS. En cliquant dessus, une zone de texte (textarea) s'ouvre dans la section detaillee du pays pour coller le JSON, avec un bouton "ANALYSER" qui declenche le meme traitement que l'upload fichier.
 
-Deux problemes lies dans le mapping des questions DB :
+## Fonctionnement
 
-1. **Mauvais chemin d'acces** : Le code cherche `q.answer?.value` (ligne 256), mais la DB stocke `q.correct_answer` (ex: `"B"`). Resultat : `ansIdx` vaut toujours 0.
+1. Sur chaque `CountryAdminRow`, un nouveau bouton icone (Clipboard) apparait entre Modifier et Supprimer
+2. Cliquer dessus ouvre/ferme une textarea dans la zone "expanded" du pays
+3. L'utilisateur colle son JSON depuis ChatGPT
+4. Un bouton "ANALYSER" parse le JSON avec la meme logique que `handleJsonFileChange`
+5. L'apercu et le bouton "IMPORTER" apparaissent comme d'habitude
 
-2. **Shuffle casse l'index** : Les choix sont melanges (lignes 381-383) avec `shuffle([...sq.choices])`, mais `answer_index` pointe toujours sur la position originale. Apres le shuffle, la "bonne reponse" affichee est fausse.
+L'import fichier existant reste inchange.
 
-## Solution
+## Details techniques
 
-**Fichier : `src/pages/FreeMission.tsx`**
+**Fichier : `src/pages/Admin.tsx`**
 
-### Etape 1 — Corriger le calcul de `ansIdx` (lignes 255-259)
+### 1. Extraire la logique de parsing dans une fonction reutilisable
 
-Remplacer :
-```
-let ansIdx = 0;
-if (q.answer?.value) {
-  const idx = (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.answer.value);
-  ansIdx = idx >= 0 ? idx : 0;
-}
-```
+La logique actuellement dans `handleJsonFileChange` (lignes 313-396) sera extraite dans une fonction `parseJsonString(jsonString: string)` qui retourne le meme objet preview. Les deux entrees (fichier et coller) l'appelleront.
 
-Par :
-```
-let ansIdx = 0;
-if (q.correct_answer) {
-  const idx = (q.options ?? []).findIndex((o: any) => (o.id ?? o) === q.correct_answer);
-  ansIdx = idx >= 0 ? idx : 0;
-}
-```
+### 2. Ajouter des states
 
-### Etape 2 — Recalculer `answer_index` apres le shuffle (lignes 381-383)
+- `pasteTarget: string | null` — le code pays dont la textarea est ouverte
+- `pasteText: string` — le contenu colle
 
-Actuellement :
-```
-if (sq) setSceneChoices(shuffle([...sq.choices]));
-if (lq) setLogicChoices(shuffle([...lq.choices]));
-if (stq) setStrategicChoices(shuffle([...stq.choices]));
-```
+### 3. Modifier `CountryAdminRow`
 
-Remplacer par une logique qui :
-1. Retrouve le texte de la bonne reponse AVANT le shuffle
-2. Shuffle les choix
-3. Recalcule `answer_index` dans le tableau shuffle
-4. Met a jour la question avec le nouvel index
+- Ajouter une prop `onPaste` et `isPasting`
+- Ajouter un bouton icone Clipboard dans la barre d'actions (ligne ~1517-1523)
+- Si `isPasting` est true, afficher une textarea + bouton "ANALYSER" dans la zone expanded (ligne ~1529)
 
-```
-if (sq) {
-  const correctText = sq.choices[sq.answer_index];
-  const shuffled = shuffle([...sq.choices]);
-  sq.answer_index = shuffled.indexOf(correctText);
-  setSceneChoices(shuffled);
-}
-// Idem pour lq et stq
-```
+### 4. Fonction d'analyse
 
-### Impact
+Le bouton "ANALYSER" appelle `parseJsonString(pasteText)` et alimente `jsonImportPreview` + `setJsonImportPreview(...)`, exactement comme le mode fichier.
 
-- Les 3 phases (Scene, Logique, Strategique) identifieront correctement la bonne reponse
-- Le shuffle continuera de fonctionner normalement
-- Aucun changement de schema DB
-
-**Total : ~15 lignes modifiees dans 1 fichier.**
+**Environ 50 lignes ajoutees/modifiees dans 1 fichier.**
