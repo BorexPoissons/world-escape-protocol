@@ -52,9 +52,13 @@
 - [x] Seasons.tsx : descriptions 12 pays/saison, bundle 48 pays
 - [x] Season1Unlock.tsx : 12 pays
 
-## Phase 7 — Stripe/Admin alignment
-- [ ] Tiers/entitlements 4 saisons × 12 pays
-- [ ] Admin : gestion image slots
+## Phase 7 — Stripe/Admin alignment ✅
+- [x] Admin overview : 4 saisons × 12 pays (S1/S2/S3/S4) au lieu de FREE/AGENT/DIRECTOR
+- [x] Admin pays : groupement par saison avec badge couleur et compteur /12
+- [x] Admin gestion accès : 6 boutons (FREE, S1, S2, S3, S4, FULL_BUNDLE)
+- [x] UpgradeModal : textes mis à jour (12 pays/saison, 48 total)
+- [x] FLAG_EMOJI étendu aux 48 codes pays
+- [x] getSubscriptionBadge aligné sur season_1..4 + full_bundle
 
 ## Phase 8 — Carry-over & Polish
 - [ ] Vies S1 → bonus S2
