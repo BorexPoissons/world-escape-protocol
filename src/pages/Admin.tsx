@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import AdminImages from "@/components/AdminImages";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,7 +105,7 @@ const Admin = () => {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions" | "purchases" | "security">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "countries" | "users" | "missions" | "purchases" | "security" | "images">("overview");
 
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<"profiles">[]>([]);
@@ -600,6 +601,7 @@ const Admin = () => {
     { key: "countries" as const, label: "PAYS", icon: Globe, count: countries.length },
     { key: "users" as const, label: "AGENTS", icon: Users, count: profiles.length },
     { key: "missions" as const, label: "MISSIONS", icon: Target, count: missions.length },
+    { key: "images" as const, label: "IMAGES", icon: Upload },
     { key: "purchases" as const, label: "VENTES", icon: CreditCard, count: purchases.length },
     { key: "security" as const, label: "SÉCURITÉ", icon: ShieldAlert, count: securityLogs.length },
   ];
@@ -1323,6 +1325,8 @@ const Admin = () => {
             </div>
           </div>
         )}
+        {/* ══ IMAGES ════════════════════════════════════════════════════ */}
+        {activeTab === "images" && <AdminImages />}
         {/* ══ SÉCURITÉ ═══════════════════════════════════════════════════ */}
         {activeTab === "security" && (
           <div className="space-y-6">
