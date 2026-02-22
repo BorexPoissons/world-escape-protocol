@@ -39,9 +39,10 @@
 - [x] Route `/prison-break/:countryCode`
 - [x] Succès → retour mission, Échec → nouveau template aléatoire
 
-## Phase 5 — Season End: Key Assembly + π
-- [ ] Assemblage V-01..V-12 → "CLÉ DU VEILLEUR"
-- [ ] Mini-jeu π : saisir 314159
+## Phase 5 — Season End: Key Assembly + π ✅
+- [x] Assemblage V-01..V-12 → "CLÉ DU VEILLEUR"
+- [x] Mini-jeu π : saisir 314159
+- [x] Route `/season1-complete`, redirection auto depuis dernière mission S1
 
 ## Phase 6 — Map/Puzzle/UI 48 pays
 - [ ] Carte mondiale 48 pays (SeasonMapNavigator)
