@@ -263,6 +263,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bonus_seconds_banked: number
           created_at: string
           display_name: string | null
           has_completed_puzzle: boolean
@@ -270,6 +271,7 @@ export type Database = {
           last_mission_at: string | null
           leaderboard_visible: boolean
           level: number
+          lives_banked: number
           longest_streak: number
           season_1_unlocked: boolean
           streak: number
@@ -279,6 +281,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          bonus_seconds_banked?: number
           created_at?: string
           display_name?: string | null
           has_completed_puzzle?: boolean
@@ -286,6 +289,7 @@ export type Database = {
           last_mission_at?: string | null
           leaderboard_visible?: boolean
           level?: number
+          lives_banked?: number
           longest_streak?: number
           season_1_unlocked?: boolean
           streak?: number
@@ -295,6 +299,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          bonus_seconds_banked?: number
           created_at?: string
           display_name?: string | null
           has_completed_puzzle?: boolean
@@ -302,6 +307,7 @@ export type Database = {
           last_mission_at?: string | null
           leaderboard_visible?: boolean
           level?: number
+          lives_banked?: number
           longest_streak?: number
           season_1_unlocked?: boolean
           streak?: number
