@@ -1,65 +1,105 @@
-# WORLD ESCAPE PROTOCOL — PLAN DE REFONTE 48 PAYS
 
-## Vision canonique
-- **48 pays** répartis en **4 saisons de 12**
-- S1: CH→GR→IN→MA→IT→JP→MX→PE→TR→ET→KH→DE
-- S2: US→CA→BR→AR→ES→PT→GB→NL→SE→PL→RO→IL
-- S3: CN→KR→SG→AU→NZ→ZA→EG→AE→TH→VN→ID→CL
-- S4: NO→FI→CZ→HU→QA→SA→KZ→MN→PH→MY→BE→FR
-- **France = pays 48** (dernier jouable)
-- **Suisse = coffre final** (hors index, `is_strategic_final=true`)
-- Fragments V-01 à V-12 → Clé "WATCHER — ACCESS LEVEL 1"
-- Mini-jeu final π (314159)
+# Audit complet : occurrences "free" / "gratuit"
 
-## Phase 0 — PWA fix ✅
-## Phase 1 — DB Cleanup & Schema ✅
-- [x] 48 pays verrouillés, 147 supprimés
-- [x] Season numbers + release_order recalés
-- [x] `bonus_seconds_banked`, `lives_banked` ajoutés aux profils
-- [x] RPC `complete_country_attempt` → gate CEIL(80%) + champ `passed_gate`
+## Inventaire exhaustif
 
-## Phase 2 — Season 1 Content Injection ✅
-- [x] 12 JSON canoniques S1 injectés (84 questions total)
-- [x] Intros Jasper, scénarios, 7 Q/R par pays
-- [x] Slots images vides modifiables via admin
-- [x] Chaîne next_country complète
-- [x] DB nettoyée (anciennes missions hors scope supprimées)
+### Textes visibles par les joueurs (UI)
 
-## Phase 3 — Mission Engine Refonte ✅
-- [x] Nouveau composant `SeasonMission.tsx` (route `/season-mission/:countryCode`)
-- [x] 120s timer par pays, 3 vies, 7 questions séquentielles
-- [x] Bonus seconds accumulées + bouton échange 60s → +1 vie
-- [x] Gate 6/7 : "ACCÈS AUTORISÉ" / "ACCÈS REFUSÉ"
-- [x] Support MCQ + text_input (Q7 continuité)
-- [x] Rescue offer si bonus dispo à la mort
-- [x] Sauvegarde : RPC + token + XP + fragment + lives_banked
+| Fichier | Ligne | Texte actuel | Contexte |
+|---|---|---|---|
+| `Dashboard.tsx` | 103 | `"OP-00 · ACCÈS GRATUIT"` | Codename de la saison 0 |
+| `Dashboard.tsx` | 796 | `"ESSAI GRATUIT COMPLÉTÉ"` | CTA après completion des 5 pays |
+| `Seasons.tsx` | 455 | `"5 pays gratuits inclus pour tous les agents"` | Mention en bas de la page saisons |
+| `Season1Unlock.tsx` | 208 | `"CONTINUER EN MODE GRATUIT"` | Bouton de refus d'achat |
+| `MissionComplete.tsx` | 460 | `"Phase gratuite"` | Fallback texte next mission |
+| `Puzzle.tsx` | 842 | `"ESSAI GRATUIT COMPLÉTÉ"` | Overlay post-puzzle |
+| `Puzzle.tsx` | 882 | `"GRATUIT (5)"` | Legende couleur dans la carte |
+| `UpgradeModal.tsx` | 224 | `"CONTINUER EN MODE GRATUIT"` | Bouton refus upgrade |
+| `CountryCard.tsx` | 10-12 | `"gratuits officiels"`, `"SAISON 0 — GRATUIT"` | Commentaires + logique badge |
+| `CinematicWorldMap.tsx` | 424-428 | Badge visuel "FREE" sur les noeuds S0 | Carte mondiale |
+| `CentralDilemma.tsx` | 218 | `"FREE-SET-001"` | Label code dans le dilemme |
 
-## Phase 4 — Prison Break Mini-game ✅
-- [x] 5 templates rotatifs (code 4 chiffres, suite math, grille 3×3, anagramme, horloge)
-- [x] Route `/prison-break/:countryCode`
-- [x] Succès → retour mission, Échec → nouveau template aléatoire
+### Textes dans l'admin (visibles uniquement par l'admin)
 
-## Phase 5 — Season End: Key Assembly + π ✅
-- [x] Assemblage V-01..V-12 → "CLÉ DU VEILLEUR"
-- [x] Mini-jeu π : saisir 314159
-- [x] Route `/season1-complete`, redirection auto depuis dernière mission S1
+| Fichier | Ligne | Texte actuel |
+|---|---|---|
+| `Admin.tsx` | 50 | `"FREE"` (label saison 0) |
+| `Admin.tsx` | 65 | `"FREE"` (subscription type label) |
+| `Admin.tsx` | 657 | `"gratuit(s)"` (KPI agents) |
+| `Admin.tsx` | 1245 | `"gratuit(s)"` (onglet ventes) |
+| `Admin.tsx` | 1419-1420 | `"jeu gratuit (S0)"` (reset options) |
 
-## Phase 6 — Map/Puzzle/UI 48 pays ✅
-- [x] SeasonMapNavigator : 12 pays/saison, labels corrigés
-- [x] IntroScreen : nouveau texte Jasper canonique (48 pays, 4 saisons, 4 clés)
-- [x] MissionComplete.tsx : total 48 pays
-- [x] Puzzle.tsx : TOTAL_COUNTRIES_IN_WORLD = 48
-- [x] Seasons.tsx : descriptions 12 pays/saison, bundle 48 pays
-- [x] Season1Unlock.tsx : 12 pays
+### Logique interne (code, pas d'affichage direct)
 
-## Phase 7 — Stripe/Admin alignment ✅
-- [x] Admin overview : 4 saisons × 12 pays (S1/S2/S3/S4) au lieu de FREE/AGENT/DIRECTOR
-- [x] Admin pays : groupement par saison avec badge couleur et compteur /12
-- [x] Admin gestion accès : 6 boutons (FREE, S1, S2, S3, S4, FULL_BUNDLE)
-- [x] UpgradeModal : textes mis à jour (12 pays/saison, 48 total)
-- [x] FLAG_EMOJI étendu aux 48 codes pays
-- [x] getSubscriptionBadge aligné sur season_1..4 + full_bundle
+| Fichier | Detail |
+|---|---|
+| `Dashboard.tsx` | Type `"free"` dans le Tier union, `getTier()` retourne `"free"` |
+| `CountryCard.tsx` | Variable `isFree`, routing vers `/free-mission/` |
+| `CinematicWorldMap.tsx` | `FREE_COUNTRY_CODES` Set, variable `isFree` pour styling |
+| `Admin.tsx` | `freeUsers` / `paidUsers` filter, `is_free` dans import JSON |
+| `FreeMission.tsx` | Composant entier + config `FREE_MISSION_CONFIG` |
+| `App.tsx` | Route `/free-mission/:countryId` |
+| Base de donnees | Colonne `is_free` dans `countries_missions` |
 
-## Phase 8 — Carry-over & Polish ✅
-- [x] Vies S1 → bonus S2 (chaque vie = 60s bonus, reset lives_banked à 0)
-- [x] Tests end-to-end : XP, level, gate, bonus exchange, carry-over, π validation (21 tests)
+### Fichiers JSON statiques (public/content/countries/)
+
+| Fichier | Champs |
+|---|---|
+| US.json | `mission_id: "US-S1-FREE-002"`, `format: "IMMERSIVE_FREE"`, `is_free: true`, `total_free: 5`, `FRAG-US-FREE-002` |
+| CN.json | `mission_id: "CN-S1-FREE-003"`, memes champs |
+| BR.json | `mission_id: "BR-S1-FREE-004"`, memes champs |
+| IN.json | `mission_id: "IN-S1-FREE-005"`, memes champs |
+| CH.json | `is_free: true` |
+
+---
+
+## Plan de remplacement propose
+
+Remplacer la terminologie "free/gratuit" par le vocabulaire narratif du jeu : **"SIGNAL INITIAL"** (nom canon de la saison 0).
+
+### 1. Textes joueurs -- Renommer
+
+| Avant | Apres |
+|---|---|
+| `"OP-00 · ACCÈS GRATUIT"` | `"OP-00 · SIGNAL INITIAL"` |
+| `"ESSAI GRATUIT COMPLÉTÉ"` | `"SIGNAL INITIAL COMPLÉTÉ"` |
+| `"5 pays gratuits inclus..."` | `"SIGNAL INITIAL — 5 pays inclus pour tous les agents"` |
+| `"CONTINUER EN MODE GRATUIT"` | `"CONTINUER L'OBSERVATION"` |
+| `"Phase gratuite"` | `"Signal Initial"` |
+| `"GRATUIT (5)"` (legende) | `"SIGNAL INITIAL (5)"` |
+| Badge `"FREE"` sur la carte | Supprimer ou remplacer par `"S0"` |
+| `"FREE-SET-001"` | `"SIGNAL-001"` |
+
+### 2. Textes admin -- Renommer
+
+| Avant | Apres |
+|---|---|
+| `"FREE"` (saison 0 label) | `"SIGNAL INITIAL"` ou `"S0"` |
+| `"FREE"` (subscription) | `"S0"` |
+| `"gratuit(s)"` (KPI) | `"S0"` |
+| `"jeu gratuit (S0)"` | `"Signal Initial (S0)"` |
+
+### 3. Code interne -- Conserver tel quel
+
+Les variables internes (`isFree`, `is_free`, `FREE_MISSION_CONFIG`, `FreeMission`, `/free-mission/`, `freeUsers`) et la colonne DB `is_free` restent inchangees. Ce sont des identifiants techniques sans impact utilisateur.
+
+### 4. JSON statiques -- Conserver tel quel
+
+Les fichiers `public/content/countries/*.json` contiennent des identifiants techniques (`IMMERSIVE_FREE`, `is_free`, `FRAG-XX-FREE-XXX`) qui ne sont pas affiches aux joueurs. Pas de changement necessaire.
+
+---
+
+## Fichiers a modifier
+
+1. `src/pages/Dashboard.tsx` -- 2 textes
+2. `src/pages/Seasons.tsx` -- 1 texte
+3. `src/pages/Season1Unlock.tsx` -- 1 texte
+4. `src/pages/MissionComplete.tsx` -- 1 texte
+5. `src/pages/Puzzle.tsx` -- 2 textes
+6. `src/pages/Admin.tsx` -- 5 textes
+7. `src/components/UpgradeModal.tsx` -- 1 texte
+8. `src/components/CountryCard.tsx` -- 1 commentaire + potentiellement badge
+9. `src/components/CinematicWorldMap.tsx` -- 1 badge visuel
+10. `src/pages/CentralDilemma.tsx` -- 1 label
+
+**Total : ~16 remplacements de texte dans 10 fichiers. Aucune modification de logique.**
